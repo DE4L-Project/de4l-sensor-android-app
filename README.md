@@ -9,24 +9,23 @@ Android App for connecting [HabitatMap's AirBeam2](https://www.habitatmap.org/ai
 
 Currently the app is used in the research project [DE4L](https://de4l.io/en/about-de4l/) (Data Economy 4 Advanced Logistics) funded by the German Federal Ministry for Economic Affairs and Energy (01MD19008A).
 
-## App
 
-Download in Google Play Store:
-[https://play.google.com/store/apps/details?id=io.de4l.app](https://play.google.com/store/apps/details?id=io.de4l.app)
-
-Developed by [InfAI Management GmbH](https://infai.org/) in Leipzig, Germany.
 
 ![App Screenshots][app-teaser]
+
+<a href='https://play.google.com/store/apps/details?id=io.de4l.app&utm_source=github&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png'/></a>
+
+Developed by [InfAI Management GmbH](https://infai.org/) in Leipzig, Germany.
 
 ## Features
 - Real-time data connection using MQTT
 - OAuth2 Token authentication for MQTT and automatic token refresh
 - MQTT message buffering using Room when connection to MQTT server is lost
-- If bluetooth connection to sensor is lost, reconnect procedure is initiated
+- In case Bluetooth connection to sensor is lost, reconnect procedure is initiated
 
 ## Technology Overview
 - [Paho MQTT Client](https://github.com/eclipse/paho.mqtt.android)
-- Okta OIDC Android [Okta OIDC Android](https://github.com/okta/okta-oidc-android) for OpenID Connect Authentication
+- [Okta OIDC Android](https://github.com/okta/okta-oidc-android) for OpenID Connect Authentication
 - [Hilt](https://dagger.dev/hilt/) for Dependency Injection
 - [Android Jetpack](https://developer.android.com/jetpack) (e.g. Room and Livedata)
 - [Google Guava](https://github.com/google/guava)
@@ -49,8 +48,8 @@ AUTH_MQTT_CLAIM_RESOURCE="{RESOURCE_ID}"                        #USE TO ACCESS K
 AUTH_MQTT_CLAIM_ROLE="{RESOURCE_ROLE}"                          #REQUIRED RESOURCE ROLE
 
 # MQTT
-MQTT_SERVER_URL="{MQTT-BROKER-URL}"                         #EXAMPLE: ssl://broker.example.com:8883
-MQTT_OAUTH_USERNAME="{MQTT_OAUTH_USERNAME}"                 #SEE NOTE BELOW
+MQTT_SERVER_URL="{MQTT-BROKER-URL}"                             #EXAMPLE: ssl://broker.example.com:8883
+MQTT_OAUTH_USERNAME="{MQTT_OAUTH_USERNAME}"                     #SEE NOTE BELOW
 ```
 
 **Note:**
@@ -71,3 +70,33 @@ MQTT_OAUTH_USERNAME="{MQTT_OAUTH_USERNAME}"                 #SEE NOTE BELOW
 [project-logo]: documentation/logos/project-logo.png "DE4L Project Logo"
 [platform-architecture]: documentation/de4l-sensor-data-platform-architecture.png "DE4L Sensor Data Platform Architecture"
 [app-teaser]: documentation/app-teaser.png "App Teaser"
+
+## License 
+```
+MIT License
+
+Copyright (c) 2021 InfAI Management GmbH
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+## Legal
+
+Google Play and the Google Play logo are trademarks of Google LLC.
+All trademarks are property of their respective owners.
