@@ -13,7 +13,7 @@ Currently the app is used in the research project [DE4L](https://de4l.io/en/abou
 
 ![App Screenshots][app-teaser]
 
-<a href='https://play.google.com/store/apps/details?id=io.de4l.app&utm_source=github&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png'/></a>
+<a href='https://play.google.com/store/apps/details?id=io.de4l.app&utm_source=github&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' width='300px'/></a>
 
 Developed by [InfAI Management GmbH](https://infai.org/) in Leipzig, Germany.
 
