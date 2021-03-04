@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="io.de4l.app">
+
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <!-- Paho MQTT Client -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:name=".De4lApplication"
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher_de4l"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/ic_launcher_de4l"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.DE4LApp">
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyCerTs8unK7f_e3WNztGHshPfEXQmunlC4" />
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.DE4LApp.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Callback from authentication screen -->
+        <!--        <activity android:name="net.openid.appauth.RedirectUriReceiverActivity">-->
+        <!--            <intent-filter>-->
+        <!--                <action android:name="android.intent.action.VIEW"/>-->
+        <!--                <category android:name="android.intent.category.DEFAULT"/>-->
+        <!--                <category android:name="android.intent.category.BROWSABLE"/>-->
+        <!--                <data android:scheme="custom-scheme"/>-->
+        <!--            </intent-filter>-->
+        <!--        </activity>-->
+
+        <service
+            android:name=".tracking.BackgroundService"
+            android:foregroundServiceType="location" />
+        <service android:name="org.eclipse.paho.android.service.MqttService" />
+
+    </application>
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
+
+</manifest>

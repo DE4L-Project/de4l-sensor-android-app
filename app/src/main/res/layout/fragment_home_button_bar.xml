@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/frameLayout3"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:context=".ui.HomeButtonBarFragment">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutBtConnection"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toStartOf="@+id/layoutUser"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tvBtConnectionHeader"
+            android:layout_width="83dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Sensor"
+            android:textAlignment="center"
+            app:layout_constraintEnd_toEndOf="@+id/tvBtConnectionFooter"
+            app:layout_constraintStart_toStartOf="@+id/tvBtConnectionFooter"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btnBtConnection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:clickable="true"
+            android:src="@drawable/ic_bluetooth_connect_24"
+            android:textAlignment="center"
+            app:layout_constraintEnd_toEndOf="@+id/tvBtConnectionHeader"
+            app:layout_constraintStart_toStartOf="@+id/tvBtConnectionHeader"
+            app:layout_constraintTop_toBottomOf="@+id/tvBtConnectionHeader" />
+
+        <TextView
+            android:id="@+id/tvBtConnectionFooter"
+            android:layout_width="83dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            android:ellipsize="marquee"
+            android:fadingEdge="horizontal"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:text="Empty"
+            android:textAlignment="center"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnBtConnection" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutUser"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toStartOf="@+id/layoutDataTransmission"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/layoutBtConnection"
+        app:layout_constraintTop_toTopOf="@+id/layoutBtConnection">
+
+        <TextView
+            android:id="@+id/tvUserHeader"
+            android:layout_width="83dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="User"
+            android:textAlignment="center"
+            app:layout_constraintEnd_toEndOf="@+id/btnUser"
+            app:layout_constraintStart_toStartOf="@+id/btnUser"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btnUser"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:clickable="true"
+            android:src="@drawable/ic_person_24"
+            android:textAlignment="center"
+            app:layout_constraintEnd_toEndOf="@+id/tvUserFooter"
+            app:layout_constraintStart_toStartOf="@+id/tvUserFooter"
+            app:layout_constraintTop_toBottomOf="@+id/tvUserHeader" />
+
+        <TextView
+            android:id="@+id/tvUserFooter"
+            android:layout_width="83dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            android:ellipsize="marquee"
+            android:fadingEdge="horizontal"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:text="Empty"
+            android:textAlignment="center"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnUser" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutDataTransmission"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/layoutUser"
+        app:layout_constraintTop_toTopOf="@+id/layoutUser">
+
+        <TextView
+            android:id="@+id/tvDataTransmissionHeader"
+            android:layout_width="83dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Tracking"
+            android:textAlignment="center"
+            app:layout_constraintEnd_toEndOf="@+id/btnDataTransmission"
+            app:layout_constraintStart_toStartOf="@+id/btnDataTransmission"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btnDataTransmission"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:clickable="true"
+            android:enabled="false"
+            android:src="@drawable/ic_baseline_dot_green"
+            android:textAlignment="center"
+            app:layout_constraintEnd_toEndOf="@+id/tvDataTransmissionFooter"
+            app:layout_constraintStart_toStartOf="@+id/tvDataTransmissionFooter"
+            app:layout_constraintTop_toBottomOf="@+id/tvDataTransmissionHeader" />
+
+        <TextView
+            android:id="@+id/tvDataTransmissionFooter"
+            android:layout_width="83dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            android:text="Empty"
+            android:textAlignment="center"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnDataTransmission" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

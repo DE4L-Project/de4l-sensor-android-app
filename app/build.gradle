@@ -1,0 +1,117 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'kotlin-kapt'
+    id 'dagger.hilt.android.plugin'
+}
+
+def properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+android {
+    compileSdkVersion 30
+    buildToolsVersion "30.0.1"
+
+    defaultConfig {
+        applicationId "io.de4l.app"
+        minSdkVersion 21
+        targetSdkVersion 30
+        versionCode 6
+        versionName "0.0.6"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        manifestPlaceholders = [
+                'appAuthRedirectScheme': 'io.de4l.app'
+        ]
+
+        buildConfigField("String", "AUTH_DISCOVERY_URI", properties['AUTH_DISCOVERY_URI'])
+        buildConfigField("String", "AUTH_CLIENT_ID", properties['AUTH_CLIENT_ID'])
+        buildConfigField("String", "AUTH_REDIRECT_URI", properties['AUTH_REDIRECT_URI'])
+        buildConfigField("String", "AUTH_REDIRECT_URI_END_SESSION", properties['AUTH_REDIRECT_URI_END_SESSION'])
+        buildConfigField("String", "AUTH_USERNAME_CLAIM_KEY", properties['AUTH_USERNAME_CLAIM_KEY'])
+        buildConfigField("String", "AUTH_MQTT_CLAIM_RESOURCE", properties['AUTH_MQTT_CLAIM_RESOURCE'])
+        buildConfigField("String", "AUTH_MQTT_CLAIM_ROLE", properties['AUTH_MQTT_CLAIM_ROLE'])
+
+        buildConfigField("String", "MQTT_SERVER_URL", properties['MQTT_SERVER_URL'])
+        buildConfigField("String", "MQTT_OAUTH_USERNAME", properties['MQTT_OAUTH_USERNAME'])
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+repositories {
+    maven {
+        url "https://repo.eclipse.org/content/repositories/paho-releases/"
+    }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.2'
+
+    //AndroidX
+    implementation 'androidx.core:core-ktx:1.3.2'
+
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.3.3'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.3.3'
+
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
+
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.0'
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.3.0"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-savedstate:2.3.0"
+
+    implementation "androidx.recyclerview:recyclerview:1.1.0"
+    implementation "androidx.recyclerview:recyclerview-selection:1.1.0"
+
+    implementation 'androidx.room:room-runtime:2.2.6'
+    implementation 'androidx.room:room-ktx:2.2.6'
+
+    implementation 'com.google.android.material:material:1.3.0'
+    implementation 'com.google.android.gms:play-services-location:17.1.0'
+    implementation 'com.google.android.gms:play-services-maps:17.0.0'
+
+    implementation 'com.google.guava:guava:30.1-android'
+    implementation 'org.greenrobot:eventbus:3.2.0'
+    implementation 'joda-time:joda-time:2.10.5'
+
+    //MQTT
+    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
+    implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.1'
+
+    implementation 'com.google.code.gson:gson:2.8.6'
+
+    implementation 'com.auth0.android:jwtdecode:2.0.0'
+    implementation 'com.okta.android:oidc-androidx:1.0.17'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+
+    //HILT
+    implementation 'com.google.dagger:hilt-android:2.32-alpha'
+
+    kapt 'com.google.dagger:hilt-android-compiler:2.32-alpha'
+    kapt "androidx.room:room-compiler:2.2.6"
+
+    testImplementation 'junit:junit:4.13.1'
+    testImplementation 'org.mockito:mockito-core:3.7.7'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+
+    // AndroidJUnitRunner and JUnit Rules
+    androidTestImplementation 'androidx.test:runner:1.3.0'
+    androidTestImplementation 'androidx.test:rules:1.3.0'
+}

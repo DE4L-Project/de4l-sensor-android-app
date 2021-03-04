@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/splashScreen">
+
+    <fragment
+        android:id="@+id/splashScreen"
+        android:name="io.de4l.app.ui.SplashScreen"
+        android:label="fragment_splash_screen"
+        tools:layout="@layout/fragment_splash_screen">
+        <action
+            android:id="@+id/action_splashScreenFinished"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@+id/splashScreen"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_splashScreen_to_devices"
+            app:destination="@id/devices" />
+    </fragment>
+    <fragment
+        android:id="@+id/devices"
+        android:name="io.de4l.app.ui.DevicesFragment"
+        android:label="fragment_devices"
+        tools:layout="@layout/fragment_devices">
+        <action
+            android:id="@+id/action_devices_to_deviceScanResultsFragment"
+            app:destination="@id/deviceScanResultsFragment" />
+        <action
+            android:id="@+id/action_devices_to_homeFragment"
+            app:destination="@id/homeFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/deviceScanResultsFragment"
+        android:name="io.de4l.app.ui.DeviceScanResultsFragment"
+        android:label="fragment_device_scan_results"
+        tools:layout="@layout/fragment_device_scan_results">
+        <action
+            android:id="@+id/action_deviceScanResultsFragment_to_devices"
+            app:destination="@id/devices" />
+    </fragment>
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="io.de4l.app.ui.HomeFragment"
+        android:label="fragment_home"
+        tools:layout="@layout/fragment_home" />
+    <fragment
+        android:id="@+id/infoFragment"
+        android:name="io.de4l.app.ui.InfoFragment"
+        android:label="InfoFragment" />
+</navigation>

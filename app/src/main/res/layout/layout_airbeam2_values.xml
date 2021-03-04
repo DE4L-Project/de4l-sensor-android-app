@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/linearLayout2"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/tvTemperatureLabel"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:text="Temperature"
+        android:textAlignment="center"
+        app:layout_constraintEnd_toStartOf="@+id/tvHumidityLabel"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvTemperatureValue"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="-"
+        android:textAlignment="center"
+        android:textSize="@dimen/sensor_value_text_size"
+        app:layout_constraintEnd_toEndOf="@+id/tvTemperatureLabel"
+        app:layout_constraintStart_toStartOf="@+id/tvTemperatureLabel"
+        app:layout_constraintTop_toBottomOf="@+id/tvTemperatureLabel"
+        tools:text="34.08 °C" />
+
+    <TextView
+        android:id="@+id/tvHumidityLabel"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:text="Humidity"
+        android:textAlignment="center"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/tvTemperatureLabel"
+        app:layout_constraintTop_toTopOf="@+id/tvTemperatureLabel" />
+
+    <TextView
+        android:id="@+id/tvHumidityValue"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="-"
+        android:textAlignment="center"
+        android:textSize="@dimen/sensor_value_text_size"
+        app:layout_constraintEnd_toEndOf="@+id/tvHumidityLabel"
+        app:layout_constraintStart_toStartOf="@+id/tvHumidityLabel"
+        app:layout_constraintTop_toBottomOf="@+id/tvHumidityLabel"
+        tools:text="100 %" />
+
+    <TextView
+        android:id="@+id/tvPm1Label"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="PM1"
+        android:textAlignment="center"
+        app:layout_constraintEnd_toStartOf="@+id/tvPm25Label"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvTemperatureValue" />
+
+    <TextView
+        android:id="@+id/tvPm1Value"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="-"
+        android:textAlignment="center"
+        android:textSize="@dimen/sensor_value_text_size"
+        app:layout_constraintEnd_toEndOf="@+id/tvPm1Label"
+        app:layout_constraintStart_toStartOf="@+id/tvPm1Label"
+        app:layout_constraintTop_toBottomOf="@+id/tvPm1Label"
+        tools:text="30 ppm" />
+
+    <TextView
+        android:id="@+id/tvPm25Label"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:text="PM2.5"
+        android:textAlignment="center"
+        app:layout_constraintEnd_toStartOf="@+id/textView21"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/tvPm1Label"
+        app:layout_constraintTop_toTopOf="@+id/tvPm1Label" />
+
+    <TextView
+        android:id="@+id/tvPm25Value"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="-"
+        android:textAlignment="center"
+        android:textSize="@dimen/sensor_value_text_size"
+        app:layout_constraintEnd_toEndOf="@+id/tvPm25Label"
+        app:layout_constraintStart_toStartOf="@+id/tvPm25Label"
+        app:layout_constraintTop_toBottomOf="@+id/tvPm25Label"
+        tools:text="40 ppm" />
+
+    <TextView
+        android:id="@+id/textView21"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:text="PM10"
+        android:textAlignment="center"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/tvPm25Label"
+        app:layout_constraintTop_toTopOf="@+id/tvPm25Label" />
+
+    <TextView
+        android:id="@+id/tvPm10Value"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="-"
+        android:textAlignment="center"
+        android:textSize="@dimen/sensor_value_text_size"
+        app:layout_constraintEnd_toEndOf="@+id/textView21"
+        app:layout_constraintStart_toStartOf="@+id/textView21"
+        app:layout_constraintTop_toBottomOf="@+id/textView21"
+        tools:text="50 ppm" />
+</androidx.constraintlayout.widget.ConstraintLayout>
