@@ -72,7 +72,7 @@ MQTT_OAUTH_USERNAME="{MQTT_OAUTH_USERNAME}"                     #SEE NOTE BELOW
 [app-teaser]: documentation/app-teaser.png "App Teaser"
 
 ## License 
-```
+```text
 MIT License
 
 Copyright (c) 2021 InfAI Management GmbH
@@ -98,5 +98,5 @@ SOFTWARE.
 
 ## Legal
 
-Google Play and the Google Play logo are trademarks of Google LLC.
-All trademarks are property of their respective owners.
+- Google Play and the Google Play logo are trademarks of Google LLC.
+- All trademarks are property of their respective owners.
