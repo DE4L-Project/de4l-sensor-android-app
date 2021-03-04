@@ -11,6 +11,7 @@ Currently the app is used in the research project [DE4L](https://de4l.io/en/abou
 
 ## App
 
+Download in Google Play Store:
 [https://play.google.com/store/apps/details?id=io.de4l.app](https://play.google.com/store/apps/details?id=io.de4l.app)
 
 Developed by [InfAI Management GmbH](https://infai.org/) in Leipzig, Germany.
