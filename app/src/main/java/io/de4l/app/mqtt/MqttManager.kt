@@ -2,6 +2,7 @@ package io.de4l.app.mqtt
 
 import android.content.Context
 import android.util.Log
+import com.auth0.android.jwt.JWT
 import com.google.common.collect.ImmutableList
 import io.de4l.app.AppConstants
 import io.de4l.app.auth.AuthManager
@@ -55,7 +56,11 @@ class MqttManager(
                 throw Exception("Access token was null!")
             }
 
-            mqttConnectOptions.userName = AppConstants.MQTT_OAUTH_USERNAME
+            mqttConnectOptions.userName =
+                JWT(accessToken)
+                    .getClaim(AppConstants.AUTH_USERNAME_CLAIM_KEY)
+                    .asString()
+
             mqttConnectOptions.password = accessToken.toCharArray()
             mqttConnectOptions.isCleanSession = false
 

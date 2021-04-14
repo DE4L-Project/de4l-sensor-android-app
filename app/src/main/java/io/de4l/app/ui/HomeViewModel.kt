@@ -49,7 +49,8 @@ class HomeViewModel @Inject constructor(
 
     val location = MutableLiveData<Location?>(locationManager.getCurrentLocation())
     val user = authManager.user.asLiveData()
-    val versionInfo = BuildConfig.VERSION_NAME
+    val versionInfo =
+        if (BuildConfig.DEBUG) BuildConfig.VERSION_NAME + "-dev" else BuildConfig.VERSION_NAME
 
     lateinit var trackingEnabled: LiveData<Boolean>
     lateinit var connectedDevices: LiveData<List<DeviceEntity>>
