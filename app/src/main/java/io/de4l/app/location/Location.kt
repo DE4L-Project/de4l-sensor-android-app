@@ -6,7 +6,8 @@ class Location(
     val latitude: Double,
     val longitude: Double,
     val provider: String,
-    val timestamp: DateTime
+    val timestamp: DateTime,
+    val accuracy: Float
 ) {
 
 }

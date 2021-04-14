@@ -32,6 +32,8 @@ open class SensorValue(
             locationJsonObj = JsonObject()
             locationJsonObj.addProperty("lat", location.latitude)
             locationJsonObj.addProperty("lon", location.longitude)
+
+            sensorValueJsonObj.addProperty("gpsAccuracy", location.accuracy)
         }
         sensorValueJsonObj.add("location", locationJsonObj)
 
