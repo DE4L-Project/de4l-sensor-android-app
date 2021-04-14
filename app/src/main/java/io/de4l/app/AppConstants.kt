@@ -28,7 +28,7 @@ class AppConstants {
 
         //MQTT
         const val MQTT_SERVER_URL = BuildConfig.MQTT_SERVER_URL
-        const val MQTT_OAUTH_USERNAME = "oauth"
+
         val MQTT_TOPIC_PATTERN_SENSOR_VALUES =
             if (BuildConfig.DEBUG) "sensors/%s/de4l-app-debug" else "sensors/%s/de4l-app"
 

@@ -33,7 +33,6 @@ android {
         buildConfigField("String", "AUTH_MQTT_CLAIM_ROLE", properties['AUTH_MQTT_CLAIM_ROLE'])
 
         buildConfigField("String", "MQTT_SERVER_URL", properties['MQTT_SERVER_URL'])
-        buildConfigField("String", "MQTT_OAUTH_USERNAME", properties['MQTT_OAUTH_USERNAME'])
     }
 
     buildTypes {
