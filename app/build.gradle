@@ -96,7 +96,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.6'
 
     implementation 'com.auth0.android:jwtdecode:2.0.0'
-    implementation 'com.okta.android:oidc-androidx:1.0.17'
+    implementation 'com.okta.android:oidc-androidx:1.0.18'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
     //HILT
