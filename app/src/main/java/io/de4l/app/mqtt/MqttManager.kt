@@ -70,6 +70,7 @@ class MqttManager(
                     //must be set when connected
                     mqttAndroidClient?.setBufferOpts(getBufferOptions())
 
+                    //buffer has sometimes null elements, unknown why
                     val bufferedMessages = ImmutableList.copyOf(buffer)
                     buffer.clear()
 
