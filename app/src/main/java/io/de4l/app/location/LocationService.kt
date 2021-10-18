@@ -59,7 +59,10 @@ class LocationService() {
                             locationResult.lastLocation.longitude,
                             locationResult.lastLocation.provider,
                             DateTime(locationResult.lastLocation.time),
-                            locationResult.lastLocation.accuracy
+                            locationResult.lastLocation.accuracy,
+                            locationResult.lastLocation.speed,
+                            locationResult.lastLocation.bearing,
+                            locationResult.lastLocation.altitude,
                         )
 
                         val locationUpdateEvent = LocationUpdateEvent(location)
