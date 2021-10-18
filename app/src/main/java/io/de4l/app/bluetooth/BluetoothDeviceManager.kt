@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.joda.time.DateTime
+import java.nio.channels.ClosedChannelException
 import javax.inject.Inject
 
 class BluetoothDeviceManager @Inject constructor(
@@ -109,7 +110,13 @@ class BluetoothDeviceManager @Inject constructor(
                     BluetoothDevice.ACTION_FOUND -> {
                         val device =
                             intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE) as BluetoothDevice?
-                        device?.let { offer(device) }
+                        device?.let {
+                            try {
+                                offer(device)
+                            } catch (e: ClosedChannelException) {
+                                Log.v(LOG_TAG, "Closed Channel Exception in BluetoohDeviceManager:onReceive - Can be ignored.")
+                            }
+                        }
                     }
                     BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
                         Log.v(LOG_TAG, "ACTION_DISCOVERY_STARTED")
