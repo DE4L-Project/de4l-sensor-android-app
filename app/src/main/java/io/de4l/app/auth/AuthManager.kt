@@ -73,37 +73,25 @@ class AuthManager(val application: Application) {
                     ResultCallback<AuthorizationStatus, AuthorizationException> {
 
                     override fun onSuccess(status: AuthorizationStatus) {
-                        try {
-                            when (status) {
-                                AuthorizationStatus.AUTHORIZED -> onAuthAuthorized()
-                                AuthorizationStatus.SIGNED_OUT -> onAuthSignedOut()
-                                AuthorizationStatus.CANCELED -> onAuthCanceled()
-                                AuthorizationStatus.ERROR -> onAuthError()
-                                AuthorizationStatus.EMAIL_VERIFICATION_AUTHENTICATED -> onAuthEmailVerificationAuthenticated()
-                                AuthorizationStatus.EMAIL_VERIFICATION_UNAUTHENTICATED -> onAuthEmailVerificationUnAuthenticated()
-                            }
-                            cont.resume(status)
-                        } catch (e: Exception) {
-                            try {
-                                cont.resumeWithException(e)
-                            } catch (resumeException: IllegalStateException) {
-                                //Might happen when continuation has been cancelled
-                                Log.v(
-                                    LOG_TAG,
-                                    "Resume Exception: Can be ignored: " + resumeException.message
-                                )
-                            }
+                        when (status) {
+                            AuthorizationStatus.AUTHORIZED -> onAuthAuthorized()
+                            AuthorizationStatus.SIGNED_OUT -> onAuthSignedOut()
+                            AuthorizationStatus.CANCELED -> onAuthCanceled()
+                            AuthorizationStatus.ERROR -> onAuthError()
+                            AuthorizationStatus.EMAIL_VERIFICATION_AUTHENTICATED -> onAuthEmailVerificationAuthenticated()
+                            AuthorizationStatus.EMAIL_VERIFICATION_UNAUTHENTICATED -> onAuthEmailVerificationUnAuthenticated()
                         }
+                        safeContinuationResume(cont, status)
                     }
 
                     override fun onCancel() {
                         Log.e(LOG_TAG, "Cancelled by user")
-                        cont.resume(AuthorizationStatus.CANCELED)
+                        safeContinuationResume(cont, AuthorizationStatus.CANCELED)
                     }
 
                     override fun onError(msg: String?, exception: AuthorizationException?) {
                         Log.e(LOG_TAG, msg, exception)
-                        cont.resume(AuthorizationStatus.ERROR)
+                        safeContinuationResume(cont, AuthorizationStatus.ERROR)
                     }
 
 
@@ -232,6 +220,25 @@ class AuthManager(val application: Application) {
             return roles?.contains(AppConstants.AUTH_MQTT_CLAIM_ROLE) == true
         }
         return false
+    }
+
+    private fun safeContinuationResume(
+        cont: Continuation<AuthorizationStatus>,
+        status: AuthorizationStatus
+    ) {
+        try {
+            cont.resume(status)
+        } catch (e: Exception) {
+            try {
+                cont.resumeWithException(e)
+            } catch (resumeException: IllegalStateException) {
+                //Might happen when continuation has been cancelled
+                Log.v(
+                    LOG_TAG,
+                    "Continuation Resume Exception - Could be ignored: " + resumeException.message
+                )
+            }
+        }
     }
 
 
