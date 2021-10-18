@@ -68,7 +68,10 @@ class MqttManager(
                 override fun onSuccess(asyncActionToken: IMqttToken) {
                     Log.i(LOG_TAG, "MQTT - Connect succeed")
                     //must be set when connected
-                    mqttAndroidClient?.setBufferOpts(getBufferOptions())
+
+                    //Sometimes client in token is different from mqttAndroidClient (Race condition?)
+                    //https://github.com/eclipse/paho.mqtt.android/issues/238#issuecomment-576289548
+                    asyncActionToken.client?.setBufferOpts(getBufferOptions())
 
                     //buffer has sometimes null elements, unknown why
                     val bufferedMessages = ImmutableList.copyOf(buffer)
