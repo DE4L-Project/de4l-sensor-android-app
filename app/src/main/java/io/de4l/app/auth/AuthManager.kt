@@ -11,6 +11,7 @@ import com.okta.oidc.util.AuthorizationException
 import io.de4l.app.AppConstants
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.lang.IllegalStateException
 import kotlin.coroutines.*
 
 class AuthManager(val application: Application) {
@@ -83,7 +84,15 @@ class AuthManager(val application: Application) {
                             }
                             cont.resume(status)
                         } catch (e: Exception) {
-                            cont.resumeWithException(e)
+                            try {
+                                cont.resumeWithException(e)
+                            } catch (resumeException: IllegalStateException) {
+                                //Might happen when continuation has been cancelled
+                                Log.v(
+                                    LOG_TAG,
+                                    "Resume Exception: Can be ignored: " + resumeException.message
+                                )
+                            }
                         }
                     }
 
