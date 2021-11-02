@@ -58,8 +58,8 @@ class DeviceRepository(private val appDatabase: AppDatabase) {
     }
 
     fun isDeviceSupported(bluetoothDevice: BluetoothDevice): Boolean {
-        //Currently only AirBeam Devices supported
-        return bluetoothDevice.name?.startsWith("Airbeam2") == true
+        //Currently only AirBeam and Ruuvi Devices supported
+        return bluetoothDevice.name?.startsWith("Airbeam2") == true || bluetoothDevice.name?.startsWith("Ruuvi") == true
     }
 
     suspend fun removeByAddress(macAddress: String) {

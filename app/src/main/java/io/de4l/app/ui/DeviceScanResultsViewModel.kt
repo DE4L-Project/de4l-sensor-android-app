@@ -1,5 +1,7 @@
 package io.de4l.app.ui
 
+import android.bluetooth.BluetoothDevice
+import android.util.Log
 import androidx.lifecycle.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.de4l.app.bluetooth.BluetoothDeviceManager
@@ -10,6 +12,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNot
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -19,6 +22,8 @@ class DeviceScanResultsViewModel @Inject constructor(
     val deviceRepository: DeviceRepository,
     val bluetoothDeviceManager: BluetoothDeviceManager
 ) : ViewModel() {
+
+    private val LOG_TAG: String = DeviceScanResultsViewModel::class.java.name
 
     val foundDevices: MutableLiveData<DeviceEntity> = MutableLiveData()
     var scanState: LiveData<BluetoothScanState> = bluetoothDeviceManager
@@ -33,6 +38,13 @@ class DeviceScanResultsViewModel @Inject constructor(
         viewModelScope.launch {
             bluetoothDeviceManager
                 .scanForDevices()
+                .map {
+                    Log.i(
+                        LOG_TAG,
+                        it.address + ": [" + it.name + "] " + getDeviceTypeAsString(it.type)
+                    )
+                    it
+                }
                 .filter {
                     deviceRepository.isDeviceSupported(it)
                 }
@@ -53,6 +65,15 @@ class DeviceScanResultsViewModel @Inject constructor(
     fun onDeviceSelected(device: DeviceEntity) {
         viewModelScope.launch {
             deviceRepository.addDevice(device)
+        }
+    }
+
+    fun getDeviceTypeAsString(deviceType: Int): String {
+        return when (deviceType) {
+            1 -> "DEVICE_TYPE_CLASSIC"
+            2 -> "DEVICE_TYPE_LE"
+            3 -> "DEVICE_TYPE_DUAL"
+            else -> "DEVICE_TYPE_UNKNOWN"
         }
     }
 }

@@ -1,8 +1,7 @@
 package io.de4l.app.bluetooth
 
 import android.app.Application
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
+import android.bluetooth.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -19,6 +18,7 @@ import io.de4l.app.ui.event.SensorValueReceivedEvent
 import io.de4l.app.util.RetryException
 import io.de4l.app.util.RetryHelper.Companion.runWithRetry
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.ClosedSendChannelException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import org.greenrobot.eventbus.EventBus
@@ -74,8 +74,18 @@ class BluetoothDeviceManager @Inject constructor(
     suspend fun connect(macAddress: String): Boolean {
         onConnecting(macAddress)
         val bluetoothDevice = findBtDevice(macAddress)
+
         bluetoothDevice?.let {
-            connectToBtDevice(it)
+            if (isBleDevice(it)) {
+                it.connectGatt(application, false, object : BluetoothGattCallback() {
+                    override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
+                        super.onServicesDiscovered(gatt, status)
+                    }
+                })
+            } else {
+                //Legacy device
+                connectToBtDevice(it)
+            }
             return true
         }
         onDisconnected(macAddress)
@@ -113,8 +123,11 @@ class BluetoothDeviceManager @Inject constructor(
                         device?.let {
                             try {
                                 offer(device)
-                            } catch (e: ClosedChannelException) {
-                                Log.v(LOG_TAG, "Closed Channel Exception in BluetoohDeviceManager:onReceive - Can be ignored.")
+                            } catch (e: ClosedSendChannelException) {
+                                Log.v(
+                                    LOG_TAG,
+                                    "Closed Channel Exception in BluetoohDeviceManager:onReceive - Can be ignored."
+                                )
                             }
                         }
                     }
@@ -316,6 +329,10 @@ class BluetoothDeviceManager @Inject constructor(
         deviceRepository.saveDevice(device)
     }
 
+    private fun isBleDevice(bluetoothDevice: BluetoothDevice): Boolean {
+        return bluetoothDevice.type == BluetoothDevice.DEVICE_TYPE_LE || bluetoothDevice.type == BluetoothDevice.DEVICE_TYPE_DUAL
+    }
+
     @Subscribe
     fun onBluetoothDataReceivedEvent(event: BluetoothDataReceivedEvent) {
         val sensorValue =
@@ -327,5 +344,6 @@ class BluetoothDeviceManager @Inject constructor(
             )
         EventBus.getDefault().post(SensorValueReceivedEvent(sensorValue))
     }
+
 
 }
