@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.util.Log
+import io.de4l.app.BuildConfig
 import io.de4l.app.bluetooth.event.BluetoothDataReceivedEvent
 import io.de4l.app.bluetooth.event.BluetoothDeviceConnectedEvent
 import io.de4l.app.bluetooth.event.BluetoothDeviceDisconnectedEvent
@@ -16,7 +17,10 @@ import io.de4l.app.device.DeviceEntity
 import io.de4l.app.device.DeviceRepository
 import io.de4l.app.location.LocationService
 import io.de4l.app.sensor.RuuviTagParser
+import io.de4l.app.sensor.SensorType
+import io.de4l.app.sensor.SensorValue
 import io.de4l.app.sensor.SensorValueParser
+import io.de4l.app.tracking.TrackingManager
 import io.de4l.app.ui.event.SensorValueReceivedEvent
 import io.de4l.app.util.ByteConverter
 import io.de4l.app.util.RetryException
@@ -38,7 +42,8 @@ class BluetoothDeviceManager @Inject constructor(
     val bluetoothAdapter: BluetoothAdapter,
     val locationService: LocationService,
     val deviceRepository: DeviceRepository,
-    val sensorValueParser: SensorValueParser
+    val sensorValueParser: SensorValueParser,
+    val trackingManager: TrackingManager
 
 ) {
     private val LOG_TAG: String = BluetoothDeviceManager::class.java.name
@@ -47,6 +52,8 @@ class BluetoothDeviceManager @Inject constructor(
 
     private var bluetoothConnectionJob: Job? = null
     private var bluetoothSocketConnection: BluetoothSocketConnection? = null
+
+    private var leScanCallback: ScanCallback? = null
 
     val bluetoothScanScanState = MutableStateFlow(BluetoothScanState.NOT_SCANNING)
     val bluetoothConnectionState = MutableStateFlow(BluetoothConnectionState.DISCONNECTED)
@@ -81,26 +88,67 @@ class BluetoothDeviceManager @Inject constructor(
         onConnecting(macAddress)
         val bluetoothDevice = findBtDevice(macAddress)
 
-        bluetoothDevice?.let {
-            if (isSensorBeacon(it)) {
+        bluetoothDevice?.let { device ->
+            if (isSensorBeacon(device)) {
                 coroutineScope.launch {
-                    bluetoothAdapter.bluetoothLeScanner.startScan(object : ScanCallback() {
+
+                    leScanCallback = object : ScanCallback() {
                         override fun onScanResult(callbackType: Int, result: ScanResult?) {
-                            if (result?.device?.address == macAddress) {
-                                val tagData =
-                                    RuuviTagParser().parseFromRawFormat5(result!!.scanRecord!!.bytes)
-                                Log.v(LOG_TAG, tagData.toString())
+                            result?.let { scanResult ->
+                                if (scanResult.device?.address == macAddress) {
+                                    val tagData =
+                                        RuuviTagParser().parseFromRawFormat5(scanResult.scanRecord!!.bytes)
+                                    Log.v(LOG_TAG, tagData.toString())
+
+                                    val location = locationService.getCurrentLocation()
+                                    val timestamp = DateTime()
+
+                                    EventBus.getDefault()
+                                        .post(
+                                            SensorValueReceivedEvent(
+                                                SensorValue(
+                                                    scanResult.device!!.address,
+                                                    SensorType.TEMPERATURE,
+                                                    tagData.temperature,
+                                                    location,
+                                                    timestamp,
+                                                    trackingManager.messageNumber.getAndIncrement(),
+                                                    "",
+                                                    BuildConfig.VERSION_CODE.toString()
+                                                )
+                                            )
+                                        )
+
+                                    EventBus.getDefault()
+                                        .post(
+                                            SensorValueReceivedEvent(
+                                                SensorValue(
+                                                    scanResult.device!!.address,
+                                                    SensorType.HUMIDITY,
+                                                    tagData.humidity,
+                                                    location,
+                                                    timestamp,
+                                                    trackingManager.messageNumber.getAndIncrement(),
+                                                    "",
+                                                    BuildConfig.VERSION_CODE.toString()
+                                                )
+                                            )
+                                        )
+                                }
                             }
                         }
-                    })
+                    }
+
+                    bluetoothAdapter.bluetoothLeScanner.startScan(leScanCallback)
+                    onSuccessfulConnect(device)
                 }
-            } else if (isBleDevice(it)) {
+            } else if (isBleDevice(device)) {
                 coroutineScope.launch(Dispatchers.IO) {
-                    it.connectGatt(application, false, BleGattCallback())
+                    device.connectGatt(application, false, BleGattCallback())
                 }
             } else {
                 //Legacy device
-                connectToBtDevice(it)
+                connectToBtDevice(device)
             }
             return true
         }
@@ -330,6 +378,12 @@ class BluetoothDeviceManager @Inject constructor(
     private suspend fun onDisconnected(device: DeviceEntity) {
         device.connectionState = BluetoothConnectionState.DISCONNECTED
         bluetoothConnectionState.value = BluetoothConnectionState.DISCONNECTED
+
+        leScanCallback?.let {
+            bluetoothAdapter.bluetoothLeScanner.stopScan(it)
+        }
+        leScanCallback = null
+
         saveDevice(device)
         EventBus.getDefault().post(BluetoothDeviceDisconnectedEvent(device))
     }
