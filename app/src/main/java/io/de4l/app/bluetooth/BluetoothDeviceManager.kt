@@ -2,6 +2,8 @@ package io.de4l.app.bluetooth
 
 import android.app.Application
 import android.bluetooth.*
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanResult
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -13,8 +15,10 @@ import io.de4l.app.bluetooth.event.BluetoothDeviceDisconnectedEvent
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.device.DeviceRepository
 import io.de4l.app.location.LocationService
+import io.de4l.app.sensor.RuuviTagParser
 import io.de4l.app.sensor.SensorValueParser
 import io.de4l.app.ui.event.SensorValueReceivedEvent
+import io.de4l.app.util.ByteConverter
 import io.de4l.app.util.RetryException
 import io.de4l.app.util.RetryHelper.Companion.runWithRetry
 import kotlinx.coroutines.*
@@ -24,6 +28,8 @@ import kotlinx.coroutines.flow.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.joda.time.DateTime
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.nio.channels.ClosedChannelException
 import javax.inject.Inject
 
@@ -76,12 +82,22 @@ class BluetoothDeviceManager @Inject constructor(
         val bluetoothDevice = findBtDevice(macAddress)
 
         bluetoothDevice?.let {
-            if (isBleDevice(it)) {
-                it.connectGatt(application, false, object : BluetoothGattCallback() {
-                    override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
-                        super.onServicesDiscovered(gatt, status)
-                    }
-                })
+            if (isSensorBeacon(it)) {
+                coroutineScope.launch {
+                    bluetoothAdapter.bluetoothLeScanner.startScan(object : ScanCallback() {
+                        override fun onScanResult(callbackType: Int, result: ScanResult?) {
+                            if (result?.device?.address == macAddress) {
+                                val tagData =
+                                    RuuviTagParser().parseFromRawFormat5(result!!.scanRecord!!.bytes)
+                                Log.v(LOG_TAG, tagData.toString())
+                            }
+                        }
+                    })
+                }
+            } else if (isBleDevice(it)) {
+                coroutineScope.launch(Dispatchers.IO) {
+                    it.connectGatt(application, false, BleGattCallback())
+                }
             } else {
                 //Legacy device
                 connectToBtDevice(it)
@@ -332,6 +348,17 @@ class BluetoothDeviceManager @Inject constructor(
     private fun isBleDevice(bluetoothDevice: BluetoothDevice): Boolean {
         return bluetoothDevice.type == BluetoothDevice.DEVICE_TYPE_LE || bluetoothDevice.type == BluetoothDevice.DEVICE_TYPE_DUAL
     }
+
+    private fun isSensorBeacon(bluetoothDevice: BluetoothDevice): Boolean {
+        return bluetoothDevice.name?.startsWith("Ruuvi") == true
+    }
+
+//    fun _twosComplement(value: Int, bits: Int): Int {
+//        if (value and (1 shl (bits - 1)) != 0) {
+//            value = value - (1 shl bits)
+//        }
+//        return value
+//    }
 
     @Subscribe
     fun onBluetoothDataReceivedEvent(event: BluetoothDataReceivedEvent) {
