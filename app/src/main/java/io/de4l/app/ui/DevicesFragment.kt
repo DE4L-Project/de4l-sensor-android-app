@@ -110,8 +110,8 @@ class DevicesFragment : Fragment() {
                 }
                 BluetoothConnectionState.DISCONNECTED -> {
                     holder.btnConnectDevice.text = "Connect"
-                    holder.btnConnectDevice.isEnabled =
-                        viewModel.connectionState.value == BluetoothConnectionState.DISCONNECTED
+//                    holder.btnConnectDevice.isEnabled =
+//                        viewModel.connectionState.value == BluetoothConnectionState.DISCONNECTED
                 }
             }
 
