@@ -2,8 +2,12 @@ package io.de4l.app.device
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import io.de4l.app.bluetooth.BluetoothConnectionState
+import io.de4l.app.sensor.SensorValue
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 
 @Entity
 data class DeviceEntity(
@@ -17,5 +21,10 @@ data class DeviceEntity(
     val macAddress: String,
 
     @ColumnInfo
-    var connectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED
-)
+    var connectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED,
+
+
+    ) {
+    @Ignore
+    val sensorValues: MutableStateFlow<SensorValue?> = MutableStateFlow(null)
+}

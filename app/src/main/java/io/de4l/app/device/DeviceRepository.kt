@@ -4,18 +4,21 @@ import android.bluetooth.BluetoothDevice
 import android.util.Log
 import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.database.AppDatabase
+import io.de4l.app.sensor.SensorValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class DeviceRepository(private val appDatabase: AppDatabase) {
     private val LOG_TAG = DeviceRepository::class.java.name
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
+
+    private val _connectedDevices: MutableMap<String, DeviceEntity> = HashMap()
+
+    val connectedDevices: MutableStateFlow<List<DeviceEntity>> =
+        MutableStateFlow(ArrayList())
 
     init {
         //Set isConnected = false for all device on application start
@@ -42,6 +45,11 @@ class DeviceRepository(private val appDatabase: AppDatabase) {
     }
 
     suspend fun saveDevice(device: DeviceEntity) {
+        when (device.connectionState) {
+            BluetoothConnectionState.CONNECTED -> registerDevice(device)
+            else -> unregisterDevice(device)
+        }
+
         try {
             appDatabase.deviceDao().updateDevice(device)
         } catch (e: Exception) {
@@ -59,7 +67,9 @@ class DeviceRepository(private val appDatabase: AppDatabase) {
 
     fun isDeviceSupported(bluetoothDevice: BluetoothDevice): Boolean {
         //Currently only AirBeam and Ruuvi Devices supported
-        return bluetoothDevice.name?.startsWith("Airbeam2") == true || bluetoothDevice.name?.startsWith("Ruuvi") == true
+        return bluetoothDevice.name?.startsWith("Airbeam2") == true || bluetoothDevice.name?.startsWith(
+            "Ruuvi"
+        ) == true
     }
 
     suspend fun removeByAddress(macAddress: String) {
@@ -76,5 +86,19 @@ class DeviceRepository(private val appDatabase: AppDatabase) {
 
     private suspend fun getDevicesFromDb(): Flow<List<DeviceEntity>> {
         return appDatabase.deviceDao().getAll()
+    }
+
+    private suspend fun registerDevice(device: DeviceEntity) {
+        this._connectedDevices[device.macAddress] = device
+        this.connectedDevices.emit(this._connectedDevices.values.toList())
+    }
+
+    private suspend fun unregisterDevice(device: DeviceEntity) {
+        this._connectedDevices.remove(device.macAddress)
+        this.connectedDevices.emit(this._connectedDevices.values.toList())
+    }
+
+    suspend fun sendUpdateForDevice(macAddress: String, sensorValue: SensorValue) {
+        _connectedDevices[macAddress]?.sensorValues?.emit(sensorValue)
     }
 }

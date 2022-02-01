@@ -2,8 +2,12 @@ package io.de4l.app.tracking
 
 import io.de4l.app.mqtt.MqttManager
 import io.de4l.app.ui.event.SensorValueReceivedEvent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import java.util.concurrent.atomic.AtomicLong

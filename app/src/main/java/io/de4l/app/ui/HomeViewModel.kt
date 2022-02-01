@@ -61,7 +61,7 @@ class HomeViewModel @Inject constructor(
         EventBus.getDefault().register(this)
 
         viewModelScope.launch {
-            connectedDevices = deviceRepository.getConnectedDevices().asLiveData()
+            connectedDevices = deviceRepository.connectedDevices.asLiveData()
             bluetoothConnectionState = bluetoothDeviceManager.bluetoothConnectionState.asLiveData()
 
             launch {

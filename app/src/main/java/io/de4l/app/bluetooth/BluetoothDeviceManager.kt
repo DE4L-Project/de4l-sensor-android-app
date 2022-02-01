@@ -423,8 +423,7 @@ class BluetoothDeviceManager @Inject constructor(
                 locationService.getCurrentLocation(),
                 DateTime()
             )
+
         EventBus.getDefault().post(SensorValueReceivedEvent(sensorValue))
     }
-
-
 }
