@@ -68,7 +68,6 @@ class BackgroundService() : Service() {
         return null;
     }
 
-    @ExperimentalCoroutinesApi
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.v(LOG_TAG, "onStartCommand()")
 

@@ -16,6 +16,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import io.de4l.app.AppConstants
 import io.de4l.app.auth.AuthManager
+import io.de4l.app.bluetooth.BleConnectionManager
 import io.de4l.app.bluetooth.BluetoothDeviceManager
 import io.de4l.app.database.AppDatabase
 import io.de4l.app.device.DeviceRepository
@@ -25,6 +26,7 @@ import io.de4l.app.mqtt.MqttMessagePersistence
 import io.de4l.app.sensor.SensorValueParser
 import io.de4l.app.tracking.BackgroundServiceWatcher
 import io.de4l.app.tracking.TrackingManager
+import no.nordicsemi.android.ble.BleManager
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
@@ -82,7 +84,8 @@ class AppModule() {
         locationService: LocationService,
         deviceRepository: DeviceRepository,
         sensorValueParser: SensorValueParser,
-        trackingManager: TrackingManager
+        trackingManager: TrackingManager,
+        bleConnectionManager: BleConnectionManager
     ): BluetoothDeviceManager {
         return BluetoothDeviceManager(
             application,
@@ -90,7 +93,8 @@ class AppModule() {
             locationService,
             deviceRepository,
             sensorValueParser,
-            trackingManager
+            trackingManager,
+            bleConnectionManager
         )
     }
 
@@ -135,6 +139,15 @@ class AppModule() {
         mqttManager: MqttManager
     ): TrackingManager {
         return TrackingManager(mqttManager)
+    }
+
+    @Singleton
+    @Provides
+    fun provideBleConnectionManager(
+        application: Application,
+        sensorValueParser: SensorValueParser
+    ): BleConnectionManager {
+        return BleConnectionManager(application, sensorValueParser)
     }
 
     private fun migrate(): Migration {

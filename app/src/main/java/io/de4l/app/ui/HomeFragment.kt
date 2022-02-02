@@ -83,7 +83,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         return inflater.inflate(R.layout.fragment_home, container, false)
     }
 
-    @ExperimentalCoroutinesApi
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 

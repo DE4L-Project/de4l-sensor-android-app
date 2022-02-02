@@ -29,12 +29,14 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ClosedSendChannelException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
+import no.nordicsemi.android.ble.BleManager
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.joda.time.DateTime
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.channels.ClosedChannelException
+import java.util.*
 import javax.inject.Inject
 
 class BluetoothDeviceManager @Inject constructor(
@@ -43,7 +45,8 @@ class BluetoothDeviceManager @Inject constructor(
     val locationService: LocationService,
     val deviceRepository: DeviceRepository,
     val sensorValueParser: SensorValueParser,
-    val trackingManager: TrackingManager
+    val trackingManager: TrackingManager,
+    val bleConnectionManager: BleConnectionManager
 
 ) {
     private val LOG_TAG: String = BluetoothDeviceManager::class.java.name
@@ -57,6 +60,8 @@ class BluetoothDeviceManager @Inject constructor(
 
     val bluetoothScanScanState = MutableStateFlow(BluetoothScanState.NOT_SCANNING)
     val bluetoothConnectionState = MutableStateFlow(BluetoothConnectionState.DISCONNECTED)
+
+    private var bleConnectionGatt: BluetoothGatt? = null;
 
     init {
         EventBus.getDefault().register(this)
@@ -144,7 +149,31 @@ class BluetoothDeviceManager @Inject constructor(
                 }
             } else if (isBleDevice(device)) {
                 coroutineScope.launch(Dispatchers.IO) {
-                    device.connectGatt(application, false, BleGattCallback())
+                    bleConnectionManager.connect(device).enqueue()
+
+
+//
+//                    val SERVICE_UUID = UUID.fromString("0000ffdd-0000-1000-8000-00805f9b34fb")
+//                    val service = connection.getService(SERVICE_UUID)
+//                    val MEASUREMENTS_CHARACTERISTIC_UUIDS = arrayListOf(
+//                        UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb"),    // Temperature
+//                        UUID.fromString("0000ffe3-0000-1000-8000-00805f9b34fb"),    // Humidity
+//                        UUID.fromString("0000ffe4-0000-1000-8000-00805f9b34fb"),    // PM1
+//                        UUID.fromString("0000ffe5-0000-1000-8000-00805f9b34fb"),    // PM2.5
+//                        UUID.fromString("0000ffe6-0000-1000-8000-00805f9b34fb")     // PM10
+//                    )
+//
+//                    var measurementsCharacteristics: List<BluetoothGattCharacteristic>? = null
+//
+//                    measurementsCharacteristics =
+//                        MEASUREMENTS_CHARACTERISTIC_UUIDS.mapNotNull { uuid ->
+//                            service.getCharacteristic(uuid)
+//                        }
+//
+//                    measurementsCharacteristics.forEach {
+//                        bluetoothGattCharacteristic ->
+//                    }
+
                 }
             } else {
                 //Legacy device

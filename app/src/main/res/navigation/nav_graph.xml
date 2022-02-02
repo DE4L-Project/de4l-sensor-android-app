@@ -49,4 +49,8 @@
         android:id="@+id/infoFragment"
         android:name="io.de4l.app.ui.InfoFragment"
         android:label="InfoFragment" />
+    <fragment
+        android:id="@+id/debugFragment"
+        android:name="io.de4l.app.ui.DebugFragment"
+        android:label="DebugFragment" />
 </navigation>
