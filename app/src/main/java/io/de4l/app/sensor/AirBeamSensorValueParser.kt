@@ -5,7 +5,7 @@ import io.de4l.app.location.Location
 import io.de4l.app.tracking.TrackingManager
 import org.joda.time.DateTime
 
-class SensorValueParser(private val trackingManager: TrackingManager) {
+class AirBeamSensorValueParser(private val trackingManager: TrackingManager) {
 
     fun parseLine(
         deviceId: String,

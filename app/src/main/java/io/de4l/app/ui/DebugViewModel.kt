@@ -1,10 +1,7 @@
 package io.de4l.app.ui
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.de4l.app.R
 import io.de4l.app.bluetooth.BluetoothConnectionState
@@ -12,6 +9,7 @@ import io.de4l.app.bluetooth.BluetoothDeviceManager
 import io.de4l.app.bluetooth.event.BluetoothDeviceConnectedEvent
 import io.de4l.app.bluetooth.event.ConnectToBluetoothDeviceEvent
 import io.de4l.app.device.DeviceEntity
+import io.de4l.app.device.DeviceRepository
 import io.de4l.app.tracking.BackgroundServiceWatcher
 import io.de4l.app.ui.event.NavigationEvent
 import kotlinx.coroutines.launch
@@ -23,11 +21,22 @@ import javax.inject.Inject
 class DebugViewModel @Inject constructor(
     private val bluetoothDeviceManager: BluetoothDeviceManager,
     private val backgroundServiceWatcher: BackgroundServiceWatcher,
+    private val deviceRepository: DeviceRepository,
     application: Application
 ) : AndroidViewModel(application) {
 
+    lateinit var connectionState: LiveData<BluetoothConnectionState>
+    lateinit var _device: LiveData<DeviceEntity?>
+
+
+    private val AIRBEAM3_TEST_ADDRESS = "E8:68:E7:38:89:CA"
+
     init {
         viewModelScope.launch {
+            connectionState = bluetoothDeviceManager.bluetoothConnectionState.asLiveData()
+            _device = bluetoothDeviceManager.deviceRepository
+                .getByAddress(AIRBEAM3_TEST_ADDRESS)
+                .asLiveData()
         }
 
         EventBus.getDefault().register(this)
@@ -39,7 +48,7 @@ class DebugViewModel @Inject constructor(
     }
 
     fun onDeviceConnectClicked() {
-        val airBeam3TestMacAddress = "E8:68:E7:38:88:A2"
+        val airBeam3TestMacAddress = AIRBEAM3_TEST_ADDRESS
 
         viewModelScope.launch {
             backgroundServiceWatcher.sendEventToService(

@@ -1,19 +1,22 @@
 package io.de4l.app.bluetooth
 
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
 import android.util.Log
-import io.de4l.app.sensor.SensorValueParser
+import io.de4l.app.bluetooth.event.BleDeviceServicesInvalidatedEvent
+import io.de4l.app.sensor.AirBeamSensorValueParser
+import io.de4l.app.ui.event.SensorValueReceivedEvent
 import io.de4l.app.util.ByteConverter
 import no.nordicsemi.android.ble.BleManager
-import no.nordicsemi.android.ble.ktx.suspend
+import org.greenrobot.eventbus.EventBus
 import org.joda.time.DateTime
 import java.util.*
 
 class BleConnectionManager(
     context: Context,
-    val sensorValueParser: SensorValueParser
+    val airBeamSensorValueParser: AirBeamSensorValueParser
 ) :
     BleManager(context) {
 
@@ -22,7 +25,6 @@ class BleConnectionManager(
     private val SERVICE_UUID = UUID.fromString("0000ffdd-0000-1000-8000-00805f9b34fb")
     private val CONFIGURATION_CHARACTERISTIC_UUID =
         UUID.fromString("0000ffde-0000-1000-8000-00805f9b34fb")
-
 
     private val BEGIN_MESSAGE_CODE = 0xfe.toByte()
     private val END_MESSAGE_CODE = 0xff.toByte()
@@ -49,7 +51,14 @@ class BleConnectionManager(
 
     private inner class BleConnectionManagerGattCallback() :
         BleManagerGattCallback() {
+
+        private var bleDeviceType: BleDeviceTypeEnum? = null
+        private var device: BluetoothDevice? = null;
+
         override fun isRequiredServiceSupported(gatt: BluetoothGatt): Boolean {
+            bleDeviceType = getDeviceType(gatt.device)
+            device = gatt.device
+
 
             val service = gatt.getService(SERVICE_UUID)
             configurationCharacteristic =
@@ -58,28 +67,49 @@ class BleConnectionManager(
             measurementsCharacteristics = MEASUREMENTS_CHARACTERISTIC_UUIDS.mapNotNull { uuid ->
                 service.getCharacteristic(uuid)
             }
-            return configurationCharacteristic != null && measurementsCharacteristics.isNotEmpty()
+            return bleDeviceType != null
+                    && device != null
+                    && configurationCharacteristic != null
+                    && measurementsCharacteristics.isNotEmpty()
         }
+
+        private fun getDeviceType(device: BluetoothDevice?): BleDeviceTypeEnum? {
+            device?.let {
+                return with(it.name) {
+                    when {
+                        startsWith("AirBeam3") -> BleDeviceTypeEnum.AIRBEAM3
+                        else -> null
+                    }
+                }
+            }
+            return null
+        }
+
 
         override fun onServicesInvalidated() {
+            //Null check in initialization
+            EventBus.getDefault().post(BleDeviceServicesInvalidatedEvent(device!!))
             configurationCharacteristic = null
             measurementsCharacteristics = emptyList()
+            device = null;
         }
 
-        override fun initialize() {
 
+        override fun initialize() {
             measurementsCharacteristics.forEach {
                 setNotificationCallback(it)
                     .with { device, data ->
-                        val sensorValue =
-                            sensorValueParser.parseLine(
-                                device.address,
-                                String(data.value!!),
-                                null,
-                                DateTime()
-                            )
-
-                        Log.i(LOG_TAG, sensorValue.toJson().toString())
+                        if (bleDeviceType == BleDeviceTypeEnum.AIRBEAM3) {
+                            val sensorValue =
+                                airBeamSensorValueParser.parseLine(
+                                    device.address,
+                                    String(data.value!!),
+                                    null,
+                                    DateTime()
+                                )
+                            Log.i(LOG_TAG, sensorValue.toJson().toString())
+                            EventBus.getDefault().post(SensorValueReceivedEvent(sensorValue))
+                        }
                     }
             }
 
@@ -122,6 +152,7 @@ class BleConnectionManager(
 
             queue.enqueue()
         }
+
     }
 
 }

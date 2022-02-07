@@ -23,10 +23,9 @@ import io.de4l.app.device.DeviceRepository
 import io.de4l.app.location.LocationService
 import io.de4l.app.mqtt.MqttManager
 import io.de4l.app.mqtt.MqttMessagePersistence
-import io.de4l.app.sensor.SensorValueParser
+import io.de4l.app.sensor.AirBeamSensorValueParser
 import io.de4l.app.tracking.BackgroundServiceWatcher
 import io.de4l.app.tracking.TrackingManager
-import no.nordicsemi.android.ble.BleManager
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
@@ -83,7 +82,7 @@ class AppModule() {
         bluetoothAdapter: BluetoothAdapter,
         locationService: LocationService,
         deviceRepository: DeviceRepository,
-        sensorValueParser: SensorValueParser,
+        airBeamSensorValueParser: AirBeamSensorValueParser,
         trackingManager: TrackingManager,
         bleConnectionManager: BleConnectionManager
     ): BluetoothDeviceManager {
@@ -92,7 +91,7 @@ class AppModule() {
             bluetoothAdapter,
             locationService,
             deviceRepository,
-            sensorValueParser,
+            airBeamSensorValueParser,
             trackingManager,
             bleConnectionManager
         )
@@ -128,8 +127,8 @@ class AppModule() {
 
     @Singleton
     @Provides
-    fun providesSensorValueParser(trackingManager: TrackingManager): SensorValueParser {
-        return SensorValueParser(trackingManager)
+    fun providesSensorValueParser(trackingManager: TrackingManager): AirBeamSensorValueParser {
+        return AirBeamSensorValueParser(trackingManager)
     }
 
 
@@ -145,9 +144,9 @@ class AppModule() {
     @Provides
     fun provideBleConnectionManager(
         application: Application,
-        sensorValueParser: SensorValueParser
+        airBeamSensorValueParser: AirBeamSensorValueParser
     ): BleConnectionManager {
-        return BleConnectionManager(application, sensorValueParser)
+        return BleConnectionManager(application, airBeamSensorValueParser)
     }
 
     private fun migrate(): Migration {

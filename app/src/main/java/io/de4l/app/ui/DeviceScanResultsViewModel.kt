@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.de4l.app.bluetooth.BluetoothDeviceManager
+import io.de4l.app.bluetooth.BluetoothDeviceType
 import io.de4l.app.bluetooth.BluetoothScanState
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.device.DeviceRepository
@@ -52,7 +53,8 @@ class DeviceScanResultsViewModel @Inject constructor(
                     deviceRepository.containsDeviceAddress(it.address)
                 }
                 .collect {
-                    foundDevices.value = DeviceEntity(null, it.name, it.address)
+                    foundDevices.value =
+                        DeviceEntity(null, it.name, it.address, getBluetoothDeviceType(it))
                 }
         }
     }
@@ -75,5 +77,9 @@ class DeviceScanResultsViewModel @Inject constructor(
             3 -> "DEVICE_TYPE_DUAL"
             else -> "DEVICE_TYPE_UNKNOWN"
         }
+    }
+
+    fun getBluetoothDeviceType(bluetoothDevice: BluetoothDevice): BluetoothDeviceType {
+        return BluetoothDeviceManager.getBluetoothDeviceTypeForDevice(bluetoothDevice)
     }
 }

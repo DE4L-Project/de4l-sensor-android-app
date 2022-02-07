@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.util.Log
 import io.de4l.app.BuildConfig
+import io.de4l.app.bluetooth.event.BleDeviceServicesInvalidatedEvent
 import io.de4l.app.bluetooth.event.BluetoothDataReceivedEvent
 import io.de4l.app.bluetooth.event.BluetoothDeviceConnectedEvent
 import io.de4l.app.bluetooth.event.BluetoothDeviceDisconnectedEvent
@@ -19,24 +20,19 @@ import io.de4l.app.location.LocationService
 import io.de4l.app.sensor.RuuviTagParser
 import io.de4l.app.sensor.SensorType
 import io.de4l.app.sensor.SensorValue
-import io.de4l.app.sensor.SensorValueParser
+import io.de4l.app.sensor.AirBeamSensorValueParser
 import io.de4l.app.tracking.TrackingManager
 import io.de4l.app.ui.event.SensorValueReceivedEvent
-import io.de4l.app.util.ByteConverter
 import io.de4l.app.util.RetryException
 import io.de4l.app.util.RetryHelper.Companion.runWithRetry
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ClosedSendChannelException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
-import no.nordicsemi.android.ble.BleManager
+import no.nordicsemi.android.ble.ktx.suspend
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.joda.time.DateTime
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.nio.channels.ClosedChannelException
-import java.util.*
 import javax.inject.Inject
 
 class BluetoothDeviceManager @Inject constructor(
@@ -44,7 +40,7 @@ class BluetoothDeviceManager @Inject constructor(
     val bluetoothAdapter: BluetoothAdapter,
     val locationService: LocationService,
     val deviceRepository: DeviceRepository,
-    val sensorValueParser: SensorValueParser,
+    val airBeamSensorValueParser: AirBeamSensorValueParser,
     val trackingManager: TrackingManager,
     val bleConnectionManager: BleConnectionManager
 
@@ -148,42 +144,17 @@ class BluetoothDeviceManager @Inject constructor(
                     onSuccessfulConnect(device)
                 }
             } else if (isBleDevice(device)) {
-                coroutineScope.launch(Dispatchers.IO) {
-                    bleConnectionManager.connect(device).enqueue()
-
-
-//
-//                    val SERVICE_UUID = UUID.fromString("0000ffdd-0000-1000-8000-00805f9b34fb")
-//                    val service = connection.getService(SERVICE_UUID)
-//                    val MEASUREMENTS_CHARACTERISTIC_UUIDS = arrayListOf(
-//                        UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb"),    // Temperature
-//                        UUID.fromString("0000ffe3-0000-1000-8000-00805f9b34fb"),    // Humidity
-//                        UUID.fromString("0000ffe4-0000-1000-8000-00805f9b34fb"),    // PM1
-//                        UUID.fromString("0000ffe5-0000-1000-8000-00805f9b34fb"),    // PM2.5
-//                        UUID.fromString("0000ffe6-0000-1000-8000-00805f9b34fb")     // PM10
-//                    )
-//
-//                    var measurementsCharacteristics: List<BluetoothGattCharacteristic>? = null
-//
-//                    measurementsCharacteristics =
-//                        MEASUREMENTS_CHARACTERISTIC_UUIDS.mapNotNull { uuid ->
-//                            service.getCharacteristic(uuid)
-//                        }
-//
-//                    measurementsCharacteristics.forEach {
-//                        bluetoothGattCharacteristic ->
-//                    }
-
-                }
+                connectBleDevice(device)
             } else {
                 //Legacy device
-                connectToBtDevice(device)
+                connectLegacyBtDevice(device)
             }
             return true
         }
         onDisconnected(macAddress)
         return false
     }
+
 
     //https://github.com/ThanosFisherman/BlueFlow
     @ExperimentalCoroutinesApi
@@ -219,7 +190,7 @@ class BluetoothDeviceManager @Inject constructor(
                             } catch (e: ClosedSendChannelException) {
                                 Log.v(
                                     LOG_TAG,
-                                    "Closed Channel Exception in BluetoohDeviceManager:onReceive - Can be ignored."
+                                    "Closed Channel Exception in BluetoothDeviceManager:onReceive - Can be ignored."
                                 )
                             }
                         }
@@ -255,9 +226,26 @@ class BluetoothDeviceManager @Inject constructor(
     }
 
     fun disconnect(device: DeviceEntity) {
-        closeBtConnection()
-        bluetoothConnectionJob?.cancel()
-        bluetoothConnectionJob = null
+
+        when (device.bluetoothDeviceType) {
+            BluetoothDeviceType.LEGACY_BLUETOOTH -> {
+                closeLegacyBtConnection()
+                bluetoothConnectionJob?.cancel()
+                bluetoothConnectionJob = null
+            }
+            BluetoothDeviceType.BLE -> {
+                bleConnectionManager.disconnect().enqueue()
+            }
+            BluetoothDeviceType.BLE_BEACON -> TODO()
+            else -> {
+                Log.i(
+                    LOG_TAG,
+                    "Trying to disconnect unknown BT DeviceType: ${device.macAddress} | ${device.name}"
+                )
+            }
+        }
+
+
         coroutineScope.launch {
             onDisconnected(device)
         }
@@ -280,7 +268,7 @@ class BluetoothDeviceManager @Inject constructor(
 
         val bluetoothDevice = findBtDeviceWithRetry(macAddress)
         bluetoothDevice?.let {
-            runWithRetry { connectToBtDevice(it) }
+            runWithRetry { connectLegacyBtDevice(it) }
         }
     }
 
@@ -313,11 +301,22 @@ class BluetoothDeviceManager @Inject constructor(
         return discoveredDevice
     }
 
+    private fun connectBleDevice(device: BluetoothDevice) {
+        coroutineScope.launch(Dispatchers.IO) {
+            bleConnectionManager
+                .connect(device)
+                .fail { device, status ->
+                    Log.i(LOG_TAG, "Connect failed ${device.address} - Status: $status")
+                }
+                .suspend()
+            onSuccessfulConnect(device);
+        }
+    }
 
-    private suspend fun connectToBtDevice(
+    private suspend fun connectLegacyBtDevice(
         device: BluetoothDevice,
     ) {
-        closeBtConnection()
+        closeLegacyBtConnection()
         bluetoothConnectionJob = coroutineScope.launch(Dispatchers.IO) {
             bluetoothSocketConnection = BluetoothSocketConnection(device)
 
@@ -330,7 +329,7 @@ class BluetoothDeviceManager @Inject constructor(
                 disconnect(device)
             } catch (e: BluetoothConnectionLostException) {
                 Log.e(LOG_TAG, "Connection lost: ${e.message}")
-                closeBtConnection()
+                closeLegacyBtConnection()
                 onReconnecting(device.address)
                 connectWithRetry(device.address)
             }
@@ -345,7 +344,7 @@ class BluetoothDeviceManager @Inject constructor(
     }
 
 
-    private fun closeBtConnection() {
+    private fun closeLegacyBtConnection() {
         bluetoothSocketConnection?.closeConnection()
         bluetoothSocketConnection = null
     }
@@ -428,25 +427,11 @@ class BluetoothDeviceManager @Inject constructor(
         deviceRepository.saveDevice(device)
     }
 
-    private fun isBleDevice(bluetoothDevice: BluetoothDevice): Boolean {
-        return bluetoothDevice.type == BluetoothDevice.DEVICE_TYPE_LE || bluetoothDevice.type == BluetoothDevice.DEVICE_TYPE_DUAL
-    }
-
-    private fun isSensorBeacon(bluetoothDevice: BluetoothDevice): Boolean {
-        return bluetoothDevice.name?.startsWith("Ruuvi") == true
-    }
-
-//    fun _twosComplement(value: Int, bits: Int): Int {
-//        if (value and (1 shl (bits - 1)) != 0) {
-//            value = value - (1 shl bits)
-//        }
-//        return value
-//    }
 
     @Subscribe
     fun onBluetoothDataReceivedEvent(event: BluetoothDataReceivedEvent) {
         val sensorValue =
-            sensorValueParser.parseLine(
+            airBeamSensorValueParser.parseLine(
                 event.device.address,
                 event.data,
                 locationService.getCurrentLocation(),
@@ -454,5 +439,28 @@ class BluetoothDeviceManager @Inject constructor(
             )
 
         EventBus.getDefault().post(SensorValueReceivedEvent(sensorValue))
+    }
+
+    @Subscribe
+    fun onBleDeviceServicesInvalidatedEvent(event: BleDeviceServicesInvalidatedEvent) {
+        disconnect(event.device)
+    }
+
+    companion object {
+        fun getBluetoothDeviceTypeForDevice(device: BluetoothDevice): BluetoothDeviceType {
+            return when {
+                isSensorBeacon(device) -> BluetoothDeviceType.BLE_BEACON
+                isBleDevice(device) -> BluetoothDeviceType.BLE
+                else -> BluetoothDeviceType.LEGACY_BLUETOOTH
+            }
+        }
+
+        private fun isBleDevice(bluetoothDevice: BluetoothDevice): Boolean {
+            return bluetoothDevice.type == BluetoothDevice.DEVICE_TYPE_LE || bluetoothDevice.type == BluetoothDevice.DEVICE_TYPE_DUAL
+        }
+
+        private fun isSensorBeacon(bluetoothDevice: BluetoothDevice): Boolean {
+            return bluetoothDevice.name?.startsWith("Ruuvi") == true
+        }
     }
 }
