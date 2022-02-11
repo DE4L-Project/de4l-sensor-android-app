@@ -59,8 +59,8 @@ class BleConnectionManager(
             bleDeviceType = getDeviceType(gatt.device)
             device = gatt.device
 
+            val service = gatt.getService(SERVICE_UUID) ?: return false
 
-            val service = gatt.getService(SERVICE_UUID)
             configurationCharacteristic =
                 service.getCharacteristic(CONFIGURATION_CHARACTERISTIC_UUID)
 
@@ -88,10 +88,13 @@ class BleConnectionManager(
 
         override fun onServicesInvalidated() {
             //Null check in initialization
-            EventBus.getDefault().post(BleDeviceServicesInvalidatedEvent(device!!))
+            device?.let {
+                EventBus.getDefault().post(BleDeviceServicesInvalidatedEvent(it))
+                device = null;
+            }
+
             configurationCharacteristic = null
             measurementsCharacteristics = emptyList()
-            device = null;
         }
 
 

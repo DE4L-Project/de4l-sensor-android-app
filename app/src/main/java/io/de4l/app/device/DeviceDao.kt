@@ -16,10 +16,10 @@ interface DeviceDao {
     @Query("SELECT * FROM DeviceEntity WHERE name = :name")
     suspend fun getByName(name: String): DeviceEntity?
 
-    @Query("SELECT * FROM DeviceEntity WHERE connectionState = :connectionState")
+    @Query("SELECT * FROM DeviceEntity WHERE actualConnectionState = :connectionState")
     fun getConnectedDevices(connectionState: BluetoothConnectionState = BluetoothConnectionState.CONNECTED): Flow<List<DeviceEntity?>>
 
-    @Query("UPDATE DeviceEntity SET connectionState = :connectionState")
+    @Query("UPDATE DeviceEntity SET actualConnectionState = :connectionState")
     fun resetConnections(connectionState: String = BluetoothConnectionState.DISCONNECTED.toString())
 
     @Update

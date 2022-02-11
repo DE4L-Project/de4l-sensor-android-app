@@ -24,8 +24,10 @@ data class DeviceEntity(
     var bluetoothDeviceType: BluetoothDeviceType,
 
     @ColumnInfo
-    var connectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED
+    var actualConnectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED,
 
+    @ColumnInfo
+    var targetConnectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED
 
 ) {
 

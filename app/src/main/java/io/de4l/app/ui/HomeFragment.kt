@@ -3,6 +3,7 @@ package io.de4l.app.ui
 import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.os.Bundle
+import android.util.EventLog
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -54,11 +55,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private var mapView: MapView? = null
 
     private lateinit var constraintLayout: ConstraintLayout
-//    private lateinit var tvTemperatureValue: TextView
-//    private lateinit var tvHumidityValue: TextView
-//    private lateinit var tvPm1Value: TextView
-//    private lateinit var tvPm25Value: TextView
-//    private lateinit var tvPm10Value: TextView
 
     private lateinit var tvBtConnectHeader: TextView
     private lateinit var btnBtConnect: FloatingActionButton
@@ -87,26 +83,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-//        viewModel.temperature.observe(viewLifecycleOwner) { value ->
-//            updateTemperature(value)
-//        }
-//
-//        viewModel.humidity.observe(viewLifecycleOwner) { value ->
-//            updateHumidity(value)
-//        }
-//
-//        viewModel.pm1.observe(viewLifecycleOwner) { value ->
-//            updatePm1(value)
-//        }
-//
-//        viewModel.pm25.observe(viewLifecycleOwner) { value ->
-//            updatePm25(value)
-//        }
-//
-//        viewModel.pm10.observe(viewLifecycleOwner) { value ->
-//            updatePm10(value)
-//        }
-
         viewModel.location.observe(viewLifecycleOwner) { location ->
             updateLocation(location)
         }
@@ -132,32 +108,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
         viewModel.connectedDevices.observe(viewLifecycleOwner) { connectedDevices ->
             if (connectedDevices.isNotEmpty()) {
-                tvBtConnectFooter.text = connectedDevices[0].name ?: "Unknown"
-            }
-        }
-
-        viewModel.bluetoothConnectionState.observe(viewLifecycleOwner) { deviceConnectionState ->
-            when (deviceConnectionState) {
-                BluetoothConnectionState.CONNECTED -> {
-                    styleFabButtonActive(btnBtConnect)
-                }
-                BluetoothConnectionState.CONNECTING -> {
-                    tvBtConnectFooter.text = "Connecting..."
-                    styleFabButtonInactive(btnBtConnect)
-                }
-                BluetoothConnectionState.RECONNECTING -> {
-                    tvBtConnectFooter.text = "Reconnecting..."
-                    styleFabButtonInactive(btnBtConnect)
-                }
-                BluetoothConnectionState.DISCONNECTED -> {
-                    tvBtConnectFooter.text = "Disconnected"
-                    styleFabButtonInactive(btnBtConnect)
-                }
-                null -> {
-                    //Not possible in Kotlin, but Java
-                    tvBtConnectFooter.text = "Disconnected"
-                    styleFabButtonInactive(btnBtConnect)
-                }
+                tvBtConnectFooter.text = connectedDevices.size.toString() + " Sensors"
+                styleFabButtonActive(btnBtConnect)
+            } else {
+                tvBtConnectFooter.text = "No Sensors connected"
+                styleFabButtonInactive(btnBtConnect)
             }
         }
 
@@ -166,12 +121,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         mapView = view.findViewById(R.id.mapView)
         mapView?.onCreate(savedInstanceState)
         mapView?.getMapAsync(this)
-
-//        tvTemperatureValue = view.findViewById(R.id.tvTemperatureValue)
-//        tvHumidityValue = view.findViewById(R.id.tvHumidityValue)
-//        tvPm1Value = view.findViewById(R.id.tvPm1Value)
-//        tvPm25Value = view.findViewById(R.id.tvPm25Value)
-//        tvPm10Value = view.findViewById(R.id.tvPm10Value)
 
         tvBtConnectHeader = view.findViewById(R.id.tvBtConnectionHeader)
         btnBtConnect = view.findViewById(R.id.btnBtConnection)
@@ -372,21 +321,42 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         inner class ViewHolder(listItemView: View) : RecyclerView.ViewHolder(listItemView) {
             lateinit var item: DeviceEntity
             val tvTemperature: TextView = listItemView.findViewById(R.id.tvTemperatureValue)
+            val tvHumidity: TextView = listItemView.findViewById(R.id.tvHumidityValue)
+            val tvPm1: TextView = listItemView.findViewById(R.id.tvPm1Value)
+            val tvPm25: TextView = listItemView.findViewById(R.id.tvPm25Value)
+            val tvPm10: TextView = listItemView.findViewById(R.id.tvPm10Value)
 
-//            init {
-//                EventBus.getDefault().register(this)
-//            }
+            val tvDeviceAddress: TextView = listItemView.findViewById(R.id.tvDeviceAddress)
 
-//            @Subscribe
-//            public fun onSensorEvent(event: SensorValueReceivedEvent) {
-//                if (event.sensorValue.airBeamId != item.macAddress) {
-//                    return
-//                }
-//
-//                if (event.sensorValue.sensorType === SensorType.TEMPERATURE) {
-//                    tvTemperature.text = String.format("%.2f °C", event.sensorValue.value)
-//                }
-//            }
+            @Subscribe
+            public fun onSensorEvent(event: SensorValueReceivedEvent) {
+                if (event.sensorValue.airBeamId != item.macAddress) {
+                    return
+                }
+
+                if (event.sensorValue.sensorType === SensorType.TEMPERATURE) {
+                    tvTemperature.text = String.format("%.2f °C", event.sensorValue.value)
+                }
+
+                if (event.sensorValue.sensorType === SensorType.HUMIDITY) {
+                    tvHumidity.text = String.format("%.2f  %%", event.sensorValue.value)
+                }
+
+                if (event.sensorValue.sensorType === SensorType.PM1) {
+                    tvPm1.text = String.format("%.0f ppm", event.sensorValue.value)
+                }
+
+                if (event.sensorValue.sensorType === SensorType.PM2_5) {
+                    tvPm25.text = String.format("%.0f ppm", event.sensorValue.value)
+                }
+
+                if (event.sensorValue.sensorType === SensorType.PM10) {
+                    tvPm10.text = String.format("%.0f ppm", event.sensorValue.value)
+                }
+
+            }
+
+
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -410,10 +380,13 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val device = _devices[position]
             holder.item = device
+            holder.tvDeviceAddress.text = device.macAddress + " - " + (device.name ?: "UNKNOWN")
 
-            device.sensorValues.asLiveData().observe(lifecycleOwner) {
-                holder.tvTemperature.text = String.format("%.2f °C", it?.value)
-            }
+            EventBus.getDefault().register(holder)
+
+//            device.sensorValues.asLiveData().observe(lifecycleOwner) {
+//                holder.tvTemperature.text = String.format("%.2f °C", it?.value)
+//            }
 
 //            when (device.connectionState) {
 //                BluetoothConnectionState.CONNECTED -> {
@@ -446,9 +419,19 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
         }
 
+        override fun onViewDetachedFromWindow(holder: ViewHolder) {
+            super.onViewDetachedFromWindow(holder)
+            EventBus.getDefault().unregister(holder)
+        }
+
+        override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+            super.onAttachedToRecyclerView(recyclerView)
+        }
+
         override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
             super.onDetachedFromRecyclerView(recyclerView)
         }
+
 
         override fun getItemCount(): Int {
             return _devices.size

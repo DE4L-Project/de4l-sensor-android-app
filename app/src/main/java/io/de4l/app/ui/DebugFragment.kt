@@ -39,7 +39,7 @@ class DebugFragment : Fragment() {
 
         viewModel._device.observe(viewLifecycleOwner) {
             it?.let {
-                tvConnectionState.text = "${it.macAddress} ${it.connectionState.name}"
+                tvConnectionState.text = "${it.macAddress} ${it.actualConnectionState.name}"
             }
         }
     }

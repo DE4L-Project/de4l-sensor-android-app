@@ -95,7 +95,7 @@ class DevicesFragment : Fragment() {
             val device = _devices[position]
             holder.item = device
 
-            when (device.connectionState) {
+            when (device.actualConnectionState) {
                 BluetoothConnectionState.CONNECTED -> {
                     holder.btnConnectDevice.text = "Disconnect"
                     holder.btnConnectDevice.isEnabled = true

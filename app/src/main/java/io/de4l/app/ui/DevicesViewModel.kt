@@ -64,9 +64,14 @@ class DevicesViewModel @Inject constructor(
     fun onDeviceConnectClicked(device: DeviceEntity) {
         viewModelScope.launch {
             device.let { device ->
-                if (device.connectionState != BluetoothConnectionState.CONNECTED) {
+                if (device.actualConnectionState != BluetoothConnectionState.CONNECTED) {
+                    device.targetConnectionState = BluetoothConnectionState.CONNECTED
+                    deviceRepository.saveDevice(device)
+
                     backgroundServiceWatcher.sendEventToService(ConnectToBluetoothDeviceEvent(device.macAddress))
                 } else {
+                    device.targetConnectionState = BluetoothConnectionState.DISCONNECTED
+                    deviceRepository.saveDevice(device)
                     bluetoothDeviceManager.disconnect(device)
                 }
             }
@@ -75,7 +80,7 @@ class DevicesViewModel @Inject constructor(
 
     private fun onDeviceRemoveClicked(device: DeviceEntity) {
         viewModelScope.launch {
-            if (device.connectionState != BluetoothConnectionState.DISCONNECTED) {
+            if (device.actualConnectionState != BluetoothConnectionState.DISCONNECTED) {
                 bluetoothDeviceManager.disconnect(device)
             }
             deviceRepository.removeByAddress(device.macAddress)

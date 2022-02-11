@@ -41,12 +41,6 @@ class HomeViewModel @Inject constructor(
     private val application: Application
 ) : ViewModel() {
 
-    val temperature = MutableLiveData<Double?>()
-    val humidity = MutableLiveData<Double?>()
-    val pm1 = MutableLiveData<Double?>()
-    val pm25 = MutableLiveData<Double?>()
-    val pm10 = MutableLiveData<Double?>()
-
     val location = MutableLiveData<Location?>(locationManager.getCurrentLocation())
     val user = authManager.user.asLiveData()
     val versionInfo =
@@ -54,23 +48,13 @@ class HomeViewModel @Inject constructor(
 
     lateinit var trackingEnabled: LiveData<Boolean>
     lateinit var connectedDevices: LiveData<List<DeviceEntity>>
-    lateinit var bluetoothConnectionState: LiveData<BluetoothConnectionState>
     lateinit var trackingState: LiveData<TrackingState>
 
     init {
         EventBus.getDefault().register(this)
 
         viewModelScope.launch {
-            connectedDevices = deviceRepository.connectedDevices.asLiveData()
-            bluetoothConnectionState = bluetoothDeviceManager.bluetoothConnectionState.asLiveData()
-
-            launch {
-                bluetoothDeviceManager.bluetoothConnectionState.collect {
-                    if (it != BluetoothConnectionState.CONNECTED) {
-                        clearData()
-                    }
-                }
-            }
+            connectedDevices = deviceRepository.getDevicesShouldBeConnected().asLiveData()
 
             trackingState = trackingManager.trackingState.asLiveData()
 
@@ -84,11 +68,6 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun clearData() {
-        temperature.value = null
-        humidity.value = null
-        pm1.value = null
-        pm25.value = null
-        pm10.value = null
     }
 
     @ExperimentalCoroutinesApi
@@ -103,7 +82,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun onBtConnectClicked() {
-        if (bluetoothConnectionState.value != BluetoothConnectionState.DISCONNECTED) {
+        if (connectedDevices.value?.isNotEmpty() == true) {
             viewModelScope.launch {
                 bluetoothDeviceManager.disconnectAllDevices()
             }
@@ -125,14 +104,6 @@ class HomeViewModel @Inject constructor(
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onSensorValueReceived(event: SensorValueReceivedEvent) {
-        val sensorValue = event.sensorValue
-        when (sensorValue.sensorType) {
-            SensorType.TEMPERATURE -> temperature.value = sensorValue.value
-            SensorType.HUMIDITY -> humidity.value = sensorValue.value
-            SensorType.PM1 -> pm1.value = sensorValue.value
-            SensorType.PM2_5 -> pm25.value = sensorValue.value
-            SensorType.PM10 -> pm10.value = sensorValue.value
-        }
     }
 
     fun onUserButtonClicked(activity: FragmentActivity) {

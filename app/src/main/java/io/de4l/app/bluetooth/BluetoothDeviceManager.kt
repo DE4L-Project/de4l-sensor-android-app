@@ -29,10 +29,12 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ClosedSendChannelException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
+import no.nordicsemi.android.ble.exception.RequestFailedException
 import no.nordicsemi.android.ble.ktx.suspend
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.joda.time.DateTime
+import java.lang.Exception
 import javax.inject.Inject
 
 class BluetoothDeviceManager @Inject constructor(
@@ -56,8 +58,6 @@ class BluetoothDeviceManager @Inject constructor(
 
     val bluetoothScanScanState = MutableStateFlow(BluetoothScanState.NOT_SCANNING)
     val bluetoothConnectionState = MutableStateFlow(BluetoothConnectionState.DISCONNECTED)
-
-    private var bleConnectionGatt: BluetoothGatt? = null;
 
     init {
         EventBus.getDefault().register(this)
@@ -91,58 +91,7 @@ class BluetoothDeviceManager @Inject constructor(
 
         bluetoothDevice?.let { device ->
             if (isSensorBeacon(device)) {
-                coroutineScope.launch {
-
-                    leScanCallback = object : ScanCallback() {
-                        override fun onScanResult(callbackType: Int, result: ScanResult?) {
-                            result?.let { scanResult ->
-                                if (scanResult.device?.address == macAddress) {
-                                    val tagData =
-                                        RuuviTagParser().parseFromRawFormat5(scanResult.scanRecord!!.bytes)
-                                    Log.v(LOG_TAG, tagData.toString())
-
-                                    val location = locationService.getCurrentLocation()
-                                    val timestamp = DateTime()
-
-                                    EventBus.getDefault()
-                                        .post(
-                                            SensorValueReceivedEvent(
-                                                SensorValue(
-                                                    scanResult.device!!.address,
-                                                    SensorType.TEMPERATURE,
-                                                    tagData.temperature,
-                                                    location,
-                                                    timestamp,
-                                                    trackingManager.messageNumber.getAndIncrement(),
-                                                    "",
-                                                    BuildConfig.VERSION_CODE.toString()
-                                                )
-                                            )
-                                        )
-
-                                    EventBus.getDefault()
-                                        .post(
-                                            SensorValueReceivedEvent(
-                                                SensorValue(
-                                                    scanResult.device!!.address,
-                                                    SensorType.HUMIDITY,
-                                                    tagData.humidity,
-                                                    location,
-                                                    timestamp,
-                                                    trackingManager.messageNumber.getAndIncrement(),
-                                                    "",
-                                                    BuildConfig.VERSION_CODE.toString()
-                                                )
-                                            )
-                                        )
-                                }
-                            }
-                        }
-                    }
-
-                    bluetoothAdapter.bluetoothLeScanner.startScan(leScanCallback)
-                    onSuccessfulConnect(device)
-                }
+                connectSensorBeacon(device)
             } else if (isBleDevice(device)) {
                 connectBleDevice(device)
             } else {
@@ -153,6 +102,61 @@ class BluetoothDeviceManager @Inject constructor(
         }
         onDisconnected(macAddress)
         return false
+    }
+
+    private fun connectSensorBeacon(device: BluetoothDevice) {
+        coroutineScope.launch {
+
+            leScanCallback = object : ScanCallback() {
+                override fun onScanResult(callbackType: Int, result: ScanResult?) {
+                    result?.let { scanResult ->
+                        if (scanResult.device?.address == device.address) {
+                            val tagData =
+                                RuuviTagParser().parseFromRawFormat5(scanResult.scanRecord!!.bytes)
+                            Log.v(LOG_TAG, tagData.toString())
+
+                            val location = locationService.getCurrentLocation()
+                            val timestamp = DateTime()
+
+                            EventBus.getDefault()
+                                .post(
+                                    SensorValueReceivedEvent(
+                                        SensorValue(
+                                            scanResult.device!!.address,
+                                            SensorType.TEMPERATURE,
+                                            tagData.temperature,
+                                            location,
+                                            timestamp,
+                                            trackingManager.messageNumber.getAndIncrement(),
+                                            "",
+                                            BuildConfig.VERSION_CODE.toString()
+                                        )
+                                    )
+                                )
+
+                            EventBus.getDefault()
+                                .post(
+                                    SensorValueReceivedEvent(
+                                        SensorValue(
+                                            scanResult.device!!.address,
+                                            SensorType.HUMIDITY,
+                                            tagData.humidity,
+                                            location,
+                                            timestamp,
+                                            trackingManager.messageNumber.getAndIncrement(),
+                                            "",
+                                            BuildConfig.VERSION_CODE.toString()
+                                        )
+                                    )
+                                )
+                        }
+                    }
+                }
+            }
+
+            bluetoothAdapter.bluetoothLeScanner.startScan(leScanCallback)
+            onSuccessfulConnect(device)
+        }
     }
 
 
@@ -226,7 +230,7 @@ class BluetoothDeviceManager @Inject constructor(
     }
 
     fun disconnect(device: DeviceEntity) {
-
+        device.targetConnectionState = BluetoothConnectionState.DISCONNECTED
         when (device.bluetoothDeviceType) {
             BluetoothDeviceType.LEGACY_BLUETOOTH -> {
                 closeLegacyBtConnection()
@@ -236,7 +240,12 @@ class BluetoothDeviceManager @Inject constructor(
             BluetoothDeviceType.BLE -> {
                 bleConnectionManager.disconnect().enqueue()
             }
-            BluetoothDeviceType.BLE_BEACON -> TODO()
+            BluetoothDeviceType.BLE_BEACON -> {
+                leScanCallback?.let {
+                    bluetoothAdapter.bluetoothLeScanner.stopScan(it)
+                }
+                leScanCallback = null
+            }
             else -> {
                 Log.i(
                     LOG_TAG,
@@ -303,13 +312,24 @@ class BluetoothDeviceManager @Inject constructor(
 
     private fun connectBleDevice(device: BluetoothDevice) {
         coroutineScope.launch(Dispatchers.IO) {
-            bleConnectionManager
-                .connect(device)
-                .fail { device, status ->
-                    Log.i(LOG_TAG, "Connect failed ${device.address} - Status: $status")
+
+            try {
+                bleConnectionManager
+                    .connect(device)
+                    .suspend()
+                onSuccessfulConnect(device)
+            } catch (e: RequestFailedException) {
+                Log.e(LOG_TAG, e.message ?: "No error message")
+                val deviceEntity = deviceRepository.getByAddress(device.address).firstOrNull()
+
+                if (deviceEntity != null && deviceEntity.targetConnectionState == BluetoothConnectionState.CONNECTED) {
+                    delay(1000)
+                    connectBleDevice(device)
+                } else {
+                    onDisconnected(device.address)
                 }
-                .suspend()
-            onSuccessfulConnect(device);
+
+            }
         }
     }
 
@@ -354,7 +374,7 @@ class BluetoothDeviceManager @Inject constructor(
     }
 
     private suspend fun onConnected(device: DeviceEntity) {
-        device.connectionState = BluetoothConnectionState.CONNECTED
+        device.actualConnectionState = BluetoothConnectionState.CONNECTED
         bluetoothConnectionState.value = BluetoothConnectionState.CONNECTED
         saveDevice(device)
         EventBus.getDefault().post(BluetoothDeviceConnectedEvent(device))
@@ -372,8 +392,8 @@ class BluetoothDeviceManager @Inject constructor(
             bluetoothConnectionState.value = BluetoothConnectionState.CONNECTING
         }
 
-        if (device.connectionState != BluetoothConnectionState.RECONNECTING) {
-            device.connectionState = BluetoothConnectionState.CONNECTING
+        if (device.actualConnectionState != BluetoothConnectionState.RECONNECTING) {
+            device.actualConnectionState = BluetoothConnectionState.CONNECTING
             saveDevice(device)
         }
     }
@@ -390,8 +410,8 @@ class BluetoothDeviceManager @Inject constructor(
             bluetoothConnectionState.value = BluetoothConnectionState.RECONNECTING
         }
 
-        if (device.connectionState != BluetoothConnectionState.CONNECTING) {
-            device.connectionState = BluetoothConnectionState.RECONNECTING
+        if (device.actualConnectionState != BluetoothConnectionState.CONNECTING) {
+            device.actualConnectionState = BluetoothConnectionState.RECONNECTING
             saveDevice(device)
         }
     }
@@ -404,13 +424,8 @@ class BluetoothDeviceManager @Inject constructor(
     }
 
     private suspend fun onDisconnected(device: DeviceEntity) {
-        device.connectionState = BluetoothConnectionState.DISCONNECTED
+        device.actualConnectionState = BluetoothConnectionState.DISCONNECTED
         bluetoothConnectionState.value = BluetoothConnectionState.DISCONNECTED
-
-        leScanCallback?.let {
-            bluetoothAdapter.bluetoothLeScanner.stopScan(it)
-        }
-        leScanCallback = null
 
         saveDevice(device)
         EventBus.getDefault().post(BluetoothDeviceDisconnectedEvent(device))

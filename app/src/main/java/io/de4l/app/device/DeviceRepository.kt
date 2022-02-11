@@ -15,10 +15,10 @@ class DeviceRepository(private val appDatabase: AppDatabase) {
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
-    private val _connectedDevices: MutableMap<String, DeviceEntity> = HashMap()
-
-    val connectedDevices: MutableStateFlow<List<DeviceEntity>> =
-        MutableStateFlow(ArrayList())
+//    private val _connectedDevices: MutableMap<String, DeviceEntity> = HashMap()
+//
+//    val connectedDevices: MutableStateFlow<List<DeviceEntity>> =
+//        MutableStateFlow(ArrayList())
 
     init {
         //Set isConnected = false for all device on application start
@@ -32,8 +32,20 @@ class DeviceRepository(private val appDatabase: AppDatabase) {
     }
 
     suspend fun getConnectedDevices(): Flow<List<DeviceEntity>> {
+        return getDevices().map {
+            it.filter { device ->
+                device.actualConnectionState == BluetoothConnectionState.CONNECTED
+            }
+        }
+    }
+
+    suspend fun getDevicesShouldBeConnected(): Flow<List<DeviceEntity>> {
         return getDevices()
-            .map { it.filter { device -> device.connectionState == BluetoothConnectionState.CONNECTED } }
+            .map {
+                it.filter { device ->
+                    device.targetConnectionState == BluetoothConnectionState.CONNECTED
+                }
+            }
     }
 
     suspend fun getDevices(): Flow<List<DeviceEntity>> {
@@ -45,10 +57,10 @@ class DeviceRepository(private val appDatabase: AppDatabase) {
     }
 
     suspend fun saveDevice(device: DeviceEntity) {
-        when (device.connectionState) {
-            BluetoothConnectionState.CONNECTED -> registerDevice(device)
-            else -> unregisterDevice(device)
-        }
+//        when (device.actualConnectionState) {
+//            BluetoothConnectionState.CONNECTED -> registerDevice(device)
+//            else -> unregisterDevice(device)
+//        }
 
         try {
             appDatabase.deviceDao().updateDevice(device)
@@ -88,17 +100,17 @@ class DeviceRepository(private val appDatabase: AppDatabase) {
         return appDatabase.deviceDao().getAll()
     }
 
-    private suspend fun registerDevice(device: DeviceEntity) {
-        this._connectedDevices[device.macAddress] = device
-        this.connectedDevices.emit(this._connectedDevices.values.toList())
-    }
+//    private suspend fun registerDevice(device: DeviceEntity) {
+//        this._connectedDevices[device.macAddress] = device
+//        this.connectedDevices.emit(this._connectedDevices.values.toList())
+//    }
+//
+//    private suspend fun unregisterDevice(device: DeviceEntity) {
+//        this._connectedDevices.remove(device.macAddress)
+//        this.connectedDevices.emit(this._connectedDevices.values.toList())
+//    }
 
-    private suspend fun unregisterDevice(device: DeviceEntity) {
-        this._connectedDevices.remove(device.macAddress)
-        this.connectedDevices.emit(this._connectedDevices.values.toList())
-    }
-
-    suspend fun sendUpdateForDevice(macAddress: String, sensorValue: SensorValue) {
-        _connectedDevices[macAddress]?.sensorValues?.emit(sensorValue)
-    }
+//    suspend fun sendUpdateForDevice(macAddress: String, sensorValue: SensorValue) {
+//        _connectedDevices[macAddress]?.sensorValues?.emit(sensorValue)
+//    }
 }
