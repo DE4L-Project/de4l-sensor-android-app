@@ -24,13 +24,16 @@ class AppConstants {
 
         // LOCATION
         const val LOCATION_INTERVAL_IN_SECONDS = 5
-        val LOCATION_MIN_DISTANCE: Float? = 10.0f
+        val LOCATION_MIN_DISTANCE: Float? = 0.0f
 
         //MQTT
         const val MQTT_SERVER_URL = BuildConfig.MQTT_SERVER_URL
 
         val MQTT_TOPIC_PATTERN_SENSOR_VALUES =
             if (BuildConfig.DEBUG) "sensors/%s/de4l-app-debug" else "sensors/%s/de4l-app"
+
+        val MQTT_TOPIC_PATTERN_LOCATION_VALUES =
+            if (BuildConfig.DEBUG) "locations/%s/de4l-app-debug" else "locations/%s/de4l-app"
 
         //UI
         const val SPLASH_SCREEN_DELAY_IN_SECONDS = 1L
@@ -46,5 +49,7 @@ class AppConstants {
 
         //WEB VIEW
         const val DE4L_INFO_URL = "https://de4l.io/en/about-de4l/"
+
+
     }
 }

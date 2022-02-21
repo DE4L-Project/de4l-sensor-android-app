@@ -173,7 +173,9 @@ class BackgroundService() : Service() {
         var trackingStateText = "No data transmission"
         var bluetoothConnectionText = "No device connected"
 
-        if (trackingManager.trackingState.value == TrackingState.TRACKING) {
+        if (trackingManager.trackingState.value == TrackingState.TRACKING ||
+            trackingManager.trackingState.value == TrackingState.LOCATION_ONLY
+        ) {
             trackingStateText = "Transmitting data"
         }
 

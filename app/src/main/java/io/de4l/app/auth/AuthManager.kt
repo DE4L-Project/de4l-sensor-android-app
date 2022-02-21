@@ -128,16 +128,25 @@ class AuthManager(val application: Application) {
         if (tokens.idToken != null) {
             val jwt = JWT(tokens.idToken!!)
 
-            tokens.accessToken?.let {
-                if (!hasTokenMqttAccess(JWT(it))) {
-                    throw TokenPermissionException("User has no access for MQTT.")
-                }
-            }
+            val accessToken =
+                tokens.accessToken ?: throw TokenPermissionException("Access Token is missing")
 
             val usernameFromToken = jwt.getClaim(AppConstants.AUTH_USERNAME_CLAIM_KEY).asString()
-            Log.i(LOG_TAG, "User ${usernameFromToken} successfully authenticated.")
+            val roles = getResourceRolesFromToken(JWT(accessToken))
             if (usernameFromToken != null && tokens.accessToken != null && tokens.refreshToken != null) {
-                user.value = UserInfo(usernameFromToken)
+                val userInfo = UserInfo(usernameFromToken, roles)
+
+                //CHECK MQTT ACCESS
+                if (!userInfo.hasResourceRole(
+                        AppConstants.AUTH_MQTT_CLAIM_RESOURCE,
+                        AppConstants.AUTH_MQTT_CLAIM_ROLE
+                    )
+                ) {
+                    throw TokenPermissionException("User has no access for MQTT.")
+                }
+
+                user.value = userInfo
+                Log.i(LOG_TAG, "User $usernameFromToken successfully authenticated.")
             }
         }
     }
@@ -208,6 +217,22 @@ class AuthManager(val application: Application) {
         webClient?.sessionClient?.cancel()
         webClient?.sessionClient?.clear()
         user.value = null
+    }
+
+    private fun getResourceRolesFromToken(token: JWT): Map<String, List<String>> {
+        val roles: MutableMap<String, List<String>> = HashMap()
+
+        val resourcesAccessMap =
+            token.getClaim("resource_access").asObject(HashMap::class.java) ?: emptyMap()
+
+        resourcesAccessMap.entries.forEach {
+            roles.put(
+                it.key as String,
+                (it.value as Map<String, List<String>>)["roles"] ?: emptyList()
+            )
+        }
+
+        return roles
     }
 
     private fun hasTokenMqttAccess(token: JWT): Boolean {

@@ -6,7 +6,6 @@ import com.auth0.android.jwt.JWT
 import com.google.common.collect.ImmutableList
 import io.de4l.app.AppConstants
 import io.de4l.app.auth.AuthManager
-import io.de4l.app.sensor.SensorValue
 import io.de4l.app.util.RetryException
 import io.de4l.app.util.RetryHelper.Companion.runWithRetry
 import kotlinx.coroutines.*
@@ -38,7 +37,7 @@ class MqttManager(
     private val connectionState: MutableStateFlow<MqttConnectionState> =
         MutableStateFlow(MqttConnectionState.DISCONNECTED)
 
-    private val buffer: MutableList<SensorValue> = ArrayList()
+    private val buffer: MutableList<AbstractMqttMessage> = ArrayList()
 
     @ExperimentalCoroutinesApi
     private suspend fun connect(): Flow<Boolean> = callbackFlow<Boolean> {
@@ -174,12 +173,12 @@ class MqttManager(
     }
 
     @ExperimentalCoroutinesApi
-    private suspend fun publishForCurrentUserSync(message: SensorValue) {
+    private suspend fun publishForCurrentUserSync(message: AbstractMqttMessage) {
         authManager.user.value?.username?.let { username ->
             message.username = username
             publish(
                 String.format(
-                    AppConstants.MQTT_TOPIC_PATTERN_SENSOR_VALUES,
+                    message.mqttTopic,
                     username
                 ), message
             ).firstOrNull()
@@ -187,14 +186,14 @@ class MqttManager(
     }
 
     @ExperimentalCoroutinesApi
-    fun publishForCurrentUser(message: SensorValue) {
+    fun publishForCurrentUser(message: AbstractMqttMessage) {
         coroutineScope.launch {
             publishForCurrentUserSync(message)
         }
     }
 
     @ExperimentalCoroutinesApi
-    private suspend fun publish(topic: String, message: SensorValue): Flow<Boolean> =
+    private suspend fun publish(topic: String, message: AbstractMqttMessage): Flow<Boolean> =
         callbackFlow {
             try {
                 val mqttMessage = MqttMessage(message.toJson().toString().toByteArray())

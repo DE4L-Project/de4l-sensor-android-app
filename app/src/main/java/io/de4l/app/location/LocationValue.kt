@@ -2,7 +2,7 @@ package io.de4l.app.location
 
 import org.joda.time.DateTime
 
-class Location(
+class LocationValue(
     val latitude: Double,
     val longitude: Double,
     val provider: String,
@@ -10,7 +10,8 @@ class Location(
     val accuracy: Float,
     val speed: Float,
     val bearing: Float,
-    val altitude: Double,
+    val altitude: Double
 ) {
+
 
 }

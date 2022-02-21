@@ -34,7 +34,6 @@ import no.nordicsemi.android.ble.ktx.suspend
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.joda.time.DateTime
-import java.lang.Exception
 import javax.inject.Inject
 
 class BluetoothDeviceManager @Inject constructor(
@@ -129,7 +128,6 @@ class BluetoothDeviceManager @Inject constructor(
                                             timestamp,
                                             trackingManager.messageNumber.getAndIncrement(),
                                             "",
-                                            BuildConfig.VERSION_CODE.toString()
                                         )
                                     )
                                 )
@@ -145,7 +143,6 @@ class BluetoothDeviceManager @Inject constructor(
                                             timestamp,
                                             trackingManager.messageNumber.getAndIncrement(),
                                             "",
-                                            BuildConfig.VERSION_CODE.toString()
                                         )
                                     )
                                 )

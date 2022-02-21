@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothDevice
 import android.util.Log
 import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.database.AppDatabase
-import io.de4l.app.sensor.SensorValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*

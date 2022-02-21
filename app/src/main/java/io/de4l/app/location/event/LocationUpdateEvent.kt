@@ -1,6 +1,6 @@
 package io.de4l.app.location.event
 
-import io.de4l.app.location.Location
+import io.de4l.app.location.LocationValue
 
-class LocationUpdateEvent(val location: Location) {
+class LocationUpdateEvent(val location: LocationValue) {
 }

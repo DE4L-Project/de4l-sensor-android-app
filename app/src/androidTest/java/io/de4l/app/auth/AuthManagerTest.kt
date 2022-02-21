@@ -18,7 +18,6 @@ class AuthManagerTest {
 
     @Before
     fun setup() {
-        authManager.initialize()
     }
 
     //    @Test(expected = NullPointerException::class)

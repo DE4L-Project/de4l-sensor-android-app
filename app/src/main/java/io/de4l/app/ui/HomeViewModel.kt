@@ -8,21 +8,20 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.de4l.app.BuildConfig
 import io.de4l.app.R
 import io.de4l.app.auth.AuthManager
-import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.bluetooth.BluetoothDeviceManager
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.device.DeviceRepository
-import io.de4l.app.location.Location
+import io.de4l.app.location.LocationValue
 import io.de4l.app.location.LocationService
 import io.de4l.app.location.event.LocationUpdateEvent
-import io.de4l.app.sensor.SensorType
 import io.de4l.app.tracking.BackgroundServiceWatcher
 import io.de4l.app.tracking.TrackingManager
 import io.de4l.app.tracking.TrackingState
 import io.de4l.app.ui.event.NavigationEvent
 import io.de4l.app.ui.event.SensorValueReceivedEvent
+import io.de4l.app.ui.event.StartLocationServiceEvent
+import io.de4l.app.ui.event.StopLocationServiceEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
@@ -41,7 +40,7 @@ class HomeViewModel @Inject constructor(
     private val application: Application
 ) : ViewModel() {
 
-    val location = MutableLiveData<Location?>(locationManager.getCurrentLocation())
+    val location = MutableLiveData<LocationValue?>(locationManager.getCurrentLocation())
     val user = authManager.user.asLiveData()
     val versionInfo =
         if (BuildConfig.DEBUG) BuildConfig.VERSION_NAME + "-dev" else BuildConfig.VERSION_NAME
@@ -61,9 +60,12 @@ class HomeViewModel @Inject constructor(
             trackingEnabled =
                 deviceRepository.getConnectedDevices()
                     .combine(authManager.user) { connectedDevices, user ->
-                        connectedDevices.isNotEmpty() && user != null
+                        connectedDevices.isNotEmpty() && user != null ||
+                                user?.isTrackOnlyUser() == true
                     }
                     .asLiveData()
+
+
         }
     }
 
@@ -73,7 +75,7 @@ class HomeViewModel @Inject constructor(
     @ExperimentalCoroutinesApi
     fun onToggleTrackingClicked() {
         viewModelScope.launch {
-            if (trackingState.value == TrackingState.TRACKING) {
+            if (trackingState.value == TrackingState.TRACKING || trackingState.value == TrackingState.LOCATION_ONLY) {
                 trackingManager.stopTracking()
             } else {
                 trackingManager.startTracking()
@@ -126,5 +128,13 @@ class HomeViewModel @Inject constructor(
             }
         }
 
+    }
+
+    fun startLocationUpdates() {
+        backgroundServiceWatcher.sendEventToService(StartLocationServiceEvent())
+    }
+
+    fun stopLocationUpdates() {
+        backgroundServiceWatcher.sendEventToService(StopLocationServiceEvent())
     }
 }

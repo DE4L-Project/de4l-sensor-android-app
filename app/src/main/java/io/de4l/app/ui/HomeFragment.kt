@@ -3,22 +3,17 @@ package io.de4l.app.ui
 import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.os.Bundle
-import android.util.EventLog
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.asLiveData
-import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.room.Ignore
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.MapView
@@ -31,18 +26,13 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import dagger.hilt.android.AndroidEntryPoint
 import io.de4l.app.R
 import io.de4l.app.auth.UserInfo
-import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.device.DeviceEntity
-import io.de4l.app.location.Location
+import io.de4l.app.location.LocationValue
 import io.de4l.app.sensor.SensorType
-import io.de4l.app.sensor.SensorValue
 import io.de4l.app.tracking.TrackingState
 import io.de4l.app.ui.event.SensorValueReceivedEvent
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
-import org.w3c.dom.Text
 
 @AndroidEntryPoint
 class HomeFragment : Fragment(), OnMapReadyCallback {
@@ -101,7 +91,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
         viewModel.trackingState.observe(viewLifecycleOwner) { trackingState ->
             when (trackingState) {
-                TrackingState.TRACKING -> onStartTracking()
+                TrackingState.TRACKING, TrackingState.LOCATION_ONLY -> onStartTracking()
                 TrackingState.NOT_TRACKING -> onStopTracking()
             }
         }
@@ -217,9 +207,15 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             tvUserFooter.text = "Not Logged In"
             styleFabButtonInactive(btnUser)
         }
+
+        if (userCapture?.isTrackOnlyUser() == true) {
+            viewModel.startLocationUpdates()
+        } else {
+            viewModel.stopLocationUpdates()
+        }
     }
 
-    private fun updateLocation(location: Location?) {
+    private fun updateLocation(location: LocationValue?) {
         location?.let {
             mapView?.getMapAsync {
                 it.clear()

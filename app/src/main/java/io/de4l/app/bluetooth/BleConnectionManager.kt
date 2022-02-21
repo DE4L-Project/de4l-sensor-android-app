@@ -110,7 +110,6 @@ class BleConnectionManager(
                                     null,
                                     DateTime()
                                 )
-                            Log.i(LOG_TAG, sensorValue.toJson().toString())
                             EventBus.getDefault().post(SensorValueReceivedEvent(sensorValue))
                         }
                     }

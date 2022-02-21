@@ -1,7 +1,7 @@
 package io.de4l.app.sensor
 
 import io.de4l.app.BuildConfig
-import io.de4l.app.location.Location
+import io.de4l.app.location.LocationValue
 import io.de4l.app.tracking.TrackingManager
 import org.joda.time.DateTime
 
@@ -10,7 +10,7 @@ class AirBeamSensorValueParser(private val trackingManager: TrackingManager) {
     fun parseLine(
         deviceId: String,
         line: String,
-        location: Location?,
+        location: LocationValue?,
         timestamp: DateTime
     ): SensorValue {
         val data = line.split(";")
@@ -31,8 +31,7 @@ class AirBeamSensorValueParser(private val trackingManager: TrackingManager) {
             location,
             timestamp,
             trackingManager.messageNumber.getAndIncrement(),
-            line,
-            BuildConfig.VERSION_CODE.toString()
+            line
         )
     }
 

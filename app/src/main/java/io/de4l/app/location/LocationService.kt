@@ -23,7 +23,7 @@ class LocationService() {
         .setInterval(AppConstants.LOCATION_INTERVAL_IN_SECONDS * 1000L)
         .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
 
-    private var locations: MutableList<Location> = ArrayList()
+    private var locations: MutableList<LocationValue> = ArrayList()
 
     private var coroutineScope: CoroutineScope? = null
 
@@ -33,11 +33,11 @@ class LocationService() {
         }
     }
 
-    fun addLocation(location: Location) {
+    fun addLocation(location: LocationValue) {
         this.locations.add(location)
     }
 
-    fun getCurrentLocation(): Location? {
+    fun getCurrentLocation(): LocationValue? {
         if (locations.isEmpty()) {
             return null
         }
@@ -46,6 +46,8 @@ class LocationService() {
 
     @SuppressLint("MissingPermission")
     fun startLocationUpdates(context: Context) {
+        Log.i(LOG_TAG, "startLocationUpdates()")
+
         coroutineScope = CoroutineScope(Dispatchers.Default)
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
@@ -54,7 +56,7 @@ class LocationService() {
                 coroutineScope?.launch {
                     super.onLocationResult(locationResult)
                     if (locationResult !== null) {
-                        val location = Location(
+                        val location = LocationValue(
                             locationResult.lastLocation.latitude,
                             locationResult.lastLocation.longitude,
                             locationResult.lastLocation.provider,
