@@ -29,12 +29,12 @@ class DevicesViewModel @Inject constructor(
 ) : AndroidViewModel(application) {
 
     lateinit var _devices: LiveData<List<DeviceEntity>>
-    lateinit var connectionState: LiveData<BluetoothConnectionState>
+//    lateinit var connectionState: LiveData<BluetoothConnectionState>
 
     init {
         viewModelScope.launch {
             _devices = deviceRepository.getDevices().asLiveData()
-            connectionState = bluetoothDeviceManager.bluetoothConnectionState.asLiveData()
+//            connectionState = bluetoothDeviceManager.bluetoothConnectionState.asLiveData()
         }
 
         EventBus.getDefault().register(this)

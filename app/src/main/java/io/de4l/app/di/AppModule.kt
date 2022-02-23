@@ -136,9 +136,10 @@ class AppModule() {
     @Provides
     fun provideTrackingManager(
         mqttManager: MqttManager,
-        authManager: AuthManager
+        authManager: AuthManager,
+        deviceRepository: DeviceRepository
     ): TrackingManager {
-        return TrackingManager(mqttManager, authManager)
+        return TrackingManager(mqttManager, authManager, deviceRepository)
     }
 
     @Singleton

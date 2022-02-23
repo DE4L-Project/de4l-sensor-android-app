@@ -2,6 +2,7 @@ package io.de4l.app.location
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Looper
 import android.util.Log
 import com.google.android.gms.location.*
 import io.de4l.app.AppConstants
@@ -16,7 +17,7 @@ import org.joda.time.DateTime
 class LocationService() {
     private val LOG_TAG: String = LocationService::class.java.getName()
 
-    private var mLocationCallback: LocationCallback? = null
+    private lateinit var mLocationCallback: LocationCallback
     private var mFusedLocationClient: FusedLocationProviderClient? = null
 
     private val mLocationRequest = LocationRequest.create()
@@ -52,29 +53,27 @@ class LocationService() {
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
         mLocationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult?) {
+            override fun onLocationResult(locationResult: LocationResult) {
                 coroutineScope?.launch {
                     super.onLocationResult(locationResult)
-                    if (locationResult !== null) {
-                        val location = LocationValue(
-                            locationResult.lastLocation.latitude,
-                            locationResult.lastLocation.longitude,
-                            locationResult.lastLocation.provider,
-                            DateTime(locationResult.lastLocation.time),
-                            locationResult.lastLocation.accuracy,
-                            locationResult.lastLocation.speed,
-                            locationResult.lastLocation.bearing,
-                            locationResult.lastLocation.altitude,
-                        )
+                    val location = LocationValue(
+                        locationResult.lastLocation.latitude,
+                        locationResult.lastLocation.longitude,
+                        locationResult.lastLocation.provider,
+                        DateTime(locationResult.lastLocation.time),
+                        locationResult.lastLocation.accuracy,
+                        locationResult.lastLocation.speed,
+                        locationResult.lastLocation.bearing,
+                        locationResult.lastLocation.altitude,
+                    )
 
-                        val locationUpdateEvent = LocationUpdateEvent(location)
-                        addLocation(location)
-                        EventBus.getDefault().post(locationUpdateEvent)
-                        Log.i(
-                            LOG_TAG,
-                            "${Thread.currentThread().name} | ${locationResult.lastLocation.provider} [${locationResult.lastLocation.longitude}; ${locationResult.lastLocation.latitude}]"
-                        )
-                    }
+                    val locationUpdateEvent = LocationUpdateEvent(location)
+                    addLocation(location)
+                    EventBus.getDefault().post(locationUpdateEvent)
+                    Log.i(
+                        LOG_TAG,
+                        "${Thread.currentThread().name} | ${locationResult.lastLocation.provider} [${locationResult.lastLocation.longitude}; ${locationResult.lastLocation.latitude}]"
+                    )
                 }
             }
         }
@@ -83,7 +82,7 @@ class LocationService() {
         mFusedLocationClient?.requestLocationUpdates(
             mLocationRequest,
             mLocationCallback,
-            null
+            Looper.myLooper()!!
         )
     }
 

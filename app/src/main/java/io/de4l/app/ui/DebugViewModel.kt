@@ -33,7 +33,7 @@ class DebugViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            connectionState = bluetoothDeviceManager.bluetoothConnectionState.asLiveData()
+//            connectionState = bluetoothDeviceManager.bluetoothConnectionState.asLiveData()
             _device = bluetoothDeviceManager.deviceRepository
                 .getByAddress(AIRBEAM3_TEST_ADDRESS)
                 .asLiveData()

@@ -2,10 +2,12 @@ package io.de4l.app.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -62,10 +64,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkPermissions() {
-        val requiredPermissions = arrayOf(
+        var requiredPermissions = arrayOf(
             Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
         )
+
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            requiredPermissions += Manifest.permission.BLUETOOTH_SCAN
+            requiredPermissions += Manifest.permission.BLUETOOTH_CONNECT
+        }
 
         val deniedPermissions = requiredPermissions.filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED

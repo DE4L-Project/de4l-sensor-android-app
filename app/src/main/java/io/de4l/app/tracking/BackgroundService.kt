@@ -1,6 +1,7 @@
 package io.de4l.app.tracking
 
 import android.app.*
+import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -75,10 +76,10 @@ class BackgroundService() : Service() {
         locationService.startLocationUpdates(this)
 
         coroutineScope.launch {
-            var lastValue: BluetoothConnectionState? = null
+
             Log.v(LOG_TAG, "coroutineScope launch()")
             merge(
-                bluetoothDeviceManager.bluetoothConnectionState,
+                bluetoothDeviceManager.hasConnectedDevices(),
                 trackingManager.trackingState,
                 authManager.user
             ).collect {
@@ -86,18 +87,28 @@ class BackgroundService() : Service() {
                 Log.v(LOG_TAG, "updateNotification()")
                 updateNotification()
 
+
+            }
+        }
+
+        coroutineScope.launch {
+            var lastValue: Boolean? = null
+            bluetoothDeviceManager.hasConnectedDevices().collect {
                 when (it) {
-                    is BluetoothConnectionState -> {
-                        if (lastValue !== null &&
-                            lastValue !== BluetoothConnectionState.DISCONNECTED &&
-                            it == BluetoothConnectionState.DISCONNECTED
-                        ) {
+                    true -> {
+                        deviceRepository.getDevicesShouldBeConnected().collect { devices ->
+                            devices.forEach {
+                                bluetoothDeviceManager.connect(it.macAddress)
+                            }
+                        }
+                    }
+                    false -> {
+                        if (lastValue !== null && lastValue == true) {
                             stopSelf()
                         }
-                        lastValue = it
                     }
                 }
-
+                lastValue = it
             }
         }
 
@@ -179,8 +190,8 @@ class BackgroundService() : Service() {
             trackingStateText = "Transmitting data"
         }
 
-        when (bluetoothDeviceManager.bluetoothConnectionState.value) {
-            BluetoothConnectionState.CONNECTED -> {
+        when (bluetoothDeviceManager.hasConnectedDevices().firstOrNull()) {
+            true -> {
                 val connectedDevices =
                     deviceRepository.getConnectedDevices().filterNot { it.isEmpty() }
                         .firstOrNull()
@@ -189,8 +200,8 @@ class BackgroundService() : Service() {
                     bluetoothConnectionText = "Connected to " + connectedDevices[0].macAddress
                 }
             }
-            BluetoothConnectionState.CONNECTING -> bluetoothConnectionText = "Connecting..."
-            BluetoothConnectionState.RECONNECTING -> bluetoothConnectionText = "Reconnecting..."
+//            BluetoothConnectionState.CONNECTING -> bluetoothConnectionText = "Connecting..."
+//            BluetoothConnectionState.RECONNECTING -> bluetoothConnectionText = "Reconnecting..."
         }
 
         val notificationText = "$bluetoothConnectionText | $trackingStateText"
@@ -206,7 +217,7 @@ class BackgroundService() : Service() {
             this,
             1002,
             intent,
-            FLAG_UPDATE_CURRENT
+            FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE
         )
 
         val forceReconnectIntent = Intent(AppConstants.FORCE_RECONNECT_ACTION)
@@ -214,7 +225,7 @@ class BackgroundService() : Service() {
             this,
             1003,
             forceReconnectIntent,
-            FLAG_UPDATE_CURRENT
+            FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE
         )
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -230,7 +241,7 @@ class BackgroundService() : Service() {
         val pendingIntent = PendingIntent.getActivity(
             this,
             AppConstants.TRACKING_NOTIFICATION_CODE,
-            notificationIntent, 0
+            notificationIntent, FLAG_IMMUTABLE
         )
 
         val notification: Notification =

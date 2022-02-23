@@ -4,6 +4,8 @@ import android.util.Log
 import io.de4l.app.AppConstants
 import io.de4l.app.BuildConfig
 import io.de4l.app.auth.AuthManager
+import io.de4l.app.bluetooth.BluetoothDeviceManager
+import io.de4l.app.device.DeviceRepository
 import io.de4l.app.location.event.LocationUpdateEvent
 import io.de4l.app.mqtt.LocationMqttMessage
 import io.de4l.app.mqtt.MqttManager
@@ -11,6 +13,8 @@ import io.de4l.app.mqtt.SensorValueMqttMessage
 import io.de4l.app.ui.event.SensorValueReceivedEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.firstOrNull
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import java.util.*
@@ -19,7 +23,8 @@ import javax.inject.Inject
 
 class TrackingManager @Inject constructor(
     val mqttManager: MqttManager,
-    val authManager: AuthManager
+    val authManager: AuthManager,
+    val deviceRepository: DeviceRepository
 ) {
 
     private val LOG_TAG: String = TrackingManager::class.java.getName()
@@ -36,10 +41,17 @@ class TrackingManager @Inject constructor(
     suspend fun startTracking() {
         trackingSessionId = UUID.randomUUID().toString()
 
-        trackingState.value = when (authManager.user.value?.isTrackOnlyUser()) {
-            true -> TrackingState.LOCATION_ONLY
-            else -> TrackingState.TRACKING
-        }
+        //Location only mode is only possible
+
+
+        val connectedDevices = deviceRepository.getDevicesShouldBeConnected().firstOrNull()
+        val user = authManager.user.value
+
+        trackingState.value =
+            when (user != null && user.isTrackOnlyUser() && connectedDevices == null || connectedDevices?.isEmpty() == true) {
+                true -> TrackingState.LOCATION_ONLY
+                else -> TrackingState.TRACKING
+            }
 
 
         mqttManager.connectWithRetry()

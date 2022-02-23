@@ -52,11 +52,11 @@ class DevicesFragment : Fragment() {
             rvDevices.adapter = DeviceAdapter(it)
         }
 
-        viewModel.connectionState.observe(viewLifecycleOwner) {
-            rvDevices.adapter?.let { adapter ->
-                (adapter as DeviceAdapter).notifyDataSetChanged()
-            }
-        }
+//        viewModel.connectionState.observe(viewLifecycleOwner) {
+//            rvDevices.adapter?.let { adapter ->
+//                (adapter as DeviceAdapter).notifyDataSetChanged()
+//            }
+//        }
 
     }
 

@@ -1,5 +1,6 @@
 package io.de4l.app.bluetooth
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.util.Log
@@ -14,6 +15,7 @@ import java.io.InputStreamReader
 import java.io.OutputStream
 import java.util.*
 
+@SuppressLint("MissingPermission")
 class BluetoothSocketConnection(private val device: BluetoothDevice) {
     private val LOG_TAG: String = BluetoothSocketConnection::class.java.name
 

@@ -7,11 +7,14 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.asLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -31,6 +34,7 @@ import io.de4l.app.location.LocationValue
 import io.de4l.app.sensor.SensorType
 import io.de4l.app.tracking.TrackingState
 import io.de4l.app.ui.event.SensorValueReceivedEvent
+import kotlinx.coroutines.flow.collect
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 
@@ -289,11 +293,17 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 //        }
 //    }
 
-    override fun onMapReady(map: GoogleMap?) {
+    override fun onMapReady(map: GoogleMap) {
         val isNightMode =
-            context?.resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+            requireContext()
+                .resources?.configuration?.uiMode?.and(Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         if (isNightMode) {
-            map?.setMapStyle(MapStyleOptions.loadRawResourceStyle(context, R.raw.map_night_style))
+            map?.setMapStyle(
+                MapStyleOptions.loadRawResourceStyle(
+                    requireContext(),
+                    R.raw.map_night_style
+                )
+            )
         }
     }
 
@@ -322,7 +332,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             val tvPm25: TextView = listItemView.findViewById(R.id.tvPm25Value)
             val tvPm10: TextView = listItemView.findViewById(R.id.tvPm10Value)
 
+            val btnDisconnectSensor: ImageButton =
+                listItemView.findViewById(R.id.btnDisconnectSensor)
+
             val tvDeviceAddress: TextView = listItemView.findViewById(R.id.tvDeviceAddress)
+            val tvConnectionState: TextView = listItemView.findViewById(R.id.tvConnectionState)
 
             @Subscribe
             public fun onSensorEvent(event: SensorValueReceivedEvent) {
@@ -369,7 +383,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 return@setOnLongClickListener true
             }
 
+
             viewHolder = ViewHolder(deviceView)
+
             return viewHolder
         }
 
@@ -377,6 +393,15 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             val device = _devices[position]
             holder.item = device
             holder.tvDeviceAddress.text = device.macAddress + " - " + (device.name ?: "UNKNOWN")
+
+
+            holder.btnDisconnectSensor.setOnClickListener {
+                viewModel.disconnectDevice(device)
+            }
+
+            device.actualConnectionStateFlow.asLiveData().observe(viewLifecycleOwner) {
+                holder.tvConnectionState.text = it.toString() ?: "null"
+            }
 
             EventBus.getDefault().register(holder)
 

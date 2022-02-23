@@ -8,6 +8,7 @@ import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.bluetooth.BluetoothDeviceType
 import io.de4l.app.sensor.SensorValue
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlin.properties.Delegates
 
 @Entity
 data class DeviceEntity(
@@ -23,15 +24,22 @@ data class DeviceEntity(
     @ColumnInfo
     var bluetoothDeviceType: BluetoothDeviceType,
 
-    @ColumnInfo
-    var actualConnectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED,
 
     @ColumnInfo
     var targetConnectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED
-
 ) {
+
+    @ColumnInfo
+    var actualConnectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED
+        set(value) {
+            field = value
+            this.actualConnectionStateFlow.value = value
+        }
+
+    @Ignore
+    val actualConnectionStateFlow: MutableStateFlow<BluetoothConnectionState?> =
+        MutableStateFlow(null)
 
     @Ignore
     val sensorValues: MutableStateFlow<SensorValue?> = MutableStateFlow(null)
-
 }

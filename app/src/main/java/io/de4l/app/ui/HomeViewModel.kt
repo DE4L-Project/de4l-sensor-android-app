@@ -137,4 +137,8 @@ class HomeViewModel @Inject constructor(
     fun stopLocationUpdates() {
         backgroundServiceWatcher.sendEventToService(StopLocationServiceEvent())
     }
+
+    fun disconnectDevice(device: DeviceEntity) {
+        bluetoothDeviceManager.disconnect(device)
+    }
 }
