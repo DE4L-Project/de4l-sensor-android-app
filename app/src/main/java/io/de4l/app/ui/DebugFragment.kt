@@ -8,8 +8,10 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.asLiveData
 import dagger.hilt.android.AndroidEntryPoint
 import io.de4l.app.R
+import kotlinx.coroutines.flow.collect
 
 @AndroidEntryPoint
 class DebugFragment : Fragment() {
@@ -17,6 +19,12 @@ class DebugFragment : Fragment() {
 
     private lateinit var btnAirBeam3Test: Button;
     private lateinit var tvConnectionState: TextView;
+    private lateinit var btnAirBeam3Status: Button;
+    private lateinit var btnAirBeam2Status: Button;
+    private lateinit var btnConnectionLoss: Button;
+
+    private lateinit var tvDebugAb2Values: TextView;
+    private lateinit var tvDebugAb3Values: TextView;
 
     private val viewModel: DebugViewModel by viewModels()
 
@@ -31,16 +39,49 @@ class DebugFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         tvConnectionState = view.findViewById(R.id.tvDebugConnectionInfo)
+        tvDebugAb2Values = view.findViewById(R.id.tvDebugAb2)
+        tvDebugAb3Values = view.findViewById(R.id.tvDebugAb3)
 
-        btnAirBeam3Test = view.findViewById(R.id.btnAirBeam3TestDebug)
-        btnAirBeam3Test.setOnClickListener {
-            viewModel.onDeviceConnectClicked()
+//        btnAirBeam3Test = view.findViewById(R.id.btnAirBeam3TestDebug)
+//        btnAirBeam3Test.setOnClickListener {
+//            viewModel.onConnectToAirBeam3()
+//        }
+
+        btnAirBeam3Status = view.findViewById(R.id.btnAirBeam3Status)
+        btnAirBeam3Status.setOnClickListener {
+            viewModel.onConnectToAirBeam3()
         }
 
-        viewModel._device.observe(viewLifecycleOwner) {
-            it?.let {
-                tvConnectionState.text = "${it.macAddress} ${it.actualConnectionState.name}"
+        btnAirBeam2Status = view.findViewById(R.id.btnAirbeam2Status)
+        btnAirBeam2Status.setOnClickListener {
+            viewModel.onConnectToAirBeam2()
+        }
+
+        btnConnectionLoss = view.findViewById(R.id.btnConnectionLoss)
+        btnConnectionLoss.setOnClickListener {
+            viewModel.onConnectionLoss()
+        }
+
+        viewModel._airbeam2.observe(viewLifecycleOwner) {
+            it?.let { deviceEntity ->
+                btnAirBeam2Status.text = "Airbeam2 - ${it.actualConnectionState.name}"
+
+                deviceEntity.sensorValues.asLiveData().observe(viewLifecycleOwner) {
+                    tvDebugAb2Values.text = it?.value.toString() ?: "null"
+                }
             }
+        }
+
+        viewModel._airbeam3.observe(viewLifecycleOwner) { deviceEntity ->
+            deviceEntity?.let {
+                btnAirBeam3Status.text = "Airbeam3 - ${deviceEntity.actualConnectionState.name}"
+
+                deviceEntity.sensorValues.asLiveData().observe(viewLifecycleOwner) {
+                    tvDebugAb3Values.text = it?.value.toString() ?: "null"
+                }
+            }
+
+
         }
     }
 }

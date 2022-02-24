@@ -63,6 +63,7 @@ class BluetoothSocketConnection(private val device: BluetoothDevice) {
                         }
 
                         EventBus.getDefault().post(BluetoothDataReceivedEvent(line, device))
+
 //                        Log.i(LOG_TAG, line)
                         return true
                     }

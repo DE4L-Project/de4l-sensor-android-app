@@ -53,7 +53,7 @@ class BluetoothDeviceManager @Inject constructor(
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     private var bluetoothConnectionJob: Job? = null
-//    private var bluetoothSocketConnection: BluetoothSocketConnection? = null
+    private var bluetoothSocketConnection: BluetoothSocketConnection? = null
 
     private var leScanCallback: ScanCallback? = null
 
@@ -468,6 +468,13 @@ class BluetoothDeviceManager @Inject constructor(
                 locationService.getCurrentLocation(),
                 DateTime()
             )
+
+        coroutineScope.launch {
+            val deviceEntity = deviceRepository.getByAddress(event.device.address).firstOrNull()
+            deviceEntity?.let {
+                it.sensorValues.value = sensorValue
+            }
+        }
 
         EventBus.getDefault().post(SensorValueReceivedEvent(sensorValue))
     }

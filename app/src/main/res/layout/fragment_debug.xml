@@ -25,4 +25,45 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnAirBeam3TestDebug" />
 
+    <Button
+        android:id="@+id/btnAirbeam2Status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Airbeam2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvDebugAb2" />
+
+    <Button
+        android:id="@+id/btnAirBeam3Status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Airbeam3"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvDebugAb3" />
+
+    <Button
+        android:id="@+id/btnConnectionLoss"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="40dp"
+        android:text="Connection Loss"
+        app:layout_constraintStart_toEndOf="@+id/btnAirbeam2Status"
+        app:layout_constraintTop_toTopOf="@+id/btnAirbeam2Status" />
+
+    <TextView
+        android:id="@+id/tvDebugAb3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TextView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnAirbeam2Status" />
+
+    <TextView
+        android:id="@+id/tvDebugAb2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TextView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvDebugConnectionInfo" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
