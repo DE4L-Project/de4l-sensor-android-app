@@ -11,7 +11,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.asLiveData
 import dagger.hilt.android.AndroidEntryPoint
 import io.de4l.app.R
-import kotlinx.coroutines.flow.collect
 
 @AndroidEntryPoint
 class DebugFragment : Fragment() {
@@ -62,26 +61,28 @@ class DebugFragment : Fragment() {
             viewModel.onConnectionLoss()
         }
 
-        viewModel._airbeam2.observe(viewLifecycleOwner) {
-            it?.let { deviceEntity ->
-                btnAirBeam2Status.text = "Airbeam2 - ${it.actualConnectionState.name}"
+        viewModel._airbeam2.observe(viewLifecycleOwner) { deviceEntity ->
+            deviceEntity?.let {
+                deviceEntity._actualConnectionState.asLiveData().observe(viewLifecycleOwner) {
+                    btnAirBeam2Status.text = "Airbeam2 - ${it.name}"
+                }
 
-                deviceEntity.sensorValues.asLiveData().observe(viewLifecycleOwner) {
-                    tvDebugAb2Values.text = it?.value.toString() ?: "null"
+                deviceEntity._sensorValues.asLiveData().observe(viewLifecycleOwner) {
+                    tvDebugAb2Values.text = it?.rawData
                 }
             }
         }
 
         viewModel._airbeam3.observe(viewLifecycleOwner) { deviceEntity ->
             deviceEntity?.let {
-                btnAirBeam3Status.text = "Airbeam3 - ${deviceEntity.actualConnectionState.name}"
+                deviceEntity._actualConnectionState.asLiveData().observe(viewLifecycleOwner) {
+                    btnAirBeam3Status.text = "Airbeam3 - ${it.name}"
+                }
 
-                deviceEntity.sensorValues.asLiveData().observe(viewLifecycleOwner) {
-                    tvDebugAb3Values.text = it?.value.toString() ?: "null"
+                deviceEntity._sensorValues.asLiveData().observe(viewLifecycleOwner) {
+                    tvDebugAb3Values.text = it?.rawData
                 }
             }
-
-
         }
     }
 }

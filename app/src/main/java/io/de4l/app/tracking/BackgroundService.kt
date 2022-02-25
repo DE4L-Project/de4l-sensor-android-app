@@ -98,7 +98,9 @@ class BackgroundService() : Service() {
                     true -> {
                         deviceRepository.getDevicesShouldBeConnected().collect { devices ->
                             devices.forEach {
-                                bluetoothDeviceManager.connect(it.macAddress)
+                                it._macAddress.value?.let { macAddress ->
+                                    bluetoothDeviceManager.connect(macAddress)
+                                }
                             }
                         }
                     }
@@ -197,7 +199,7 @@ class BackgroundService() : Service() {
                         .firstOrNull()
 
                 connectedDevices?.let {
-                    bluetoothConnectionText = "Connected to " + connectedDevices[0].macAddress
+                    bluetoothConnectionText = "Connected to " + connectedDevices[0]._macAddress.value
                 }
             }
 //            BluetoothConnectionState.CONNECTING -> bluetoothConnectionText = "Connecting..."

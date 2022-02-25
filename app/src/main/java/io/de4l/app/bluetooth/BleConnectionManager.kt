@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
 import android.util.Log
 import io.de4l.app.bluetooth.event.BleDeviceServicesInvalidatedEvent
+import io.de4l.app.bluetooth.event.BluetoothDataReceivedEvent
 import io.de4l.app.sensor.AirBeamSensorValueParser
 import io.de4l.app.ui.event.SensorValueReceivedEvent
 import io.de4l.app.util.ByteConverter
@@ -103,14 +104,15 @@ class BleConnectionManager(
                 setNotificationCallback(it)
                     .with { device, data ->
                         if (bleDeviceType == BleDeviceTypeEnum.AIRBEAM3) {
-                            val sensorValue =
-                                airBeamSensorValueParser.parseLine(
-                                    device.address,
-                                    String(data.value!!),
-                                    null,
-                                    DateTime()
-                                )
-                            EventBus.getDefault().post(SensorValueReceivedEvent(sensorValue))
+//                            val sensorValue =
+//                                airBeamSensorValueParser.parseLine(
+//                                    device.address,
+//                                    String(data.value!!),
+//                                    null,
+//                                    DateTime()
+//                                )
+                            EventBus.getDefault()
+                                .post(BluetoothDataReceivedEvent(String(data.value!!), device))
                         }
                     }
             }

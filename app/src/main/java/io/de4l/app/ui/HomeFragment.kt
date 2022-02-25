@@ -14,6 +14,8 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import androidx.lifecycle.asLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -340,7 +342,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
             @Subscribe
             public fun onSensorEvent(event: SensorValueReceivedEvent) {
-                if (event.sensorValue.airBeamId != item.macAddress) {
+                if (event.sensorValue.airBeamId != item._macAddress.value) {
                     return
                 }
 
@@ -392,14 +394,16 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val device = _devices[position]
             holder.item = device
-            holder.tvDeviceAddress.text = device.macAddress + " - " + (device.name ?: "UNKNOWN")
+            holder.tvDeviceAddress.text =
+                device._macAddress.value + " - " + (device._name.value ?: "UNKNOWN")
 
 
             holder.btnDisconnectSensor.setOnClickListener {
                 viewModel.disconnectDevice(device)
             }
 
-            device.actualConnectionStateFlow.asLiveData().observe(viewLifecycleOwner) {
+
+            device._actualConnectionState.asLiveData().observe(viewLifecycleOwner) {
                 holder.tvConnectionState.text = it.toString() ?: "null"
             }
 

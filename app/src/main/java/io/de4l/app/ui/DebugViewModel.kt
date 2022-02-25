@@ -31,6 +31,7 @@ class DebugViewModel @Inject constructor(
 
 
     private val AIRBEAM3_TEST_ADDRESS = "E8:68:E7:38:89:CA"
+//    private val AIRBEAM3_TEST_ADDRESS = "E8:68:E7:38:88:A2"
     private val AIRBEAM2_TEST_ADDRESS = "00:11:E4:00:05:28"
 
     init {
@@ -57,7 +58,7 @@ class DebugViewModel @Inject constructor(
         val airBeam3TestMacAddress = AIRBEAM3_TEST_ADDRESS
 
         viewModelScope.launch {
-            if (_airbeam3.value?.actualConnectionState === BluetoothConnectionState.DISCONNECTED) {
+            if (_airbeam3.value?._actualConnectionState?.value === BluetoothConnectionState.DISCONNECTED) {
                 backgroundServiceWatcher.sendEventToService(
                     ConnectToBluetoothDeviceEvent(
                         airBeam3TestMacAddress
@@ -73,7 +74,7 @@ class DebugViewModel @Inject constructor(
         val airBeam2TestMacAddress = AIRBEAM2_TEST_ADDRESS
 
         viewModelScope.launch {
-            if (_airbeam2.value?.actualConnectionState === BluetoothConnectionState.DISCONNECTED) {
+            if (_airbeam2.value?._actualConnectionState?.value === BluetoothConnectionState.DISCONNECTED) {
                 backgroundServiceWatcher.sendEventToService(
                     ConnectToBluetoothDeviceEvent(
                         airBeam2TestMacAddress

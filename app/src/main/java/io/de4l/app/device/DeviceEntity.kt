@@ -1,45 +1,59 @@
 package io.de4l.app.device
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.Ignore
-import androidx.room.PrimaryKey
+import androidx.databinding.BaseObservable
 import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.bluetooth.BluetoothDeviceType
 import io.de4l.app.sensor.SensorValue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlin.properties.Delegates
+import kotlinx.coroutines.flow.merge
 
-@Entity
-data class DeviceEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int?,
+@OptIn(ExperimentalCoroutinesApi::class)
+class DeviceEntity : BaseObservable {
 
-    @ColumnInfo(index = true)
-    var name: String?,
+    val _name: MutableStateFlow<String?> = MutableStateFlow(null)
+    val _macAddress: MutableStateFlow<String?> = MutableStateFlow(null)
 
-    @ColumnInfo(index = true)
-    val macAddress: String,
+    val _bluetoothDeviceType: MutableStateFlow<BluetoothDeviceType> =
+        MutableStateFlow(BluetoothDeviceType.NONE)
 
-    @ColumnInfo
-    var bluetoothDeviceType: BluetoothDeviceType,
+    val _targetConnectionState: MutableStateFlow<BluetoothConnectionState> =
+        MutableStateFlow(BluetoothConnectionState.DISCONNECTED)
+    val _actualConnectionState: MutableStateFlow<BluetoothConnectionState> =
+        MutableStateFlow(BluetoothConnectionState.DISCONNECTED)
+
+    val _sensorValues: MutableStateFlow<SensorValue?> = MutableStateFlow(null)
 
 
-    @ColumnInfo
-    var targetConnectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED
-) {
+    val changes: Flow<Any?>
 
-    @ColumnInfo
-    var actualConnectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED
-        set(value) {
-            field = value
-            this.actualConnectionStateFlow.value = value
-        }
+    init {
+        changes = merge(
+            _name,
+            _macAddress,
+            _bluetoothDeviceType,
+            _targetConnectionState,
+            _actualConnectionState,
+            _sensorValues
+        )
+    }
 
-    @Ignore
-    val actualConnectionStateFlow: MutableStateFlow<BluetoothConnectionState?> =
-        MutableStateFlow(null)
+    constructor(
+        name: String?,
+        macAddress: String,
+        bluetoothDeviceType: BluetoothDeviceType,
+        targetConnectionState: BluetoothConnectionState
+    ) {
+        this._name.value = name
+        this._macAddress.value = macAddress
+        this._bluetoothDeviceType.value = bluetoothDeviceType
+        this._targetConnectionState.value = targetConnectionState
+    }
 
-    @Ignore
-    val sensorValues: MutableStateFlow<SensorValue?> = MutableStateFlow(null)
+
+//    val actualConnectionStateFlow: MutableStateFlow<BluetoothConnectionState?> =
+//        MutableStateFlow(null)
+
+
 }

@@ -95,7 +95,7 @@ class DevicesFragment : Fragment() {
             val device = _devices[position]
             holder.item = device
 
-            when (device.actualConnectionState) {
+            when (device._actualConnectionState.value) {
                 BluetoothConnectionState.CONNECTED -> {
                     holder.btnConnectDevice.text = "Disconnect"
                     holder.btnConnectDevice.isEnabled = true
@@ -116,8 +116,8 @@ class DevicesFragment : Fragment() {
             }
 
             device.let {
-                holder.textView.text = it.name
-                holder.tvDescription.text = it.macAddress
+                holder.textView.text = it._name.value
+                holder.tvDescription.text = it._macAddress.value
             }
 
             holder.btnConnectDevice.setOnClickListener {

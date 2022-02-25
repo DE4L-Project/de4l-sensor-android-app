@@ -47,6 +47,10 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+
+    buildFeatures {
+        dataBinding true
+    }
 }
 
 repositories {
@@ -101,6 +105,7 @@ dependencies {
 
     //HILT
     implementation 'com.google.dagger:hilt-android:2.39.1'
+    implementation 'androidx.databinding:databinding-runtime:4.2.2'
 
     kapt 'com.google.dagger:hilt-android-compiler:2.39.1'
     kapt "androidx.room:room-compiler:2.4.1"

@@ -48,7 +48,7 @@ class DevicesViewModel @Inject constructor(
     fun onLongPress(view: View, device: DeviceEntity) {
         device.let {
             val builder = AlertDialog.Builder(view.context)
-            builder.setMessage("Delete paired device [${it.macAddress}] from DE4L Sensor app?")
+            builder.setMessage("Delete paired device [${it._macAddress.value}] from DE4L Sensor app?")
                 .setPositiveButton("Yes") { dialog, id ->
                     onDeviceRemoveClicked(it)
                 }
@@ -64,13 +64,16 @@ class DevicesViewModel @Inject constructor(
     fun onDeviceConnectClicked(device: DeviceEntity) {
         viewModelScope.launch {
             device.let { device ->
-                if (device.actualConnectionState != BluetoothConnectionState.CONNECTED) {
-                    device.targetConnectionState = BluetoothConnectionState.CONNECTED
+                if (device._actualConnectionState.value != BluetoothConnectionState.CONNECTED) {
+                    device._targetConnectionState.value = BluetoothConnectionState.CONNECTED
                     deviceRepository.saveDevice(device)
 
-                    backgroundServiceWatcher.sendEventToService(ConnectToBluetoothDeviceEvent(device.macAddress))
+                    device._macAddress.value?.let {
+                        deviceRepository.removeByAddress(it)
+                    }
+
                 } else {
-                    device.targetConnectionState = BluetoothConnectionState.DISCONNECTED
+                    device._targetConnectionState.value = BluetoothConnectionState.DISCONNECTED
                     deviceRepository.saveDevice(device)
                     bluetoothDeviceManager.disconnect(device)
                 }
@@ -80,10 +83,13 @@ class DevicesViewModel @Inject constructor(
 
     private fun onDeviceRemoveClicked(device: DeviceEntity) {
         viewModelScope.launch {
-            if (device.actualConnectionState != BluetoothConnectionState.DISCONNECTED) {
+            if (device._actualConnectionState.value != BluetoothConnectionState.DISCONNECTED) {
                 bluetoothDeviceManager.disconnect(device)
             }
-            deviceRepository.removeByAddress(device.macAddress)
+
+            device._macAddress.value?.let {
+                deviceRepository.removeByAddress(it)
+            }
         }
     }
 

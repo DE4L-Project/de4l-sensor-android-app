@@ -5,12 +5,13 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import io.de4l.app.device.DeviceDao
 import io.de4l.app.device.DeviceEntity
+import io.de4l.app.device.DeviceRecord
 import io.de4l.app.mqtt.MqttMessageDao
 import io.de4l.app.mqtt.PersistentMqttMessage
 
 @Database(
-    entities = arrayOf(DeviceEntity::class, PersistentMqttMessage::class),
-    version = 8,
+    entities = arrayOf(DeviceRecord::class, PersistentMqttMessage::class),
+    version = 11,
     exportSchema = true
 )
 @TypeConverters(RoomConverters::class)

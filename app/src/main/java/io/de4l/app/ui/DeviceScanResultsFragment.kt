@@ -56,7 +56,12 @@ class DeviceScanResultsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         viewModel.foundDevices.observe(viewLifecycleOwner) {
-            devices[it.macAddress] = it
+
+            it._macAddress.value?.let { macAddress ->
+                devices[macAddress] = it
+            }
+
+
             rvBtDevices.adapter?.notifyDataSetChanged()
         }
 
@@ -116,8 +121,8 @@ class DeviceScanResultsFragment : Fragment() {
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val item = btDevices.values.toList()[position]
 
-            holder.textView.text = item.name
-            holder.tvDescription.text = item.macAddress
+            holder.textView.text = item._name.value
+            holder.tvDescription.text = item._macAddress.value
             holder.btnConnect.text = "Link"
 
             holder.btnConnect.setOnClickListener {

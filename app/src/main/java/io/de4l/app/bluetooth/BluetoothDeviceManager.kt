@@ -10,7 +10,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.util.Log
-import io.de4l.app.BuildConfig
 import io.de4l.app.bluetooth.event.BleDeviceServicesInvalidatedEvent
 import io.de4l.app.bluetooth.event.BluetoothDataReceivedEvent
 import io.de4l.app.bluetooth.event.BluetoothDeviceConnectedEvent
@@ -93,7 +92,7 @@ class BluetoothDeviceManager @Inject constructor(
             .transform { devices ->
                 var hasConnectedDevices = false
                 for (device in devices) {
-                    if (device.targetConnectionState == BluetoothConnectionState.CONNECTED) {
+                    if (device._targetConnectionState.value == BluetoothConnectionState.CONNECTED) {
                         hasConnectedDevices = true
                         break;
                     }
@@ -246,8 +245,8 @@ class BluetoothDeviceManager @Inject constructor(
     }
 
     fun disconnect(device: DeviceEntity) {
-        device.targetConnectionState = BluetoothConnectionState.DISCONNECTED
-        when (device.bluetoothDeviceType) {
+        device._targetConnectionState.value = BluetoothConnectionState.DISCONNECTED
+        when (device._bluetoothDeviceType.value) {
             BluetoothDeviceType.LEGACY_BLUETOOTH -> {
                 closeLegacyBtConnection()
                 bluetoothConnectionJob?.cancel()
@@ -265,7 +264,7 @@ class BluetoothDeviceManager @Inject constructor(
             else -> {
                 Log.i(
                     LOG_TAG,
-                    "Trying to disconnect unknown BT DeviceType: ${device.macAddress} | ${device.name}"
+                    "Trying to disconnect unknown BT DeviceType: ${device._macAddress.value} | ${device._name.value}"
                 )
             }
         }
@@ -338,7 +337,7 @@ class BluetoothDeviceManager @Inject constructor(
                 Log.e(LOG_TAG, e.message ?: "No error message")
                 val deviceEntity = deviceRepository.getByAddress(device.address).firstOrNull()
 
-                if (deviceEntity != null && deviceEntity.targetConnectionState == BluetoothConnectionState.CONNECTED) {
+                if (deviceEntity != null && deviceEntity._targetConnectionState.value == BluetoothConnectionState.CONNECTED) {
                     delay(1000)
                     connectBleDevice(device)
                 } else {
@@ -390,7 +389,7 @@ class BluetoothDeviceManager @Inject constructor(
     }
 
     private suspend fun onConnected(device: DeviceEntity) {
-        device.actualConnectionState = BluetoothConnectionState.CONNECTED
+        device._actualConnectionState.value = BluetoothConnectionState.CONNECTED
 //        bluetoothConnectionState.value = BluetoothConnectionState.CONNECTED
         saveDevice(device)
         EventBus.getDefault().post(BluetoothDeviceConnectedEvent(device))
@@ -408,8 +407,8 @@ class BluetoothDeviceManager @Inject constructor(
 //            bluetoothConnectionState.value = BluetoothConnectionState.CONNECTING
 //        }
 
-        if (device.actualConnectionState != BluetoothConnectionState.RECONNECTING) {
-            device.actualConnectionState = BluetoothConnectionState.CONNECTING
+        if (device._actualConnectionState.value != BluetoothConnectionState.RECONNECTING) {
+            device._actualConnectionState.value = BluetoothConnectionState.CONNECTING
             saveDevice(device)
         }
     }
@@ -426,8 +425,8 @@ class BluetoothDeviceManager @Inject constructor(
 //            bluetoothConnectionState.value = BluetoothConnectionState.RECONNECTING
 //        }
 
-        if (device.actualConnectionState != BluetoothConnectionState.CONNECTING) {
-            device.actualConnectionState = BluetoothConnectionState.RECONNECTING
+        if (device._actualConnectionState.value != BluetoothConnectionState.CONNECTING) {
+            device._actualConnectionState.value = BluetoothConnectionState.RECONNECTING
             saveDevice(device)
         }
     }
@@ -440,7 +439,7 @@ class BluetoothDeviceManager @Inject constructor(
     }
 
     private suspend fun onDisconnected(device: DeviceEntity) {
-        device.actualConnectionState = BluetoothConnectionState.DISCONNECTED
+        device._actualConnectionState.value = BluetoothConnectionState.DISCONNECTED
 //        bluetoothConnectionState.value = BluetoothConnectionState.DISCONNECTED
 
         saveDevice(device)
@@ -472,7 +471,7 @@ class BluetoothDeviceManager @Inject constructor(
         coroutineScope.launch {
             val deviceEntity = deviceRepository.getByAddress(event.device.address).firstOrNull()
             deviceEntity?.let {
-                it.sensorValues.value = sensorValue
+                it._sensorValues.value = sensorValue
             }
         }
 
