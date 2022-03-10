@@ -15,7 +15,6 @@ class SensorValueMqttMessage(
     override fun toJson(): JsonObject {
         val sensorValueJsonObj = super.toJson()
 
-
         sensorValueJsonObj.addProperty("airBeamId", this.sensorValue.airBeamId)
         sensorValueJsonObj.addProperty("sensorType", this.sensorValue.sensorType.toString())
         sensorValueJsonObj.addProperty("value", this.sensorValue.value)
@@ -28,16 +27,16 @@ class SensorValueMqttMessage(
             locationJsonObj = JsonObject()
 
             //Location JSON Object can only contain lat and lon
-            locationJsonObj.addProperty("lat", sensorValue.location.latitude)
-            locationJsonObj.addProperty("lon", sensorValue.location.longitude)
+            locationJsonObj.addProperty("lat", sensorValue.location?.latitude)
+            locationJsonObj.addProperty("lon", sensorValue.location?.longitude)
             sensorValueJsonObj.add("location", locationJsonObj)
             sensorValueJsonObj.add("location", locationJsonObj)
 
-            sensorValueJsonObj.addProperty("gpsAccuracy", sensorValue.location.accuracy)
-            sensorValueJsonObj.addProperty("altitudeInMeters", sensorValue.location.altitude)
-            sensorValueJsonObj.addProperty("bearingInDegrees", sensorValue.location.bearing)
-            sensorValueJsonObj.addProperty("speedInMetersPerSecond", sensorValue.location.speed)
-            sensorValueJsonObj.addProperty("provider", sensorValue.location.provider)
+            sensorValueJsonObj.addProperty("gpsAccuracy", sensorValue.location?.accuracy)
+            sensorValueJsonObj.addProperty("altitudeInMeters", sensorValue.location?.altitude)
+            sensorValueJsonObj.addProperty("bearingInDegrees", sensorValue.location?.bearing)
+            sensorValueJsonObj.addProperty("speedInMetersPerSecond", sensorValue.location?.speed)
+            sensorValueJsonObj.addProperty("provider", sensorValue.location?.provider)
         }
 
         return sensorValueJsonObj

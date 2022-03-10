@@ -55,12 +55,7 @@ class DeviceScanResultsViewModel @Inject constructor(
                 }
                 .collect {
                     foundDevices.value =
-                        DeviceEntity(
-                            it.name,
-                            it.address,
-                            getBluetoothDeviceType(it),
-                            BluetoothConnectionState.DISCONNECTED
-                        )
+                        DeviceEntity.fromBluetoothDevice(it)
                 }
         }
     }

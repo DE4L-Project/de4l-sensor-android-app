@@ -4,20 +4,16 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
-import android.util.Log
-import io.de4l.app.bluetooth.event.BleDeviceServicesInvalidatedEvent
-import io.de4l.app.bluetooth.event.BluetoothDataReceivedEvent
-import io.de4l.app.sensor.AirBeamSensorValueParser
-import io.de4l.app.ui.event.SensorValueReceivedEvent
+import io.de4l.app.device.BleDevice
+import io.de4l.app.device.DeviceEntity
 import io.de4l.app.util.ByteConverter
 import no.nordicsemi.android.ble.BleManager
-import org.greenrobot.eventbus.EventBus
 import org.joda.time.DateTime
 import java.util.*
 
 class BleConnectionManager(
     context: Context,
-    val airBeamSensorValueParser: AirBeamSensorValueParser
+    private val connectionListener: ConnectionListener
 ) :
     BleManager(context) {
 
@@ -50,15 +46,19 @@ class BleConnectionManager(
         return BleConnectionManagerGattCallback()
     }
 
+    interface ConnectionListener {
+        fun onDataReceived(string: String, device: BluetoothDevice)
+        fun onDisconnected()
+    }
+
     private inner class BleConnectionManagerGattCallback() :
         BleManagerGattCallback() {
 
-        private var bleDeviceType: BleDeviceTypeEnum? = null
-        private var device: BluetoothDevice? = null;
+        //        private var bleDeviceType: BleDeviceTypeEnum? = null
+        private var device: DeviceEntity? = null;
 
         override fun isRequiredServiceSupported(gatt: BluetoothGatt): Boolean {
-            bleDeviceType = getDeviceType(gatt.device)
-            device = gatt.device
+            device = DeviceEntity.fromBluetoothDevice(gatt.device)
 
             val service = gatt.getService(SERVICE_UUID) ?: return false
 
@@ -68,34 +68,21 @@ class BleConnectionManager(
             measurementsCharacteristics = MEASUREMENTS_CHARACTERISTIC_UUIDS.mapNotNull { uuid ->
                 service.getCharacteristic(uuid)
             }
-            return bleDeviceType != null
-                    && device != null
+            return device != null
+                    && device is BleDevice
                     && configurationCharacteristic != null
                     && measurementsCharacteristics.isNotEmpty()
         }
 
-        private fun getDeviceType(device: BluetoothDevice?): BleDeviceTypeEnum? {
-            device?.let {
-                return with(it.name) {
-                    when {
-                        startsWith("AirBeam3") -> BleDeviceTypeEnum.AIRBEAM3
-                        else -> null
-                    }
-                }
-            }
-            return null
-        }
-
-
         override fun onServicesInvalidated() {
             //Null check in initialization
             device?.let {
-                EventBus.getDefault().post(BleDeviceServicesInvalidatedEvent(it))
                 device = null;
             }
 
             configurationCharacteristic = null
             measurementsCharacteristics = emptyList()
+            connectionListener.onDisconnected()
         }
 
 
@@ -103,17 +90,7 @@ class BleConnectionManager(
             measurementsCharacteristics.forEach {
                 setNotificationCallback(it)
                     .with { device, data ->
-                        if (bleDeviceType == BleDeviceTypeEnum.AIRBEAM3) {
-//                            val sensorValue =
-//                                airBeamSensorValueParser.parseLine(
-//                                    device.address,
-//                                    String(data.value!!),
-//                                    null,
-//                                    DateTime()
-//                                )
-                            EventBus.getDefault()
-                                .post(BluetoothDataReceivedEvent(String(data.value!!), device))
-                        }
+                        connectionListener.onDataReceived(String(data.value!!), device)
                     }
             }
 

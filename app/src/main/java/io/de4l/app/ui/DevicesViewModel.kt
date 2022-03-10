@@ -9,7 +9,6 @@ import io.de4l.app.R
 import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.bluetooth.BluetoothDeviceManager
 import io.de4l.app.bluetooth.event.BluetoothDeviceConnectedEvent
-import io.de4l.app.bluetooth.event.ConnectToBluetoothDeviceEvent
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.device.DeviceRepository
 import io.de4l.app.tracking.BackgroundServiceWatcher
@@ -66,7 +65,7 @@ class DevicesViewModel @Inject constructor(
             device.let { device ->
                 if (device._actualConnectionState.value != BluetoothConnectionState.CONNECTED) {
                     device._targetConnectionState.value = BluetoothConnectionState.CONNECTED
-                    deviceRepository.saveDevice(device)
+                    deviceRepository.updateDevice(device)
 
                     device._macAddress.value?.let {
                         deviceRepository.removeByAddress(it)
@@ -74,7 +73,7 @@ class DevicesViewModel @Inject constructor(
 
                 } else {
                     device._targetConnectionState.value = BluetoothConnectionState.DISCONNECTED
-                    deviceRepository.saveDevice(device)
+                    deviceRepository.updateDevice(device)
                     bluetoothDeviceManager.disconnect(device)
                 }
             }

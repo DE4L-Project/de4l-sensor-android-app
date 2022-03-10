@@ -1,6 +1,7 @@
 package io.de4l.app.ui
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.de4l.app.R
@@ -10,6 +11,7 @@ import io.de4l.app.bluetooth.event.BluetoothDeviceConnectedEvent
 import io.de4l.app.bluetooth.event.ConnectToBluetoothDeviceEvent
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.device.DeviceRepository
+import io.de4l.app.device.LegacyBtDevice
 import io.de4l.app.tracking.BackgroundServiceWatcher
 import io.de4l.app.ui.event.NavigationEvent
 import kotlinx.coroutines.launch
@@ -25,13 +27,17 @@ class DebugViewModel @Inject constructor(
     application: Application
 ) : AndroidViewModel(application) {
 
+    private val LOG_TAG: String = DebugViewModel::class.java.name
+
+
     lateinit var connectionState: LiveData<BluetoothConnectionState>
     lateinit var _airbeam3: LiveData<DeviceEntity?>
     lateinit var _airbeam2: LiveData<DeviceEntity?>
 
 
     private val AIRBEAM3_TEST_ADDRESS = "E8:68:E7:38:89:CA"
-//    private val AIRBEAM3_TEST_ADDRESS = "E8:68:E7:38:88:A2"
+
+    //    private val AIRBEAM3_TEST_ADDRESS = "E8:68:E7:38:88:A2"
     private val AIRBEAM2_TEST_ADDRESS = "00:11:E4:00:05:28"
 
     init {
@@ -55,16 +61,25 @@ class DebugViewModel @Inject constructor(
     }
 
     fun onConnectToAirBeam3() {
+        Log.i(
+            LOG_TAG,
+            "BleDeviceTest - DebugViewModel::onConnectToAirBeam3 - ${Thread.currentThread().name}"
+        )
         val airBeam3TestMacAddress = AIRBEAM3_TEST_ADDRESS
-
-        viewModelScope.launch {
-            if (_airbeam3.value?._actualConnectionState?.value === BluetoothConnectionState.DISCONNECTED) {
+        if (_airbeam3.value?._actualConnectionState?.value === BluetoothConnectionState.DISCONNECTED) {
+            viewModelScope.launch {
                 backgroundServiceWatcher.sendEventToService(
                     ConnectToBluetoothDeviceEvent(
                         airBeam3TestMacAddress
                     )
                 )
-            } else {
+            }
+        } else {
+            viewModelScope.launch {
+                Log.i(
+                    LOG_TAG,
+                    "BleDeviceTest - DebugViewModel::onConnectToAirBeam3/disconnect - ${Thread.currentThread().name}"
+                )
                 bluetoothDeviceManager.disconnect(_airbeam3.value!!)
             }
         }
@@ -92,7 +107,9 @@ class DebugViewModel @Inject constructor(
     }
 
     fun onConnectionLoss() {
-        bluetoothDeviceManager.forceReconnect()
+        viewModelScope.launch {
+            _airbeam2.value?.disconnect()
+        }
     }
 
 

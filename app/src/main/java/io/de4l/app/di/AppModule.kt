@@ -82,18 +82,14 @@ class AppModule() {
         bluetoothAdapter: BluetoothAdapter,
         locationService: LocationService,
         deviceRepository: DeviceRepository,
-        airBeamSensorValueParser: AirBeamSensorValueParser,
         trackingManager: TrackingManager,
-        bleConnectionManager: BleConnectionManager
     ): BluetoothDeviceManager {
         return BluetoothDeviceManager(
             application,
             bluetoothAdapter,
             locationService,
             deviceRepository,
-            airBeamSensorValueParser,
-            trackingManager,
-            bleConnectionManager
+            trackingManager
         )
     }
 
@@ -127,13 +123,6 @@ class AppModule() {
 
     @Singleton
     @Provides
-    fun providesSensorValueParser(trackingManager: TrackingManager): AirBeamSensorValueParser {
-        return AirBeamSensorValueParser(trackingManager)
-    }
-
-
-    @Singleton
-    @Provides
     fun provideTrackingManager(
         mqttManager: MqttManager,
         authManager: AuthManager,
@@ -142,14 +131,13 @@ class AppModule() {
         return TrackingManager(mqttManager, authManager, deviceRepository)
     }
 
-    @Singleton
-    @Provides
-    fun provideBleConnectionManager(
-        application: Application,
-        airBeamSensorValueParser: AirBeamSensorValueParser
-    ): BleConnectionManager {
-        return BleConnectionManager(application, airBeamSensorValueParser)
-    }
+//    @Singleton
+//    @Provides
+//    fun provideBleConnectionManager(
+//        application: Application,
+//    ): BleConnectionManager {
+//        return BleConnectionManager(application)
+//    }
 
     private fun migrate(): Migration {
         return object : Migration(1, 2) {

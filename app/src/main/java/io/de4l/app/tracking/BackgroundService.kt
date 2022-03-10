@@ -86,32 +86,44 @@ class BackgroundService() : Service() {
                 // Update notification when any of these changed
                 Log.v(LOG_TAG, "updateNotification()")
                 updateNotification()
-
-
             }
         }
 
         coroutineScope.launch {
             var lastValue: Boolean? = null
-            bluetoothDeviceManager.hasConnectedDevices().collect {
-                when (it) {
-                    true -> {
-                        deviceRepository.getDevicesShouldBeConnected().collect { devices ->
-                            devices.forEach {
-                                it._macAddress.value?.let { macAddress ->
-                                    bluetoothDeviceManager.connect(macAddress)
-                                }
-                            }
-                        }
-                    }
-                    false -> {
-                        if (lastValue !== null && lastValue == true) {
-                            stopSelf()
-                        }
-                    }
+            val connectedDevices = deviceRepository.getDevicesShouldBeConnected().firstOrNull()
+            connectedDevices?.forEach { device ->
+                val macAddress = device._macAddress.value
+                macAddress?.let {
+                    launch { bluetoothDeviceManager.connectDeviceWithRetry(it) }
                 }
-                lastValue = it
             }
+        }
+        coroutineScope.launch {
+
+//            bluetoothDeviceManager.hasConnectedDevices().collect {
+//                when (it) {
+//                    true -> {
+//                        deviceRepository.getDevicesShouldBeConnected().collect { devices ->
+//                            devices.forEach {
+//                                it._macAddress.value?.let { macAddress ->
+//                                    launch {
+//                                        bluetoothDeviceManager.connectDeviceWithRetry(
+//                                            macAddress
+//                                        )
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                    false -> {
+//                        if (lastValue !== null && lastValue == true) {
+//                            stopSelf()
+//                        }
+//                    }
+//                }
+//                lastValue = it
+//            }
         }
 
         if (!backgroundServiceWatcher.isBackgroundServiceActive.value) {
@@ -141,7 +153,7 @@ class BackgroundService() : Service() {
                         stopSelf()
                     }
                     AppConstants.FORCE_RECONNECT_ACTION -> {
-                        bluetoothDeviceManager.forceReconnect()
+//                        bluetoothDeviceManager.forceReconnect()
                     }
                 }
 
@@ -199,7 +211,8 @@ class BackgroundService() : Service() {
                         .firstOrNull()
 
                 connectedDevices?.let {
-                    bluetoothConnectionText = "Connected to " + connectedDevices[0]._macAddress.value
+                    bluetoothConnectionText = "${connectedDevices.size} connected"
+
                 }
             }
 //            BluetoothConnectionState.CONNECTING -> bluetoothConnectionText = "Connecting..."
@@ -287,7 +300,11 @@ class BackgroundService() : Service() {
     @Subscribe
     fun onConnectToBluetoothDevice(event: ConnectToBluetoothDeviceEvent) {
         coroutineScope.launch {
-            bluetoothDeviceManager.connect(event.macAddress)
+            if (event.connectWithRetry) {
+                bluetoothDeviceManager.connectDeviceWithRetry(event.macAddress)
+            } else {
+                bluetoothDeviceManager.connectDevice(event.macAddress)
+            }
         }
     }
 

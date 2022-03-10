@@ -9,10 +9,9 @@ class SensorValue(
     val airBeamId: String,
     val sensorType: SensorType?,
     val value: Double?,
-    val location: LocationValue?,
     val timestamp: DateTime,
-    val sequenceNumber: Long,
-    val rawData: String,
+    val rawData: String
 ) {
-
+    var sequenceNumber: Long? = null
+    var location: LocationValue? = null
 }

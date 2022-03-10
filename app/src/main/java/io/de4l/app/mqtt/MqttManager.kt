@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.firstOrNull
 import org.eclipse.paho.android.service.MqttAndroidClient
+
 import org.eclipse.paho.client.mqttv3.*
 
 class MqttManager(
@@ -83,7 +84,7 @@ class MqttManager(
                         }
                     }
 
-                    offer(true)
+                    (true)
                 }
 
                 override fun onFailure(asyncActionToken: IMqttToken, exception: Throwable) {
@@ -145,6 +146,7 @@ class MqttManager(
                 MqttClient.generateClientId(),
                 mqttMessagePersistence
             )
+
 
         mqttClient.setCallback(object : MqttCallback {
             override fun connectionLost(cause: Throwable?) {

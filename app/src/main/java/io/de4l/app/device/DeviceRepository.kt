@@ -3,21 +3,20 @@ package io.de4l.app.device
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.util.Log
-import androidx.databinding.ObservableField
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import io.de4l.app.bluetooth.BluetoothConnectionState
+import io.de4l.app.bluetooth.BluetoothDeviceType
 import io.de4l.app.database.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 @SuppressLint("MissingPermission")
 class DeviceRepository(private val appDatabase: AppDatabase) {
     private val LOG_TAG = DeviceRepository::class.java.name
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
-    private val _connectedDevices: MutableMap<String, DeviceEntity> = HashMap()
-//
+    private val _cachedDevices: MutableMap<String, CachedDevice> = HashMap()
+
 //    val connectedDevices: MutableStateFlow<List<DeviceEntity>> =
 //        MutableStateFlow(ArrayList())
 
@@ -53,18 +52,20 @@ class DeviceRepository(private val appDatabase: AppDatabase) {
     }
 
     suspend fun addDevice(device: DeviceEntity) {
+        val deviceRecord = createDeviceRecordFromDeviceEntity(device)
+
         appDatabase
             .deviceDao()
-            .insertAll(createDeviceRecordFromDeviceEntity(device))
+            .insertAll(deviceRecord)
 
         device._macAddress.value?.let {
-            _connectedDevices[it] = device
+            _cachedDevices[it] = CachedDevice(device, deviceRecord)
         }
 
     }
 
-    suspend fun saveDevice(device: DeviceEntity) {
-//        when (device.actualConnectionState) {
+    suspend fun updateDevice(device: DeviceEntity) {
+//        when (device._actualConnectionState) {
 //            BluetoothConnectionState.CONNECTED -> registerDevice(device)
 //            else -> unregisterDevice(device)
 //        }
@@ -103,8 +104,10 @@ class DeviceRepository(private val appDatabase: AppDatabase) {
                 if (deviceRecord == null) {
                     null
                 } else {
-                    _connectedDevices[deviceRecord.macAddress]
-                        ?: createDeviceEntityFromDeviceRecord(deviceRecord)
+                    _cachedDevices[deviceRecord.macAddress]?.deviceEntity
+                        ?: createDeviceEntityFromDeviceRecord(
+                            deviceRecord
+                        )
                 }
             }
     }
@@ -115,33 +118,45 @@ class DeviceRepository(private val appDatabase: AppDatabase) {
             .getAll()
             .map {
                 it.map { deviceRecord ->
-                    var cachedDevice = _connectedDevices[deviceRecord.macAddress]
+                    var cachedDevice = _cachedDevices[deviceRecord.macAddress]
                     if (cachedDevice == null) {
-                        cachedDevice = createDeviceEntityFromDeviceRecord(deviceRecord)
-                        _connectedDevices[cachedDevice._macAddress.value as String] = cachedDevice
+                        val deviceEntity = createDeviceEntityFromDeviceRecord(deviceRecord)
+                        cachedDevice = CachedDevice(deviceEntity, deviceRecord)
+                        _cachedDevices[deviceEntity._macAddress.value as String] = cachedDevice
                     }
-                    cachedDevice
+                    cachedDevice.deviceEntity
                 }
             }
     }
 
     private fun createDeviceEntityFromDeviceRecord(deviceRecord: DeviceRecord): DeviceEntity {
-        return DeviceEntity(
-            deviceRecord.name,
-            deviceRecord.macAddress,
-            deviceRecord.bluetoothDeviceType,
-            deviceRecord.targetConnectionState
-        )
+        val deviceEntity = DeviceEntity.fromDeviceRecord(deviceRecord)
+        coroutineScope.launch {
+            merge(deviceEntity._targetConnectionState)
+                .collect {
+                    updateDevice(deviceEntity)
+                }
+        }
+        return deviceEntity
     }
 
     private fun createDeviceRecordFromDeviceEntity(device: DeviceEntity): DeviceRecord {
+        val id: Int? = _cachedDevices[device._macAddress.value]?.deviceRecord?.id
         return DeviceRecord(
-            null,
+            id,
             device._name.value!!,
             device._macAddress.value!!,
-            device._bluetoothDeviceType.value,
+            getBluetoothTypeForDeviceEntity(device),
             device._targetConnectionState.value
         )
+    }
+
+    private fun getBluetoothTypeForDeviceEntity(device: DeviceEntity): BluetoothDeviceType {
+        return when (device) {
+            is BleDevice -> BluetoothDeviceType.BLE
+            is LegacyBtDevice -> BluetoothDeviceType.LEGACY_BLUETOOTH
+            else -> BluetoothDeviceType.NONE
+        }
     }
 
 //    private suspend fun registerDevice(device: DeviceEntity) {

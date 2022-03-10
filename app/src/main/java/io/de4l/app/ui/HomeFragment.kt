@@ -325,7 +325,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     ) :
         RecyclerView.Adapter<DeviceAdapter.ViewHolder>() {
 
-
         inner class ViewHolder(listItemView: View) : RecyclerView.ViewHolder(listItemView) {
             lateinit var item: DeviceEntity
             val tvTemperature: TextView = listItemView.findViewById(R.id.tvTemperatureValue)
@@ -339,35 +338,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
             val tvDeviceAddress: TextView = listItemView.findViewById(R.id.tvDeviceAddress)
             val tvConnectionState: TextView = listItemView.findViewById(R.id.tvConnectionState)
-
-            @Subscribe
-            public fun onSensorEvent(event: SensorValueReceivedEvent) {
-                if (event.sensorValue.airBeamId != item._macAddress.value) {
-                    return
-                }
-
-                if (event.sensorValue.sensorType === SensorType.TEMPERATURE) {
-                    tvTemperature.text = String.format("%.2f °C", event.sensorValue.value)
-                }
-
-                if (event.sensorValue.sensorType === SensorType.HUMIDITY) {
-                    tvHumidity.text = String.format("%.2f  %%", event.sensorValue.value)
-                }
-
-                if (event.sensorValue.sensorType === SensorType.PM1) {
-                    tvPm1.text = String.format("%.0f ppm", event.sensorValue.value)
-                }
-
-                if (event.sensorValue.sensorType === SensorType.PM2_5) {
-                    tvPm25.text = String.format("%.0f ppm", event.sensorValue.value)
-                }
-
-                if (event.sensorValue.sensorType === SensorType.PM10) {
-                    tvPm10.text = String.format("%.0f ppm", event.sensorValue.value)
-                }
-
-            }
-
 
         }
 
@@ -407,11 +377,29 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 holder.tvConnectionState.text = it.toString() ?: "null"
             }
 
-            EventBus.getDefault().register(holder)
+            device._sensorValues.asLiveData().observe(lifecycleOwner) {
+                when (it?.sensorType) {
+                    SensorType.TEMPERATURE -> holder.tvTemperature.text =
+                        String.format("%.2f °C", it?.value)
+                    SensorType.HUMIDITY -> holder.tvHumidity.text =
+                        String.format("%.2f  %%", it.value)
+                    SensorType.PM1 -> holder.tvPm1.text = String.format("%.0f ppm", it.value)
+                    SensorType.PM2_5 -> holder.tvPm25.text = String.format("%.0f ppm", it.value)
+                    SensorType.PM10 -> holder.tvPm10.text = String.format("%.0f ppm", it.value)
+                    null -> {
+                        holder.tvTemperature.text = "null"
+                        holder.tvHumidity.text = "null"
+                        holder.tvPm1.text = "null"
+                        holder.tvPm25.text = "null"
+                        holder.tvPm10.text = "null"
+                    }
+                }
+            }
 
-//            device.sensorValues.asLiveData().observe(lifecycleOwner) {
-//                holder.tvTemperature.text = String.format("%.2f °C", it?.value)
-//            }
+
+//            EventBus.getDefault().register(holder)
+
+//
 
 //            when (device.connectionState) {
 //                BluetoothConnectionState.CONNECTED -> {

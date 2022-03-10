@@ -1,6 +1,7 @@
 package io.de4l.app.ui
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -48,6 +49,10 @@ class DebugFragment : Fragment() {
 
         btnAirBeam3Status = view.findViewById(R.id.btnAirBeam3Status)
         btnAirBeam3Status.setOnClickListener {
+            Log.i(
+                LOG_TAG,
+                "BleDeviceTest - DebugFragment::btnAirBeam3Status - ${Thread.currentThread().name}"
+            )
             viewModel.onConnectToAirBeam3()
         }
 

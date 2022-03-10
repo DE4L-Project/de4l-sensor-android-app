@@ -10,18 +10,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.util.Log
-import io.de4l.app.bluetooth.event.BleDeviceServicesInvalidatedEvent
-import io.de4l.app.bluetooth.event.BluetoothDataReceivedEvent
 import io.de4l.app.bluetooth.event.BluetoothDeviceConnectedEvent
 import io.de4l.app.bluetooth.event.BluetoothDeviceDisconnectedEvent
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.device.DeviceRepository
 import io.de4l.app.location.LocationService
 import io.de4l.app.sensor.RuuviTagParser
-import io.de4l.app.sensor.SensorType
-import io.de4l.app.sensor.SensorValue
-import io.de4l.app.sensor.AirBeamSensorValueParser
 import io.de4l.app.tracking.TrackingManager
+import io.de4l.app.ui.event.SendSensorValueMqttEvent
 import io.de4l.app.ui.event.SensorValueReceivedEvent
 import io.de4l.app.util.RetryException
 import io.de4l.app.util.RetryHelper.Companion.runWithRetry
@@ -29,8 +25,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ClosedSendChannelException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
-import no.nordicsemi.android.ble.exception.RequestFailedException
-import no.nordicsemi.android.ble.ktx.suspend
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.joda.time.DateTime
@@ -42,32 +36,17 @@ class BluetoothDeviceManager @Inject constructor(
     val bluetoothAdapter: BluetoothAdapter,
     val locationService: LocationService,
     val deviceRepository: DeviceRepository,
-    val airBeamSensorValueParser: AirBeamSensorValueParser,
     val trackingManager: TrackingManager,
-    val bleConnectionManager: BleConnectionManager
-
 ) {
     private val LOG_TAG: String = BluetoothDeviceManager::class.java.name
-
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
-
-    private var bluetoothConnectionJob: Job? = null
-    private var bluetoothSocketConnection: BluetoothSocketConnection? = null
-
     private var leScanCallback: ScanCallback? = null
 
     val bluetoothScanScanState = MutableStateFlow(BluetoothScanState.NOT_SCANNING)
 
-
-//       val bluetoothConnectionState = MutableStateFlow(BluetoothConnectionState.DISCONNECTED)
-
     init {
         EventBus.getDefault().register(this)
-        coroutineScope.launch {
-//            bluetoothConnectionState.collect {
-//                Log.v(LOG_TAG, "CONNECTION STATE: " + bluetoothConnectionState.value)
-//            }
-        }
+
     }
 
     fun startDeviceDiscovery() {
@@ -82,7 +61,6 @@ class BluetoothDeviceManager @Inject constructor(
         coroutineScope.launch {
             cancelDeviceDiscovery()
             disconnectAllDevices()
-//            bluetoothConnectionState.value = BluetoothConnectionState.DISCONNECTED
         }
     }
 
@@ -101,24 +79,28 @@ class BluetoothDeviceManager @Inject constructor(
             }
     }
 
+    suspend fun connectDevice(macAddress: String) {
+        connect(macAddress)
+    }
 
-    suspend fun connect(macAddress: String): Boolean {
-        onConnecting(macAddress)
-        val bluetoothDevice = findBtDevice(macAddress)
+    suspend fun connectDeviceWithRetry(macAddress: String) {
+        connect(macAddress, true)
+    }
 
-        bluetoothDevice?.let { device ->
-            if (isSensorBeacon(device)) {
-                connectSensorBeacon(device)
-            } else if (isBleDevice(device)) {
-                connectBleDevice(device)
-            } else {
-                //Legacy device
-                connectLegacyBtDevice(device)
+    private suspend fun connect(macAddress: String, connectWithRetry: Boolean = false) {
+//        onConnecting(macAddress)
+        val bluetoothDevice =
+            if (connectWithRetry) findBtDeviceWithRetry(macAddress) else findBtDevice(macAddress)
+
+        bluetoothDevice?.let {
+            val deviceEntity = deviceRepository.getByAddress(macAddress).firstOrNull()
+            deviceEntity?.let {
+                it._targetConnectionState.value = BluetoothConnectionState.CONNECTED
+                it.bluetoothDevice = bluetoothDevice
+                deviceEntity.connect()
             }
-            return true
         }
         onDisconnected(macAddress)
-        return false
     }
 
     private fun connectSensorBeacon(device: BluetoothDevice) {
@@ -135,35 +117,35 @@ class BluetoothDeviceManager @Inject constructor(
                             val location = locationService.getCurrentLocation()
                             val timestamp = DateTime()
 
-                            EventBus.getDefault()
-                                .post(
-                                    SensorValueReceivedEvent(
-                                        SensorValue(
-                                            scanResult.device!!.address,
-                                            SensorType.TEMPERATURE,
-                                            tagData.temperature,
-                                            location,
-                                            timestamp,
-                                            trackingManager.messageNumber.getAndIncrement(),
-                                            "",
-                                        )
-                                    )
-                                )
-
-                            EventBus.getDefault()
-                                .post(
-                                    SensorValueReceivedEvent(
-                                        SensorValue(
-                                            scanResult.device!!.address,
-                                            SensorType.HUMIDITY,
-                                            tagData.humidity,
-                                            location,
-                                            timestamp,
-                                            trackingManager.messageNumber.getAndIncrement(),
-                                            "",
-                                        )
-                                    )
-                                )
+//                            EventBus.getDefault()
+//                                .post(
+//                                    SensorValueReceivedEvent(
+//                                        SensorValue(
+//                                            scanResult.device!!.address,
+//                                            SensorType.TEMPERATURE,
+//                                            tagData.temperature,
+//                                            location,
+//                                            timestamp,
+//                                            trackingManager.messageNumber.getAndIncrement(),
+//                                            "",
+//                                        )
+//                                    )
+//                                )
+//
+//                            EventBus.getDefault()
+//                                .post(
+//                                    SensorValueReceivedEvent(
+//                                        SensorValue(
+//                                            scanResult.device!!.address,
+//                                            SensorType.HUMIDITY,
+//                                            tagData.humidity,
+//                                            location,
+//                                            timestamp,
+//                                            trackingManager.messageNumber.getAndIncrement(),
+//                                            "",
+//                                        )
+//                                    )
+//                                )
                         }
                     }
                 }
@@ -205,7 +187,7 @@ class BluetoothDeviceManager @Inject constructor(
                             intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE) as BluetoothDevice?
                         device?.let {
                             try {
-                                offer(device)
+                                trySend(device)
                             } catch (e: ClosedSendChannelException) {
                                 Log.v(
                                     LOG_TAG,
@@ -245,34 +227,42 @@ class BluetoothDeviceManager @Inject constructor(
     }
 
     fun disconnect(device: DeviceEntity) {
-        device._targetConnectionState.value = BluetoothConnectionState.DISCONNECTED
-        when (device._bluetoothDeviceType.value) {
-            BluetoothDeviceType.LEGACY_BLUETOOTH -> {
-                closeLegacyBtConnection()
-                bluetoothConnectionJob?.cancel()
-                bluetoothConnectionJob = null
-            }
-            BluetoothDeviceType.BLE -> {
-                bleConnectionManager.disconnect().enqueue()
-            }
-            BluetoothDeviceType.BLE_BEACON -> {
-                leScanCallback?.let {
-                    bluetoothAdapter.bluetoothLeScanner.stopScan(it)
-                }
-                leScanCallback = null
-            }
-            else -> {
-                Log.i(
-                    LOG_TAG,
-                    "Trying to disconnect unknown BT DeviceType: ${device._macAddress.value} | ${device._name.value}"
-                )
-            }
-        }
-
-
+        Log.i(
+            LOG_TAG,
+            "BleDeviceTest - BluetoothDeviceManager::disconnect - ${Thread.currentThread().name}"
+        )
         coroutineScope.launch {
-            onDisconnected(device)
+            device._targetConnectionState.value = BluetoothConnectionState.DISCONNECTED
+            device.disconnect()
         }
+
+//        when (device._bluetoothDeviceType.value) {
+//            BluetoothDeviceType.LEGACY_BLUETOOTH -> {
+//                closeLegacyBtConnection()
+//                bluetoothConnectionJob?.cancel()
+//                bluetoothConnectionJob = null
+//            }
+//            BluetoothDeviceType.BLE -> {
+//                bleConnectionManager.disconnect().enqueue()
+//            }
+//            BluetoothDeviceType.BLE_BEACON -> {
+//                leScanCallback?.let {
+//                    bluetoothAdapter.bluetoothLeScanner.stopScan(it)
+//                }
+//                leScanCallback = null
+//            }
+//            else -> {
+//                Log.i(
+//                    LOG_TAG,
+//                    "Trying to disconnect unknown BT DeviceType: ${device._macAddress.value} | ${device._name.value}"
+//                )
+//            }
+//        }
+
+
+//        coroutineScope.launch {
+//            onDisconnected(device)
+//        }
     }
 
     fun disconnect(device: BluetoothDevice) {
@@ -283,18 +273,6 @@ class BluetoothDeviceManager @Inject constructor(
         }
     }
 
-    fun forceReconnect() {
-        bluetoothSocketConnection?.simulateConnectionLoss()
-    }
-
-    private suspend fun connectWithRetry(macAddress: String) {
-        onConnecting(macAddress)
-
-        val bluetoothDevice = findBtDeviceWithRetry(macAddress)
-        bluetoothDevice?.let {
-            runWithRetry { connectLegacyBtDevice(it) }
-        }
-    }
 
     private suspend fun findBtDeviceWithRetry(macAddress: String): BluetoothDevice? {
         var discoveredDevice: BluetoothDevice? = null
@@ -325,63 +303,11 @@ class BluetoothDeviceManager @Inject constructor(
         return discoveredDevice
     }
 
-    private fun connectBleDevice(device: BluetoothDevice) {
-        coroutineScope.launch(Dispatchers.IO) {
-
-            try {
-                bleConnectionManager
-                    .connect(device)
-                    .suspend()
-                onSuccessfulConnect(device)
-            } catch (e: RequestFailedException) {
-                Log.e(LOG_TAG, e.message ?: "No error message")
-                val deviceEntity = deviceRepository.getByAddress(device.address).firstOrNull()
-
-                if (deviceEntity != null && deviceEntity._targetConnectionState.value == BluetoothConnectionState.CONNECTED) {
-                    delay(1000)
-                    connectBleDevice(device)
-                } else {
-                    onDisconnected(device.address)
-                }
-
-            }
-        }
-    }
-
-    private suspend fun connectLegacyBtDevice(
-        device: BluetoothDevice,
-    ) {
-        closeLegacyBtConnection()
-        bluetoothConnectionJob = coroutineScope.launch(Dispatchers.IO) {
-            bluetoothSocketConnection = BluetoothSocketConnection(device)
-
-            try {
-                bluetoothSocketConnection?.connect {
-                    coroutineScope.launch {
-                        onSuccessfulConnect(device)
-                    }
-                }
-                disconnect(device)
-            } catch (e: BluetoothConnectionLostException) {
-                Log.e(LOG_TAG, "Connection lost: ${e.message}")
-                closeLegacyBtConnection()
-                onReconnecting(device.address)
-                connectWithRetry(device.address)
-            }
-        }
-    }
-
     private suspend fun onSuccessfulConnect(device: BluetoothDevice) {
         val deviceEntity = deviceRepository.getByAddress(device.address).first()
         deviceEntity?.let {
             onConnected(deviceEntity)
         }
-    }
-
-
-    private fun closeLegacyBtConnection() {
-        bluetoothSocketConnection?.closeConnection()
-        bluetoothSocketConnection = null
     }
 
     fun getPairedDevices(): Set<BluetoothDevice> {
@@ -390,7 +316,6 @@ class BluetoothDeviceManager @Inject constructor(
 
     private suspend fun onConnected(device: DeviceEntity) {
         device._actualConnectionState.value = BluetoothConnectionState.CONNECTED
-//        bluetoothConnectionState.value = BluetoothConnectionState.CONNECTED
         saveDevice(device)
         EventBus.getDefault().post(BluetoothDeviceConnectedEvent(device))
     }
@@ -403,10 +328,6 @@ class BluetoothDeviceManager @Inject constructor(
     }
 
     private suspend fun onConnecting(device: DeviceEntity) {
-//        if (bluetoothConnectionState.value != BluetoothConnectionState.RECONNECTING) {
-//            bluetoothConnectionState.value = BluetoothConnectionState.CONNECTING
-//        }
-
         if (device._actualConnectionState.value != BluetoothConnectionState.RECONNECTING) {
             device._actualConnectionState.value = BluetoothConnectionState.CONNECTING
             saveDevice(device)
@@ -421,10 +342,6 @@ class BluetoothDeviceManager @Inject constructor(
     }
 
     private suspend fun onReconnecting(device: DeviceEntity) {
-//        if (bluetoothConnectionState.value != BluetoothConnectionState.CONNECTING) {
-//            bluetoothConnectionState.value = BluetoothConnectionState.RECONNECTING
-//        }
-
         if (device._actualConnectionState.value != BluetoothConnectionState.CONNECTING) {
             device._actualConnectionState.value = BluetoothConnectionState.RECONNECTING
             saveDevice(device)
@@ -439,7 +356,7 @@ class BluetoothDeviceManager @Inject constructor(
     }
 
     private suspend fun onDisconnected(device: DeviceEntity) {
-        device._actualConnectionState.value = BluetoothConnectionState.DISCONNECTED
+//        device._actualConnectionState.value = BluetoothConnectionState.DISCONNECTED
 //        bluetoothConnectionState.value = BluetoothConnectionState.DISCONNECTED
 
         saveDevice(device)
@@ -454,33 +371,16 @@ class BluetoothDeviceManager @Inject constructor(
     }
 
     private suspend fun saveDevice(device: DeviceEntity) {
-        deviceRepository.saveDevice(device)
+        deviceRepository.updateDevice(device)
     }
 
-
     @Subscribe
-    fun onBluetoothDataReceivedEvent(event: BluetoothDataReceivedEvent) {
-        val sensorValue =
-            airBeamSensorValueParser.parseLine(
-                event.device.address,
-                event.data,
-                locationService.getCurrentLocation(),
-                DateTime()
-            )
-
-        coroutineScope.launch {
-            val deviceEntity = deviceRepository.getByAddress(event.device.address).firstOrNull()
-            deviceEntity?.let {
-                it._sensorValues.value = sensorValue
-            }
+    fun onSensorValueReceivedEvent(event: SensorValueReceivedEvent) {
+        event.sensorValue?.let {
+            it.location = locationService.getCurrentLocation()
+            it.sequenceNumber = trackingManager.messageNumber.getAndIncrement()
+            EventBus.getDefault().post(SendSensorValueMqttEvent(it))
         }
-
-        EventBus.getDefault().post(SensorValueReceivedEvent(sensorValue))
-    }
-
-    @Subscribe
-    fun onBleDeviceServicesInvalidatedEvent(event: BleDeviceServicesInvalidatedEvent) {
-        disconnect(event.device)
     }
 
     companion object {
@@ -491,7 +391,6 @@ class BluetoothDeviceManager @Inject constructor(
                 else -> BluetoothDeviceType.LEGACY_BLUETOOTH
             }
         }
-
 
         private fun isBleDevice(bluetoothDevice: BluetoothDevice): Boolean {
             return bluetoothDevice.type == BluetoothDevice.DEVICE_TYPE_LE || bluetoothDevice.type == BluetoothDevice.DEVICE_TYPE_DUAL

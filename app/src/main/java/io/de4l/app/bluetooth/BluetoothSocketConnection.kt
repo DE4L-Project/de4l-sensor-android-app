@@ -16,7 +16,10 @@ import java.io.OutputStream
 import java.util.*
 
 @SuppressLint("MissingPermission")
-class BluetoothSocketConnection(private val device: BluetoothDevice) {
+class BluetoothSocketConnection(
+    private val device: BluetoothDevice,
+    private val connectionListener: BleConnectionManager.ConnectionListener
+) {
     private val LOG_TAG: String = BluetoothSocketConnection::class.java.name
 
     private val MOBILE_SESSION_MESSAGE =
@@ -62,9 +65,7 @@ class BluetoothSocketConnection(private val device: BluetoothDevice) {
                             return false
                         }
 
-                        EventBus.getDefault().post(BluetoothDataReceivedEvent(line, device))
-
-//                        Log.i(LOG_TAG, line)
+                        connectionListener.onDataReceived(line, device)
                         return true
                     }
 

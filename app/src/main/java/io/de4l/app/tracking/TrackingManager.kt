@@ -10,6 +10,7 @@ import io.de4l.app.location.event.LocationUpdateEvent
 import io.de4l.app.mqtt.LocationMqttMessage
 import io.de4l.app.mqtt.MqttManager
 import io.de4l.app.mqtt.SensorValueMqttMessage
+import io.de4l.app.ui.event.SendSensorValueMqttEvent
 import io.de4l.app.ui.event.SensorValueReceivedEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,8 +43,6 @@ class TrackingManager @Inject constructor(
         trackingSessionId = UUID.randomUUID().toString()
 
         //Location only mode is only possible
-
-
         val connectedDevices = deviceRepository.getDevicesShouldBeConnected().firstOrNull()
         val user = authManager.user.value
 
@@ -52,7 +51,6 @@ class TrackingManager @Inject constructor(
                 true -> TrackingState.LOCATION_ONLY
                 else -> TrackingState.TRACKING
             }
-
 
         mqttManager.connectWithRetry()
     }
@@ -69,17 +67,19 @@ class TrackingManager @Inject constructor(
 
     @ExperimentalCoroutinesApi
     @Subscribe
-    fun onSensorValueReceived(event: SensorValueReceivedEvent) {
+    fun onSensorValueReceived(event: SendSensorValueMqttEvent) {
         if (trackingState.value == TrackingState.TRACKING) {
-            mqttManager.publishForCurrentUser(
-                SensorValueMqttMessage(
-                    event.sensorValue,
-                    authManager.user.value?.username ?: "Unknown user.",
-                    BuildConfig.VERSION_NAME,
-                    AppConstants.MQTT_TOPIC_PATTERN_SENSOR_VALUES,
-                    trackingSessionId ?: "null"
+            event.sensorValue?.let {
+                mqttManager.publishForCurrentUser(
+                    SensorValueMqttMessage(
+                        event.sensorValue,
+                        authManager.user.value?.username ?: "Unknown user.",
+                        BuildConfig.VERSION_NAME,
+                        AppConstants.MQTT_TOPIC_PATTERN_SENSOR_VALUES,
+                        trackingSessionId ?: "null"
+                    )
                 )
-            )
+            }
         }
     }
 
