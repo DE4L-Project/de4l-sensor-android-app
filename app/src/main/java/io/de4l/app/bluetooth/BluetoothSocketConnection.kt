@@ -7,9 +7,7 @@ import android.util.Log
 import com.google.common.io.CharStreams
 import com.google.common.io.LineProcessor
 import io.de4l.app.AppConstants
-import io.de4l.app.bluetooth.event.BluetoothDataReceivedEvent
 import kotlinx.coroutines.delay
-import org.greenrobot.eventbus.EventBus
 import java.io.IOException
 import java.io.InputStreamReader
 import java.io.OutputStream
@@ -18,7 +16,7 @@ import java.util.*
 @SuppressLint("MissingPermission")
 class BluetoothSocketConnection(
     private val device: BluetoothDevice,
-    private val connectionListener: BleConnectionManager.ConnectionListener
+    private val connectionListener: AirBeam3BleConnection.ConnectionListener
 ) {
     private val LOG_TAG: String = BluetoothSocketConnection::class.java.name
 

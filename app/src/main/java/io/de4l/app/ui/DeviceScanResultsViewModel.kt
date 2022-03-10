@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothDevice
 import android.util.Log
 import androidx.lifecycle.*
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.bluetooth.BluetoothDeviceManager
 import io.de4l.app.bluetooth.BluetoothDeviceType
 import io.de4l.app.bluetooth.BluetoothScanState
@@ -81,6 +80,6 @@ class DeviceScanResultsViewModel @Inject constructor(
     }
 
     fun getBluetoothDeviceType(bluetoothDevice: BluetoothDevice): BluetoothDeviceType {
-        return BluetoothDeviceManager.getBluetoothDeviceTypeForDevice(bluetoothDevice)
+        return BluetoothDeviceManager.getDeviceTypeForBluetoothDevice(bluetoothDevice)
     }
 }

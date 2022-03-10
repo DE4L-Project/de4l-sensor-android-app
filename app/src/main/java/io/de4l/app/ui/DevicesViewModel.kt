@@ -13,7 +13,9 @@ import io.de4l.app.device.DeviceEntity
 import io.de4l.app.device.DeviceRepository
 import io.de4l.app.tracking.BackgroundServiceWatcher
 import io.de4l.app.ui.event.NavigationEvent
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import javax.inject.Inject
@@ -28,12 +30,10 @@ class DevicesViewModel @Inject constructor(
 ) : AndroidViewModel(application) {
 
     lateinit var _devices: LiveData<List<DeviceEntity>>
-//    lateinit var connectionState: LiveData<BluetoothConnectionState>
 
     init {
         viewModelScope.launch {
             _devices = deviceRepository.getDevices().asLiveData()
-//            connectionState = bluetoothDeviceManager.bluetoothConnectionState.asLiveData()
         }
 
         EventBus.getDefault().register(this)
@@ -62,19 +62,21 @@ class DevicesViewModel @Inject constructor(
 
     fun onDeviceConnectClicked(device: DeviceEntity) {
         viewModelScope.launch {
-            device.let { device ->
-                if (device._actualConnectionState.value != BluetoothConnectionState.CONNECTED) {
-                    device._targetConnectionState.value = BluetoothConnectionState.CONNECTED
-                    deviceRepository.updateDevice(device)
+            withContext(Dispatchers.IO) {
+                device.let { device ->
+                    if (device._actualConnectionState.value != BluetoothConnectionState.CONNECTED) {
+                        device._targetConnectionState.value = BluetoothConnectionState.CONNECTED
+                        device._macAddress.value?.let {
 
-                    device._macAddress.value?.let {
-                        deviceRepository.removeByAddress(it)
+                            //Must find device first
+                            launch { bluetoothDeviceManager.connectDeviceWithRetry(it) }
+                        }
+
+                    } else {
+                        device._targetConnectionState.value = BluetoothConnectionState.DISCONNECTED
+                        deviceRepository.updateDevice(device)
+                        bluetoothDeviceManager.disconnect(device)
                     }
-
-                } else {
-                    device._targetConnectionState.value = BluetoothConnectionState.DISCONNECTED
-                    deviceRepository.updateDevice(device)
-                    bluetoothDeviceManager.disconnect(device)
                 }
             }
         }

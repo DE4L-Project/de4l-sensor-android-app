@@ -16,14 +16,12 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import io.de4l.app.AppConstants
 import io.de4l.app.auth.AuthManager
-import io.de4l.app.bluetooth.BleConnectionManager
 import io.de4l.app.bluetooth.BluetoothDeviceManager
 import io.de4l.app.database.AppDatabase
 import io.de4l.app.device.DeviceRepository
 import io.de4l.app.location.LocationService
 import io.de4l.app.mqtt.MqttManager
 import io.de4l.app.mqtt.MqttMessagePersistence
-import io.de4l.app.sensor.AirBeamSensorValueParser
 import io.de4l.app.tracking.BackgroundServiceWatcher
 import io.de4l.app.tracking.TrackingManager
 import javax.inject.Singleton

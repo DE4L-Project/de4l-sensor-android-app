@@ -11,7 +11,7 @@ import no.nordicsemi.android.ble.BleManager
 import org.joda.time.DateTime
 import java.util.*
 
-class BleConnectionManager(
+class RuuviTagBleConnection(
     context: Context,
     private val connectionListener: ConnectionListener
 ) :
@@ -47,7 +47,7 @@ class BleConnectionManager(
     }
 
     interface ConnectionListener {
-        fun onDataReceived(string: String, device: BluetoothDevice)
+        fun onDataReceived(data: String, device: BluetoothDevice)
         fun onDisconnected()
     }
 

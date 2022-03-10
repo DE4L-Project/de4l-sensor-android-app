@@ -38,7 +38,7 @@ class LegacyBtDevice(
                     try {
                         socketConnection = BluetoothSocketConnection(
                             it,
-                            object : BleConnectionManager.ConnectionListener {
+                            object : AirBeam3BleConnection.ConnectionListener {
                                 override fun onDataReceived(
                                     data: String,
                                     device: BluetoothDevice

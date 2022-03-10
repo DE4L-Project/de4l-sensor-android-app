@@ -8,6 +8,7 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.asLiveData
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -95,25 +96,29 @@ class DevicesFragment : Fragment() {
             val device = _devices[position]
             holder.item = device
 
-            when (device._actualConnectionState.value) {
-                BluetoothConnectionState.CONNECTED -> {
-                    holder.btnConnectDevice.text = "Disconnect"
-                    holder.btnConnectDevice.isEnabled = true
-                }
-                BluetoothConnectionState.CONNECTING -> {
-                    holder.btnConnectDevice.text = "Connecting..."
-                    holder.btnConnectDevice.isEnabled = false
-                }
-                BluetoothConnectionState.RECONNECTING -> {
-                    holder.btnConnectDevice.text = "Reconnecting..."
-                    holder.btnConnectDevice.isEnabled = false
-                }
-                BluetoothConnectionState.DISCONNECTED -> {
-                    holder.btnConnectDevice.text = "Connect"
+            device._actualConnectionState.asLiveData().observe(viewLifecycleOwner) {
+                when (it) {
+                    BluetoothConnectionState.CONNECTED -> {
+                        holder.btnConnectDevice.text = "Disconnect"
+                        holder.btnConnectDevice.isEnabled = true
+                    }
+                    BluetoothConnectionState.CONNECTING -> {
+                        holder.btnConnectDevice.text = "Connecting..."
+                        holder.btnConnectDevice.isEnabled = false
+                    }
+                    BluetoothConnectionState.RECONNECTING -> {
+                        holder.btnConnectDevice.text = "Reconnecting..."
+                        holder.btnConnectDevice.isEnabled = false
+                    }
+                    BluetoothConnectionState.DISCONNECTED -> {
+                        holder.btnConnectDevice.text = "Connect"
 //                    holder.btnConnectDevice.isEnabled =
 //                        viewModel.connectionState.value == BluetoothConnectionState.DISCONNECTED
+                    }
                 }
             }
+
+
 
             device.let {
                 holder.textView.text = it._name.value

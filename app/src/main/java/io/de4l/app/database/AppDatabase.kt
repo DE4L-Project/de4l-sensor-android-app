@@ -11,7 +11,7 @@ import io.de4l.app.mqtt.PersistentMqttMessage
 
 @Database(
     entities = arrayOf(DeviceRecord::class, PersistentMqttMessage::class),
-    version = 11,
+    version = 12,
     exportSchema = true
 )
 @TypeConverters(RoomConverters::class)

@@ -5,5 +5,6 @@ enum class SensorType {
     HUMIDITY,
     PM1,
     PM2_5,
-    PM10
+    PM10,
+    PRESSURE
 }

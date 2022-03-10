@@ -43,8 +43,6 @@ import org.greenrobot.eventbus.Subscribe
 @AndroidEntryPoint
 class HomeFragment : Fragment(), OnMapReadyCallback {
 
-    private var _connectedDevices: List<DeviceEntity> = ArrayList()
-
     private val LOG_TAG = HomeFragment::class.java.name
 
     private val viewModel: HomeViewModel by viewModels()
@@ -367,7 +365,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             holder.tvDeviceAddress.text =
                 device._macAddress.value + " - " + (device._name.value ?: "UNKNOWN")
 
-
             holder.btnDisconnectSensor.setOnClickListener {
                 viewModel.disconnectDevice(device)
             }
@@ -380,71 +377,22 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             device._sensorValues.asLiveData().observe(lifecycleOwner) {
                 when (it?.sensorType) {
                     SensorType.TEMPERATURE -> holder.tvTemperature.text =
-                        String.format("%.2f °C", it?.value)
+                        String.format("%.2f °C", it.value)
                     SensorType.HUMIDITY -> holder.tvHumidity.text =
                         String.format("%.2f  %%", it.value)
                     SensorType.PM1 -> holder.tvPm1.text = String.format("%.0f ppm", it.value)
                     SensorType.PM2_5 -> holder.tvPm25.text = String.format("%.0f ppm", it.value)
                     SensorType.PM10 -> holder.tvPm10.text = String.format("%.0f ppm", it.value)
                     null -> {
-                        holder.tvTemperature.text = "null"
-                        holder.tvHumidity.text = "null"
-                        holder.tvPm1.text = "null"
-                        holder.tvPm25.text = "null"
-                        holder.tvPm10.text = "null"
+                        holder.tvTemperature.text = "-"
+                        holder.tvHumidity.text = "-"
+                        holder.tvPm1.text = "-"
+                        holder.tvPm25.text = "-"
+                        holder.tvPm10.text = "-"
                     }
                 }
             }
-
-
-//            EventBus.getDefault().register(holder)
-
-//
-
-//            when (device.connectionState) {
-//                BluetoothConnectionState.CONNECTED -> {
-//                    holder.btnConnectDevice.text = "Disconnect"
-//                    holder.btnConnectDevice.isEnabled = true
-//                }
-//                BluetoothConnectionState.CONNECTING -> {
-//                    holder.btnConnectDevice.text = "Connecting..."
-//                    holder.btnConnectDevice.isEnabled = false
-//                }
-//                BluetoothConnectionState.RECONNECTING -> {
-//                    holder.btnConnectDevice.text = "Reconnecting..."
-//                    holder.btnConnectDevice.isEnabled = false
-//                }
-//                BluetoothConnectionState.DISCONNECTED -> {
-//                    holder.btnConnectDevice.text = "Connect"
-////                    holder.btnConnectDevice.isEnabled =
-////                        viewModel.connectionState.value == BluetoothConnectionState.DISCONNECTED
-//                }
-//            }
-//
-//            device.let {
-//                holder.textView.text = it.name
-//                holder.tvDescription.text = it.macAddress
-//            }
-//
-//            holder.btnConnectDevice.setOnClickListener {
-//
-//            }
-
         }
-
-        override fun onViewDetachedFromWindow(holder: ViewHolder) {
-            super.onViewDetachedFromWindow(holder)
-            EventBus.getDefault().unregister(holder)
-        }
-
-        override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
-            super.onAttachedToRecyclerView(recyclerView)
-        }
-
-        override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
-            super.onDetachedFromRecyclerView(recyclerView)
-        }
-
 
         override fun getItemCount(): Int {
             return _devices.size

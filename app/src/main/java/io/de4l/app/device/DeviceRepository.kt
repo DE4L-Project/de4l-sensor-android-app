@@ -153,23 +153,10 @@ class DeviceRepository(private val appDatabase: AppDatabase) {
 
     private fun getBluetoothTypeForDeviceEntity(device: DeviceEntity): BluetoothDeviceType {
         return when (device) {
-            is BleDevice -> BluetoothDeviceType.BLE
-            is LegacyBtDevice -> BluetoothDeviceType.LEGACY_BLUETOOTH
+            is AirBeam3Device -> BluetoothDeviceType.AIRBEAM3
+            is RuuviTagDevice -> BluetoothDeviceType.RUUVI_TAG
+            is LegacyBtDevice -> BluetoothDeviceType.AIRBEAM2
             else -> BluetoothDeviceType.NONE
         }
     }
-
-//    private suspend fun registerDevice(device: DeviceEntity) {
-//        this._connectedDevices[device.macAddress] = device
-//        this.connectedDevices.emit(this._connectedDevices.values.toList())
-//    }
-//
-//    private suspend fun unregisterDevice(device: DeviceEntity) {
-//        this._connectedDevices.remove(device.macAddress)
-//        this.connectedDevices.emit(this._connectedDevices.values.toList())
-//    }
-
-//    suspend fun sendUpdateForDevice(macAddress: String, sensorValue: SensorValue) {
-//        _connectedDevices[macAddress]?.sensorValues?.emit(sensorValue)
-//    }
 }

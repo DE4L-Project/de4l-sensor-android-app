@@ -1,11 +1,10 @@
 package io.de4l.app.device
 
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothClass
 import android.bluetooth.BluetoothDevice
 import io.de4l.app.bluetooth.BluetoothConnectionState
+import io.de4l.app.bluetooth.BluetoothDeviceManager
 import io.de4l.app.bluetooth.BluetoothDeviceType
-import io.de4l.app.bluetooth.BluetoothSocketConnection
 import io.de4l.app.sensor.SensorValue
 import io.de4l.app.ui.event.SensorValueReceivedEvent
 import kotlinx.coroutines.CoroutineScope
@@ -79,28 +78,39 @@ abstract class DeviceEntity {
 
     @SuppressLint("MissingPermission")
     companion object {
-
         fun fromBluetoothDevice(bluetoothDevice: BluetoothDevice): DeviceEntity {
             var deviceEntity: DeviceEntity
-            when {
-                isSensorBeacon(bluetoothDevice) -> deviceEntity =
-                    BleDevice(bluetoothDevice.name, bluetoothDevice.address)
-                isBleDevice(bluetoothDevice) -> deviceEntity =
-                    BleDevice(bluetoothDevice.name, bluetoothDevice.address)
-                else -> deviceEntity = LegacyBtDevice(bluetoothDevice.name, bluetoothDevice.address)
+            val bluetoothDeviceType =
+                BluetoothDeviceManager.getDeviceTypeForBluetoothDevice(bluetoothDevice)
+
+            when (bluetoothDeviceType) {
+                BluetoothDeviceType.AIRBEAM2 -> deviceEntity = LegacyBtDevice(
+                    bluetoothDevice.name,
+                    bluetoothDevice.address
+                )
+                BluetoothDeviceType.AIRBEAM3 -> deviceEntity = AirBeam3Device(
+                    bluetoothDevice.name,
+                    bluetoothDevice.address
+                )
+                BluetoothDeviceType.RUUVI_TAG -> deviceEntity = RuuviTagDevice(
+                    bluetoothDevice.name,
+                    bluetoothDevice.address
+                )
+                else -> throw Exception("Unknown device type: $bluetoothDeviceType")
             }
+
             deviceEntity.bluetoothDevice = bluetoothDevice
             return deviceEntity
         }
 
         fun fromDeviceRecord(deviceRecord: DeviceRecord): DeviceEntity {
-            var deviceEntity: DeviceEntity
-            when (deviceRecord.bluetoothDeviceType) {
-                BluetoothDeviceType.BLE ->
-                    deviceEntity = BleDevice(deviceRecord.name, deviceRecord.macAddress)
-
-                BluetoothDeviceType.LEGACY_BLUETOOTH ->
-                    deviceEntity = LegacyBtDevice(
+            var deviceEntity: DeviceEntity = when (deviceRecord.bluetoothDeviceType) {
+                BluetoothDeviceType.AIRBEAM3 ->
+                    AirBeam3Device(deviceRecord.name, deviceRecord.macAddress)
+                BluetoothDeviceType.RUUVI_TAG ->
+                    RuuviTagDevice(deviceRecord.name, deviceRecord.macAddress)
+                BluetoothDeviceType.AIRBEAM2 ->
+                    LegacyBtDevice(
                         deviceRecord.name, deviceRecord.macAddress
                     )
                 else ->
@@ -109,15 +119,6 @@ abstract class DeviceEntity {
 
             deviceEntity._targetConnectionState.value = deviceRecord.targetConnectionState
             return deviceEntity
-        }
-
-
-        private fun isBleDevice(bluetoothDevice: BluetoothDevice): Boolean {
-            return bluetoothDevice.type == BluetoothDevice.DEVICE_TYPE_LE || bluetoothDevice.type == BluetoothDevice.DEVICE_TYPE_DUAL
-        }
-
-        private fun isSensorBeacon(bluetoothDevice: BluetoothDevice): Boolean {
-            return bluetoothDevice.name?.startsWith("Ruuvi") == true
         }
     }
 }

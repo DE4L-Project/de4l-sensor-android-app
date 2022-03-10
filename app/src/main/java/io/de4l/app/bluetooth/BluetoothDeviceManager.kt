@@ -14,6 +14,7 @@ import io.de4l.app.bluetooth.event.BluetoothDeviceConnectedEvent
 import io.de4l.app.bluetooth.event.BluetoothDeviceDisconnectedEvent
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.device.DeviceRepository
+import io.de4l.app.device.StopBleScannerEvent
 import io.de4l.app.location.LocationService
 import io.de4l.app.sensor.RuuviTagParser
 import io.de4l.app.tracking.TrackingManager
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.joda.time.DateTime
+import java.lang.Exception
 import javax.inject.Inject
 
 @SuppressLint("MissingPermission")
@@ -383,21 +385,30 @@ class BluetoothDeviceManager @Inject constructor(
         }
     }
 
+    @Subscribe
+    fun onStartBleScannerEvent(event: StartBleScannerEvent) {
+        bluetoothAdapter.bluetoothLeScanner.startScan(event.leScanCallback)
+    }
+
+    @Subscribe
+    fun onStopBleScannerEvent(event: StopBleScannerEvent) {
+        bluetoothAdapter.bluetoothLeScanner.stopScan(event.leScanCallback)
+    }
+
     companion object {
-        fun getBluetoothDeviceTypeForDevice(device: BluetoothDevice): BluetoothDeviceType {
-            return when {
-                isSensorBeacon(device) -> BluetoothDeviceType.BLE_BEACON
-                isBleDevice(device) -> BluetoothDeviceType.BLE
-                else -> BluetoothDeviceType.LEGACY_BLUETOOTH
+        fun getDeviceTypeForBluetoothDevice(bluetoothDevice: BluetoothDevice): BluetoothDeviceType {
+            when {
+                bluetoothDevice.name.startsWith("Airbeam2") -> {
+                    return BluetoothDeviceType.AIRBEAM2
+                }
+                bluetoothDevice.name.startsWith("AirBeam3") -> {
+                    return BluetoothDeviceType.AIRBEAM3
+                }
+                bluetoothDevice.name.startsWith("Ruuvi") -> {
+                    return BluetoothDeviceType.RUUVI_TAG
+                }
+                else -> throw Exception("Unknown device type: ${bluetoothDevice.name}")
             }
-        }
-
-        private fun isBleDevice(bluetoothDevice: BluetoothDevice): Boolean {
-            return bluetoothDevice.type == BluetoothDevice.DEVICE_TYPE_LE || bluetoothDevice.type == BluetoothDevice.DEVICE_TYPE_DUAL
-        }
-
-        private fun isSensorBeacon(bluetoothDevice: BluetoothDevice): Boolean {
-            return bluetoothDevice.name?.startsWith("Ruuvi") == true
         }
     }
 }
