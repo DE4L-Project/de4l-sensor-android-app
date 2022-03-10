@@ -21,9 +21,11 @@ import io.de4l.app.ui.event.NavigationEvent
 import io.de4l.app.ui.event.SensorValueReceivedEvent
 import io.de4l.app.ui.event.StartLocationServiceEvent
 import io.de4l.app.ui.event.StopLocationServiceEvent
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -75,10 +77,12 @@ class HomeViewModel @Inject constructor(
     @ExperimentalCoroutinesApi
     fun onToggleTrackingClicked() {
         viewModelScope.launch {
-            if (trackingState.value == TrackingState.TRACKING || trackingState.value == TrackingState.LOCATION_ONLY) {
-                trackingManager.stopTracking()
-            } else {
-                trackingManager.startTracking()
+            withContext(Dispatchers.IO) {
+                if (trackingState.value == TrackingState.TRACKING || trackingState.value == TrackingState.LOCATION_ONLY) {
+                    trackingManager.stopTracking()
+                } else {
+                    trackingManager.startTracking()
+                }
             }
         }
     }

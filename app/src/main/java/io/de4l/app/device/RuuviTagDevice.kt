@@ -67,6 +67,7 @@ class RuuviTagDevice(
             EventBus.getDefault().post(StopBleScannerEvent(it))
         }
         leScanCallback = null
+        onDisconnected()
     }
 
     override suspend fun forceReconnect() {
