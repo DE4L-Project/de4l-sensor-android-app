@@ -4,17 +4,14 @@ import android.util.Log
 import io.de4l.app.AppConstants
 import io.de4l.app.BuildConfig
 import io.de4l.app.auth.AuthManager
-import io.de4l.app.bluetooth.BluetoothDeviceManager
 import io.de4l.app.device.DeviceRepository
 import io.de4l.app.location.event.LocationUpdateEvent
 import io.de4l.app.mqtt.LocationMqttMessage
 import io.de4l.app.mqtt.MqttManager
 import io.de4l.app.mqtt.SensorValueMqttMessage
 import io.de4l.app.ui.event.SendSensorValueMqttEvent
-import io.de4l.app.ui.event.SensorValueReceivedEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe

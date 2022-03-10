@@ -2,7 +2,8 @@ package io.de4l.app.bluetooth
 
 import android.annotation.SuppressLint
 import android.app.Application
-import android.bluetooth.*
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.BroadcastReceiver
@@ -29,7 +30,6 @@ import kotlinx.coroutines.flow.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.joda.time.DateTime
-import java.lang.Exception
 import javax.inject.Inject
 
 @SuppressLint("MissingPermission")

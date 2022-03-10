@@ -1,10 +1,7 @@
 package io.de4l.app.mqtt
 
-import android.database.DatabaseErrorHandler
 import com.google.gson.JsonObject
-import io.de4l.app.location.LocationValue
 import org.joda.time.DateTime
-import java.sql.Timestamp
 
 abstract class AbstractMqttMessage(
     var username: String? = null,

@@ -1,7 +1,9 @@
 package io.de4l.app.device
 
 import android.bluetooth.BluetoothDevice
-import io.de4l.app.bluetooth.*
+import io.de4l.app.bluetooth.AirBeam3BleConnection
+import io.de4l.app.bluetooth.BluetoothConnectionState
+import io.de4l.app.bluetooth.BluetoothSocketConnection
 import io.de4l.app.sensor.AirBeamSensorValueParser
 import io.de4l.app.util.RetryException
 import io.de4l.app.util.RetryHelper.Companion.runWithRetry
@@ -10,7 +12,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.joda.time.DateTime
-import java.lang.Exception
 
 class LegacyBtDevice(
     name: String?,

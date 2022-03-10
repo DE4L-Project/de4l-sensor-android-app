@@ -11,8 +11,8 @@ import io.de4l.app.auth.AuthManager
 import io.de4l.app.bluetooth.BluetoothDeviceManager
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.device.DeviceRepository
-import io.de4l.app.location.LocationValue
 import io.de4l.app.location.LocationService
+import io.de4l.app.location.LocationValue
 import io.de4l.app.location.event.LocationUpdateEvent
 import io.de4l.app.tracking.BackgroundServiceWatcher
 import io.de4l.app.tracking.TrackingManager

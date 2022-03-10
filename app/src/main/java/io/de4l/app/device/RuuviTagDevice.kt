@@ -2,7 +2,6 @@ package io.de4l.app.device
 
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
-import android.util.Log
 import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.bluetooth.StartBleScannerEvent
 import io.de4l.app.sensor.RuuviTagParser

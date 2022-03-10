@@ -2,7 +2,6 @@ package io.de4l.app.mqtt
 
 import com.google.gson.JsonObject
 import io.de4l.app.location.LocationValue
-import org.eclipse.paho.client.mqttv3.MqttTopic
 import org.joda.time.DateTime
 
 class LocationMqttMessage(

@@ -15,7 +15,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.de4l.app.AppConstants
 import io.de4l.app.R
 import io.de4l.app.auth.AuthManager
-import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.bluetooth.BluetoothDeviceManager
 import io.de4l.app.bluetooth.event.ConnectToBluetoothDeviceEvent
 import io.de4l.app.device.DeviceRepository

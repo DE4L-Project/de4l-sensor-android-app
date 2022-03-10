@@ -1,8 +1,5 @@
 package io.de4l.app.sensor
 
-import io.de4l.app.BuildConfig
-import io.de4l.app.location.LocationValue
-import io.de4l.app.tracking.TrackingManager
 import org.joda.time.DateTime
 
 class AirBeamSensorValueParser {

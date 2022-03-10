@@ -1,7 +1,6 @@
 package io.de4l.app.device
 
 import androidx.room.*
-import io.de4l.app.bluetooth.BluetoothConnectionState
 import kotlinx.coroutines.flow.Flow
 
 @Dao

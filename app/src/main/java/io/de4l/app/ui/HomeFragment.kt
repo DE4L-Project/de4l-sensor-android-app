@@ -7,15 +7,12 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
 import androidx.lifecycle.asLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -35,10 +32,6 @@ import io.de4l.app.device.DeviceEntity
 import io.de4l.app.location.LocationValue
 import io.de4l.app.sensor.SensorType
 import io.de4l.app.tracking.TrackingState
-import io.de4l.app.ui.event.SensorValueReceivedEvent
-import kotlinx.coroutines.flow.collect
-import org.greenrobot.eventbus.EventBus
-import org.greenrobot.eventbus.Subscribe
 
 @AndroidEntryPoint
 class HomeFragment : Fragment(), OnMapReadyCallback {

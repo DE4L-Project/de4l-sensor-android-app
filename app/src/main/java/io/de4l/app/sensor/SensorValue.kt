@@ -1,8 +1,6 @@
 package io.de4l.app.sensor
 
-import com.google.gson.JsonObject
 import io.de4l.app.location.LocationValue
-import io.de4l.app.mqtt.AbstractMqttMessage
 import org.joda.time.DateTime
 
 class SensorValue(

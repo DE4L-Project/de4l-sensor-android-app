@@ -4,7 +4,6 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import io.de4l.app.device.DeviceDao
-import io.de4l.app.device.DeviceEntity
 import io.de4l.app.device.DeviceRecord
 import io.de4l.app.mqtt.MqttMessageDao
 import io.de4l.app.mqtt.PersistentMqttMessage
