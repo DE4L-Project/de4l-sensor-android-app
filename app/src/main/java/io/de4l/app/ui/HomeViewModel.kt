@@ -76,13 +76,11 @@ class HomeViewModel @Inject constructor(
 
     @ExperimentalCoroutinesApi
     fun onToggleTrackingClicked() {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                if (trackingState.value == TrackingState.TRACKING || trackingState.value == TrackingState.LOCATION_ONLY) {
-                    trackingManager.stopTracking()
-                } else {
-                    trackingManager.startTracking()
-                }
+        viewModelScope.launch(Dispatchers.IO) {
+            if (trackingState.value == TrackingState.TRACKING || trackingState.value == TrackingState.LOCATION_ONLY) {
+                trackingManager.stopTracking()
+            } else {
+                trackingManager.startTracking()
             }
         }
     }

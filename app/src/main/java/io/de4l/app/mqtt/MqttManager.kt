@@ -29,7 +29,7 @@ class MqttManager(
 
     private val LOG_TAG: String = MqttManager::class.java.name
 
-    private var mqttAndroidClient: MqttAndroidClient? = null
+    private var mqttAndroidClient: MqttAsyncClient? = null
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
@@ -138,10 +138,9 @@ class MqttManager(
     }
 
     @ExperimentalCoroutinesApi
-    private fun createMqttClient(): MqttAndroidClient {
+    private fun createMqttClient(): MqttAsyncClient {
         val mqttClient =
-            MqttAndroidClient(
-                context,
+            MqttAsyncClient(
                 AppConstants.MQTT_SERVER_URL,
                 MqttClient.generateClientId(),
                 mqttMessagePersistence
