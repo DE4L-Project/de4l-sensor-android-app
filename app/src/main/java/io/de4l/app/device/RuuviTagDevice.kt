@@ -3,6 +3,7 @@ package io.de4l.app.device
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import io.de4l.app.bluetooth.BluetoothConnectionState
+import io.de4l.app.bluetooth.BluetoothDeviceType
 import io.de4l.app.bluetooth.StartBleScannerEvent
 import io.de4l.app.sensor.RuuviTagParser
 import io.de4l.app.sensor.SensorType
@@ -31,6 +32,7 @@ class RuuviTagDevice(
                             val timestamp = DateTime()
                             _sensorValues.value = SensorValue(
                                 it.address,
+                                getBluetoothDeviceType(),
                                 SensorType.TEMPERATURE,
                                 tagData.temperature,
                                 timestamp,
@@ -38,6 +40,7 @@ class RuuviTagDevice(
                             )
                             _sensorValues.value = SensorValue(
                                 it.address,
+                                getBluetoothDeviceType(),
                                 SensorType.HUMIDITY,
                                 tagData.humidity,
                                 timestamp,
@@ -45,8 +48,9 @@ class RuuviTagDevice(
                             )
                             _sensorValues.value = SensorValue(
                                 it.address,
+                                getBluetoothDeviceType(),
                                 SensorType.PRESSURE,
-                                tagData.pressure.toDouble(),
+                                tagData.pressure.toDouble() / 100.0,
                                 timestamp,
                                 tagData.toString()
                             )
@@ -67,6 +71,10 @@ class RuuviTagDevice(
         }
         leScanCallback = null
         onDisconnected()
+    }
+
+    override fun getBluetoothDeviceType(): BluetoothDeviceType {
+        return BluetoothDeviceType.RUUVI_TAG
     }
 
     override suspend fun forceReconnect() {

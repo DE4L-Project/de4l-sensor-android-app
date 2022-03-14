@@ -15,7 +15,8 @@ class SensorValueMqttMessage(
     override fun toJson(): JsonObject {
         val sensorValueJsonObj = super.toJson()
 
-        sensorValueJsonObj.addProperty("airBeamId", this.sensorValue.airBeamId)
+        sensorValueJsonObj.addProperty("sensorId", this.sensorValue.sensorId)
+        sensorValueJsonObj.addProperty("deviceType", this.sensorValue.deviceType.toString())
         sensorValueJsonObj.addProperty("sensorType", this.sensorValue.sensorType.toString())
         sensorValueJsonObj.addProperty("value", this.sensorValue.value)
         sensorValueJsonObj.addProperty("sequenceNumber", this.sensorValue.sequenceNumber)
@@ -30,7 +31,6 @@ class SensorValueMqttMessage(
             locationJsonObj.addProperty("lat", sensorValue.location?.latitude)
             locationJsonObj.addProperty("lon", sensorValue.location?.longitude)
             sensorValueJsonObj.add("location", locationJsonObj)
-            sensorValueJsonObj.add("location", locationJsonObj)
 
             sensorValueJsonObj.addProperty("gpsAccuracy", sensorValue.location?.accuracy)
             sensorValueJsonObj.addProperty("altitudeInMeters", sensorValue.location?.altitude)
@@ -40,6 +40,10 @@ class SensorValueMqttMessage(
         }
 
         return sensorValueJsonObj
+    }
+
+    override fun getSchemaVersion(): String {
+        return "0.1.0"
     }
 
     override fun getTimestamp(): DateTime {

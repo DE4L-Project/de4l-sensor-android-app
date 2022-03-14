@@ -29,4 +29,8 @@ class LocationMqttMessage(
         return locationJsonObj
     }
 
+    override fun getSchemaVersion(): String {
+        return "0.1.0"
+    }
+
 }

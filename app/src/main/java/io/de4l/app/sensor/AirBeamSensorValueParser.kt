@@ -1,11 +1,13 @@
 package io.de4l.app.sensor
 
+import io.de4l.app.bluetooth.BluetoothDeviceType
 import org.joda.time.DateTime
 
 class AirBeamSensorValueParser {
     companion object {
         fun parseLine(
             deviceId: String,
+            deviceType: BluetoothDeviceType,
             line: String,
             timestamp: DateTime
         ): SensorValue {
@@ -22,6 +24,7 @@ class AirBeamSensorValueParser {
 
             return SensorValue(
                 airBeamId,
+                deviceType,
                 sensorType,
                 sensorValue,
                 timestamp,

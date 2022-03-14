@@ -61,6 +61,7 @@ abstract class DeviceEntity {
     abstract suspend fun forceReconnect()
     abstract suspend fun connect()
     abstract suspend fun disconnect()
+    abstract fun getBluetoothDeviceType(): BluetoothDeviceType
 
     protected fun onConnecting() {
         this._actualConnectionState.value = BluetoothConnectionState.CONNECTING
@@ -86,7 +87,7 @@ abstract class DeviceEntity {
                 BluetoothDeviceManager.getDeviceTypeForBluetoothDevice(bluetoothDevice)
 
             when (bluetoothDeviceType) {
-                BluetoothDeviceType.AIRBEAM2 -> deviceEntity = LegacyBtDevice(
+                BluetoothDeviceType.AIRBEAM2 -> deviceEntity = AirBeam2Device(
                     bluetoothDevice.name,
                     bluetoothDevice.address
                 )
@@ -112,7 +113,7 @@ abstract class DeviceEntity {
                 BluetoothDeviceType.RUUVI_TAG ->
                     RuuviTagDevice(deviceRecord.name, deviceRecord.macAddress)
                 BluetoothDeviceType.AIRBEAM2 ->
-                    LegacyBtDevice(
+                    AirBeam2Device(
                         deviceRecord.name, deviceRecord.macAddress
                     )
                 else ->

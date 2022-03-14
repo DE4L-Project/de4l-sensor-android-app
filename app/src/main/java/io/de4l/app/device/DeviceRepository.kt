@@ -155,7 +155,7 @@ class DeviceRepository(private val appDatabase: AppDatabase) {
         return when (device) {
             is AirBeam3Device -> BluetoothDeviceType.AIRBEAM3
             is RuuviTagDevice -> BluetoothDeviceType.RUUVI_TAG
-            is LegacyBtDevice -> BluetoothDeviceType.AIRBEAM2
+            is AirBeam2Device -> BluetoothDeviceType.AIRBEAM2
             else -> BluetoothDeviceType.NONE
         }
     }

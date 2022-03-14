@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothDevice
 import io.de4l.app.De4lApplication
 import io.de4l.app.bluetooth.AirBeam3BleConnection
 import io.de4l.app.bluetooth.BluetoothConnectionState
+import io.de4l.app.bluetooth.BluetoothDeviceType
 import io.de4l.app.sensor.AirBeamSensorValueParser
 import io.de4l.app.util.RetryException
 import no.nordicsemi.android.ble.BleManager
@@ -33,8 +34,17 @@ class AirBeam3Device(
 
             override fun onDataReceived(data: String, device: BluetoothDevice) {
                 _sensorValues.value =
-                    AirBeamSensorValueParser.parseLine(device.address, data, DateTime())
+                    AirBeamSensorValueParser.parseLine(
+                        device.address,
+                        getBluetoothDeviceType(),
+                        data,
+                        DateTime()
+                    )
             }
         })
+    }
+
+    override fun getBluetoothDeviceType(): BluetoothDeviceType {
+        return BluetoothDeviceType.AIRBEAM3
     }
 }

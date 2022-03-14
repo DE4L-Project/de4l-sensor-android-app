@@ -115,39 +115,6 @@ class BluetoothDeviceManager @Inject constructor(
                             val tagData =
                                 RuuviTagParser().parseFromRawFormat5(scanResult.scanRecord!!.bytes)
                             Log.v(LOG_TAG, tagData.toString())
-
-                            val location = locationService.getCurrentLocation()
-                            val timestamp = DateTime()
-
-//                            EventBus.getDefault()
-//                                .post(
-//                                    SensorValueReceivedEvent(
-//                                        SensorValue(
-//                                            scanResult.device!!.address,
-//                                            SensorType.TEMPERATURE,
-//                                            tagData.temperature,
-//                                            location,
-//                                            timestamp,
-//                                            trackingManager.messageNumber.getAndIncrement(),
-//                                            "",
-//                                        )
-//                                    )
-//                                )
-//
-//                            EventBus.getDefault()
-//                                .post(
-//                                    SensorValueReceivedEvent(
-//                                        SensorValue(
-//                                            scanResult.device!!.address,
-//                                            SensorType.HUMIDITY,
-//                                            tagData.humidity,
-//                                            location,
-//                                            timestamp,
-//                                            trackingManager.messageNumber.getAndIncrement(),
-//                                            "",
-//                                        )
-//                                    )
-//                                )
                         }
                     }
                 }

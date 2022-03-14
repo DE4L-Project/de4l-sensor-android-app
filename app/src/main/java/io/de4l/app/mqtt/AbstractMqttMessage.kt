@@ -10,7 +10,7 @@ abstract class AbstractMqttMessage(
     val trackingSessionId: String
 ) {
 
-    abstract fun getTimestamp(): DateTime;
+    abstract fun getTimestamp(): DateTime
 
     open fun toJson(): JsonObject {
         val messageJsonObj = JsonObject()
@@ -18,7 +18,10 @@ abstract class AbstractMqttMessage(
         messageJsonObj.addProperty("appVersionCode", appVersionCode)
         messageJsonObj.addProperty("username", username)
         messageJsonObj.addProperty("trackingSessionId", trackingSessionId)
+        messageJsonObj.addProperty("schemaVersion", getSchemaVersion())
         return messageJsonObj
     }
+
+    abstract fun getSchemaVersion(): String
 
 }

@@ -3,6 +3,7 @@ package io.de4l.app.device
 import android.bluetooth.BluetoothDevice
 import io.de4l.app.bluetooth.AirBeam3BleConnection
 import io.de4l.app.bluetooth.BluetoothConnectionState
+import io.de4l.app.bluetooth.BluetoothDeviceType
 import io.de4l.app.bluetooth.BluetoothSocketConnection
 import io.de4l.app.sensor.AirBeamSensorValueParser
 import io.de4l.app.util.RetryException
@@ -13,13 +14,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.joda.time.DateTime
 
-class LegacyBtDevice(
+class AirBeam2Device(
     name: String?,
     macAddress: String,
     targetConnectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED
 ) : DeviceEntity(name, macAddress, targetConnectionState) {
 
-    private val LOG_TAG: String = LegacyBtDevice::class.java.name
+    private val LOG_TAG: String = AirBeam2Device::class.java.name
 
     var socketConnection: BluetoothSocketConnection? = null
 
@@ -46,6 +47,7 @@ class LegacyBtDevice(
                                 ) {
                                     _sensorValues.value = AirBeamSensorValueParser.parseLine(
                                         device.address,
+                                        getBluetoothDeviceType(),
                                         data,
                                         DateTime()
                                     )
@@ -74,5 +76,9 @@ class LegacyBtDevice(
         onDisconnected()
         socketConnection?.closeConnection()
         socketConnection = null
+    }
+
+    override fun getBluetoothDeviceType(): BluetoothDeviceType {
+        return BluetoothDeviceType.AIRBEAM2
     }
 }
