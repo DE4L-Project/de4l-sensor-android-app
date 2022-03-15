@@ -1,6 +1,7 @@
 package io.de4l.app.ui
 
 import android.app.Application
+import android.util.Log
 import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.*
@@ -14,6 +15,7 @@ import io.de4l.app.device.DeviceRepository
 import io.de4l.app.location.LocationService
 import io.de4l.app.location.LocationValue
 import io.de4l.app.location.event.LocationUpdateEvent
+import io.de4l.app.sensor.SensorValue
 import io.de4l.app.tracking.BackgroundServiceWatcher
 import io.de4l.app.tracking.TrackingManager
 import io.de4l.app.tracking.TrackingState
@@ -21,11 +23,11 @@ import io.de4l.app.ui.event.NavigationEvent
 import io.de4l.app.ui.event.SensorValueReceivedEvent
 import io.de4l.app.ui.event.StartLocationServiceEvent
 import io.de4l.app.ui.event.StopLocationServiceEvent
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -41,6 +43,9 @@ class HomeViewModel @Inject constructor(
     private val trackingManager: TrackingManager,
     private val application: Application
 ) : ViewModel() {
+    private val LOG_TAG = HomeViewModel::class.java.name
+
+    private var job: Job? = null
 
     val location = MutableLiveData<LocationValue?>(locationManager.getCurrentLocation())
     val user = authManager.user.asLiveData()
@@ -51,14 +56,15 @@ class HomeViewModel @Inject constructor(
     lateinit var connectedDevices: LiveData<List<DeviceEntity>>
     lateinit var trackingState: LiveData<TrackingState>
 
+    var sensorValues: MutableStateFlow<SensorValue?> = MutableStateFlow(null)
+    val selectedDevice: MutableStateFlow<DeviceEntity?> = MutableStateFlow(null)
+
     init {
         EventBus.getDefault().register(this)
 
         viewModelScope.launch {
             connectedDevices = deviceRepository.getDevicesShouldBeConnected().asLiveData()
-
             trackingState = trackingManager.trackingState.asLiveData()
-
             trackingEnabled =
                 deviceRepository.getConnectedDevices()
                     .combine(authManager.user) { connectedDevices, user ->
@@ -67,7 +73,26 @@ class HomeViewModel @Inject constructor(
                     }
                     .asLiveData()
 
+            selectedDevice.collect {
+                try {
+                    job?.cancelAndJoin()
+                } catch (e: CancellationException) {
+                    Log.v(LOG_TAG, e.message.toString())
+                }
 
+                job = null
+
+                it?.let { _device ->
+                    job = viewModelScope.launch {
+                        //Send current value
+                        sensorValues.value = _device._sensorValues.value
+                        //Register Updates
+                        _device._sensorValues.collect { _sensorValue ->
+                            sensorValues.value = _sensorValue
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -106,10 +131,6 @@ class HomeViewModel @Inject constructor(
         location.value = locationUpdateEvent.location
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onSensorValueReceived(event: SensorValueReceivedEvent) {
-    }
-
     fun onUserButtonClicked(activity: FragmentActivity) {
         if (user.value != null) {
             viewModelScope.launch {
@@ -142,5 +163,9 @@ class HomeViewModel @Inject constructor(
 
     fun disconnectDevice(device: DeviceEntity) {
         bluetoothDeviceManager.disconnect(device)
+    }
+
+    fun onDeviceButtonClicked(device: DeviceEntity) {
+        selectedDevice.value = device
     }
 }

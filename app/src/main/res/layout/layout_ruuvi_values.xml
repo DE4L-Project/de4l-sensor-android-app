@@ -8,23 +8,13 @@
     android:paddingBottom="8dp">
 
     <TextView
-        android:id="@+id/tvTemperatureLabel"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:text="Temperature"
-        android:textAlignment="center"
-        app:layout_constraintEnd_toStartOf="@+id/tvHumidityLabel"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/tvHumidityLabel" />
-
-    <TextView
         android:id="@+id/tvTemperatureValue"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="-"
         android:textAlignment="center"
         android:textSize="@dimen/sensor_value_text_size"
+
         app:layout_constraintEnd_toEndOf="@+id/tvTemperatureLabel"
         app:layout_constraintStart_toStartOf="@+id/tvTemperatureLabel"
         app:layout_constraintTop_toBottomOf="@+id/tvTemperatureLabel"
@@ -36,11 +26,33 @@
         android:layout_height="wrap_content"
         android:text="Humidity"
         android:textAlignment="center"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/tvPressureLabel"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/tvTemperatureLabel"
-        app:layout_constraintTop_toBottomOf="@+id/tvConnectionState"
-        android:layout_marginTop="8dp"/>
+        app:layout_constraintTop_toTopOf="@+id/tvTemperatureLabel" />
+
+    <TextView
+        android:id="@+id/tvTemperatureLabel"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Temperature"
+        android:textAlignment="center"
+        app:layout_constraintEnd_toStartOf="@+id/tvHumidityLabel"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvConnectionState" />
+
+    <TextView
+        android:id="@+id/tvPressureLabel"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:text="Pressure"
+        android:textAlignment="center"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/tvHumidityLabel"
+        app:layout_constraintTop_toTopOf="@+id/tvTemperatureLabel" />
 
     <TextView
         android:id="@+id/tvHumidityValue"
@@ -55,74 +67,16 @@
         tools:text="100 %" />
 
     <TextView
-        android:id="@+id/tvPm1Label"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="PM1"
-        android:textAlignment="center"
-        app:layout_constraintEnd_toStartOf="@+id/tvPm25Label"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvTemperatureValue" />
-
-    <TextView
-        android:id="@+id/tvPm1Value"
+        android:id="@+id/tvPressureValue"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="-"
         android:textAlignment="center"
         android:textSize="@dimen/sensor_value_text_size"
-        app:layout_constraintEnd_toEndOf="@+id/tvPm1Label"
-        app:layout_constraintStart_toStartOf="@+id/tvPm1Label"
-        app:layout_constraintTop_toBottomOf="@+id/tvPm1Label"
+        app:layout_constraintEnd_toEndOf="@+id/tvPressureLabel"
+        app:layout_constraintStart_toStartOf="@+id/tvPressureLabel"
+        app:layout_constraintTop_toBottomOf="@+id/tvPressureLabel"
         tools:text="30 ppm" />
-
-    <TextView
-        android:id="@+id/tvPm25Label"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:text="PM2.5"
-        android:textAlignment="center"
-        app:layout_constraintEnd_toStartOf="@+id/textView21"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/tvPm1Label"
-        app:layout_constraintTop_toTopOf="@+id/tvPm1Label" />
-
-    <TextView
-        android:id="@+id/tvPm25Value"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="-"
-        android:textAlignment="center"
-        android:textSize="@dimen/sensor_value_text_size"
-        app:layout_constraintEnd_toEndOf="@+id/tvPm25Label"
-        app:layout_constraintStart_toStartOf="@+id/tvPm25Label"
-        app:layout_constraintTop_toBottomOf="@+id/tvPm25Label"
-        tools:text="40 ppm" />
-
-    <TextView
-        android:id="@+id/textView21"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:text="PM10"
-        android:textAlignment="center"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/tvPm25Label"
-        app:layout_constraintTop_toTopOf="@+id/tvPm25Label" />
-
-    <TextView
-        android:id="@+id/tvPm10Value"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="-"
-        android:textAlignment="center"
-        android:textSize="@dimen/sensor_value_text_size"
-        app:layout_constraintEnd_toEndOf="@+id/textView21"
-        app:layout_constraintStart_toStartOf="@+id/textView21"
-        app:layout_constraintTop_toBottomOf="@+id/textView21"
-        tools:text="50 ppm" />
 
     <TextView
         android:id="@+id/tvDeviceAddress"

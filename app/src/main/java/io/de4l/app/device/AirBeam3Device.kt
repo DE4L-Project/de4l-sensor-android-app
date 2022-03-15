@@ -14,10 +14,9 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 class AirBeam3Device(
-    name: String?,
     macAddress: String,
     targetConnectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED
-) : BleDevice(name, macAddress, targetConnectionState) {
+) : BleDevice(macAddress, targetConnectionState) {
 
     override fun getBleConnection(cont: Continuation<Void?>): BleManager {
         return AirBeam3BleConnection(De4lApplication.context, object :

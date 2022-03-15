@@ -19,7 +19,7 @@ import org.greenrobot.eventbus.EventBus
 
 @OptIn(ExperimentalCoroutinesApi::class)
 abstract class DeviceEntity {
-    val _name: MutableStateFlow<String?> = MutableStateFlow(null)
+
     val _macAddress: MutableStateFlow<String?> = MutableStateFlow(null)
 
     val _targetConnectionState: MutableStateFlow<BluetoothConnectionState> =
@@ -32,15 +32,21 @@ abstract class DeviceEntity {
 
     var bluetoothDevice: BluetoothDevice? = null
 
+    val _name: MutableStateFlow<String?> = MutableStateFlow(null)
+
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     constructor(
-        name: String?,
         macAddress: String,
         targetConnectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED
     ) {
-        this._name.value = name
+        val sanitizedMacAddress = macAddress.replace(":", "")
         this._macAddress.value = macAddress
+        this._name.value =
+            getBluetoothDeviceType().toString() + " " + sanitizedMacAddress.subSequence(
+                sanitizedMacAddress.length - 4,
+                sanitizedMacAddress.length
+            )
         this._targetConnectionState.value = targetConnectionState
 
         changes = merge(
@@ -88,15 +94,12 @@ abstract class DeviceEntity {
 
             when (bluetoothDeviceType) {
                 BluetoothDeviceType.AIRBEAM2 -> deviceEntity = AirBeam2Device(
-                    bluetoothDevice.name,
                     bluetoothDevice.address
                 )
                 BluetoothDeviceType.AIRBEAM3 -> deviceEntity = AirBeam3Device(
-                    bluetoothDevice.name,
                     bluetoothDevice.address
                 )
                 BluetoothDeviceType.RUUVI_TAG -> deviceEntity = RuuviTagDevice(
-                    bluetoothDevice.name,
                     bluetoothDevice.address
                 )
                 else -> throw Exception("Unknown device type: $bluetoothDeviceType")
@@ -109,13 +112,11 @@ abstract class DeviceEntity {
         fun fromDeviceRecord(deviceRecord: DeviceRecord): DeviceEntity {
             var deviceEntity: DeviceEntity = when (deviceRecord.bluetoothDeviceType) {
                 BluetoothDeviceType.AIRBEAM3 ->
-                    AirBeam3Device(deviceRecord.name, deviceRecord.macAddress)
+                    AirBeam3Device(deviceRecord.macAddress)
                 BluetoothDeviceType.RUUVI_TAG ->
-                    RuuviTagDevice(deviceRecord.name, deviceRecord.macAddress)
+                    RuuviTagDevice(deviceRecord.macAddress)
                 BluetoothDeviceType.AIRBEAM2 ->
-                    AirBeam2Device(
-                        deviceRecord.name, deviceRecord.macAddress
-                    )
+                    AirBeam2Device(deviceRecord.macAddress)
                 else ->
                     throw Exception("Unknown device type: ${deviceRecord.bluetoothDeviceType}")
             }

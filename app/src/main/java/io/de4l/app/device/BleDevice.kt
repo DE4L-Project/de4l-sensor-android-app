@@ -9,10 +9,9 @@ import kotlin.coroutines.Continuation
 import kotlin.coroutines.suspendCoroutine
 
 abstract class BleDevice(
-    name: String?,
     macAddress: String,
     targetConnectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED
-) : DeviceEntity(name, macAddress, targetConnectionState) {
+) : DeviceEntity(macAddress, targetConnectionState) {
     var connection: BleManager? = null
 
     private val LOG_TAG: String = BleDevice::class.java.name

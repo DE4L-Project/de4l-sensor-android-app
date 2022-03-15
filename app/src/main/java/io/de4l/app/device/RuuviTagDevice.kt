@@ -12,10 +12,9 @@ import org.greenrobot.eventbus.EventBus
 import org.joda.time.DateTime
 
 class RuuviTagDevice(
-    name: String?,
     macAddress: String,
     targetConnectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED
-) : DeviceEntity(name, macAddress, targetConnectionState) {
+) : DeviceEntity(macAddress, targetConnectionState) {
 
     private var leScanCallback: ScanCallback? = null
 

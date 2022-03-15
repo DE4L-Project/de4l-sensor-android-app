@@ -15,10 +15,9 @@ import kotlinx.coroutines.launch
 import org.joda.time.DateTime
 
 class AirBeam2Device(
-    name: String?,
     macAddress: String,
     targetConnectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED
-) : DeviceEntity(name, macAddress, targetConnectionState) {
+) : DeviceEntity(macAddress, targetConnectionState) {
 
     private val LOG_TAG: String = AirBeam2Device::class.java.name
 

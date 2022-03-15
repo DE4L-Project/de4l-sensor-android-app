@@ -83,8 +83,6 @@ class MqttManager(
                             publishForCurrentUserSync(message)
                         }
                     }
-
-                    (true)
                 }
 
                 override fun onFailure(asyncActionToken: IMqttToken, exception: Throwable) {

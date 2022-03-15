@@ -17,10 +17,23 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvSensorId"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:orientation="horizontal"
+        android:scrollbars="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/cVSensorValues"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/include3" />
+
     <androidx.cardview.widget.CardView
-        android:id="@+id/cardView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:id="@+id/cVSensorValues"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="8dp"
@@ -29,13 +42,12 @@
         app:cardMaxElevation="5dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/include3">
+        app:layout_constraintTop_toBottomOf="@+id/rvSensorId">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvDevices"
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/fragmentContainerView"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:scrollbars="vertical" />
+            android:layout_height="wrap_content" />
     </androidx.cardview.widget.CardView>
 
     <TextView
@@ -48,7 +60,7 @@
         android:textSize="10sp"
         android:textStyle="italic"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/cardView" />
+        app:layout_constraintTop_toBottomOf="@+id/cVSensorValues" />
 
     <com.google.android.gms.maps.MapView
         android:id="@+id/mapView"

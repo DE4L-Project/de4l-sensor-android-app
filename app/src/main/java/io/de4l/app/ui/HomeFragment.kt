@@ -7,10 +7,12 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentContainer
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.asLiveData
@@ -28,6 +30,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import dagger.hilt.android.AndroidEntryPoint
 import io.de4l.app.R
 import io.de4l.app.auth.UserInfo
+import io.de4l.app.bluetooth.BluetoothDeviceType
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.location.LocationValue
 import io.de4l.app.sensor.SensorType
@@ -55,9 +58,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private lateinit var btnTracking: FloatingActionButton
     private lateinit var tvTrackingFooter: TextView
 
-    private lateinit var rvDevices: RecyclerView
+    //    private lateinit var rvDevices: RecyclerView
+    private lateinit var rvDeviceLabels: RecyclerView
 
     private lateinit var tvVersionInfo: TextView
+    private lateinit var fragmentContainer: FragmentContainer
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -137,14 +142,30 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         }
         tvTrackingFooter = view.findViewById(R.id.tvDataTransmissionFooter)
 
-        rvDevices = view.findViewById(R.id.rvDevices)
-        rvDevices.layoutManager = LinearLayoutManager(context)
+
+//        rvDevices = view.findViewById(R.id.rvDevices)
+//        rvDevices.layoutManager = LinearLayoutManager(context)
+//        viewModel.connectedDevices.observe(viewLifecycleOwner) {
+//            rvDevices.adapter = DeviceAdapter(it, viewLifecycleOwner)
+//        }
+
+        rvDeviceLabels = view.findViewById(R.id.rvSensorId)
+        rvDeviceLabels.layoutManager = LinearLayoutManager(context)
+        (rvDeviceLabels.layoutManager as LinearLayoutManager).orientation =
+            LinearLayoutManager.HORIZONTAL
+
         viewModel.connectedDevices.observe(viewLifecycleOwner) {
-            rvDevices.adapter = DeviceAdapter(it, viewLifecycleOwner)
+            rvDeviceLabels.adapter = DeviceTabsAdapter(it, viewLifecycleOwner)
         }
 
         tvVersionInfo = view.findViewById(R.id.tvVersionInfo)
         tvVersionInfo.text = "Version: ${viewModel.versionInfo}"
+
+        renderUiForDevice(null)
+
+        viewModel.selectedDevice.asLiveData().observe(viewLifecycleOwner) {
+            renderUiForDevice(it)
+        }
     }
 
     fun onStartTracking() {
@@ -246,46 +267,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     }
 
-//    private fun updateTemperature(sensorValue: Double?) {
-//        if (sensorValue != null) {
-//            tvTemperatureValue.text = String.format("%.2f °C", sensorValue)
-//        } else {
-//            tvTemperatureValue.text = "-"
-//        }
-//    }
-//
-//    private fun updateHumidity(sensorValue: Double?) {
-//        if (sensorValue != null) {
-//            tvHumidityValue.text = String.format("%.2f  %%", sensorValue)
-//        } else {
-//            tvHumidityValue.text = "-"
-//        }
-//    }
-//
-//    private fun updatePm1(sensorValue: Double?) {
-//        if (sensorValue != null) {
-//            tvPm1Value.text = String.format("%.0f ppm", sensorValue)
-//        } else {
-//            tvPm1Value.text = "-"
-//        }
-//    }
-//
-//    private fun updatePm25(sensorValue: Double?) {
-//        if (sensorValue != null) {
-//            tvPm25Value.text = String.format("%.0f ppm", sensorValue)
-//        } else {
-//            tvPm25Value.text = "-"
-//        }
-//    }
-//
-//    private fun updatePm10(sensorValue: Double?) {
-//        if (sensorValue != null) {
-//            tvPm10Value.text = String.format("%.0f ppm", sensorValue)
-//        } else {
-//            tvPm10Value.text = "-"
-//        }
-//    }
-
     override fun onMapReady(map: GoogleMap) {
         val isNightMode =
             requireContext()
@@ -310,26 +291,105 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             ColorStateList.valueOf(resources.getColor(R.color.light_blue_600))
     }
 
-    inner class DeviceAdapter(
+    inner class DeviceTabsAdapter(
         private var _devices: List<DeviceEntity>,
         private val lifecycleOwner: LifecycleOwner
     ) :
-        RecyclerView.Adapter<DeviceAdapter.ViewHolder>() {
-
+        RecyclerView.Adapter<DeviceTabsAdapter.ViewHolder>() {
         inner class ViewHolder(listItemView: View) : RecyclerView.ViewHolder(listItemView) {
+            inner class DeviceAdapter(
+                private var _devices: List<DeviceEntity>,
+                private val lifecycleOwner: LifecycleOwner
+            ) :
+                RecyclerView.Adapter<DeviceAdapter.ViewHolder>() {
+
+                inner class ViewHolder(listItemView: View) : RecyclerView.ViewHolder(listItemView) {
+                    lateinit var item: DeviceEntity
+                    val tvTemperature: TextView = listItemView.findViewById(R.id.tvTemperatureValue)
+                    val tvHumidity: TextView = listItemView.findViewById(R.id.tvHumidityValue)
+                    val tvPm1: TextView = listItemView.findViewById(R.id.tvPm1Value)
+                    val tvPm25: TextView = listItemView.findViewById(R.id.tvPm25Value)
+                    val tvPm10: TextView = listItemView.findViewById(R.id.tvPm10Value)
+
+                    val btnDisconnectSensor: ImageButton =
+                        listItemView.findViewById(R.id.btnDisconnectSensor)
+
+                    val tvDeviceAddress: TextView = listItemView.findViewById(R.id.tvDeviceAddress)
+                    val tvConnectionState: TextView =
+                        listItemView.findViewById(R.id.tvConnectionState)
+
+                }
+
+                override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+                    var deviceView: View
+                    var viewHolder: ViewHolder? = null
+
+                    deviceView = layoutInflater.inflate(
+                        R.layout.layout_airbeam2_values,
+                        parent,
+                        false
+                    )
+
+                    deviceView.setOnLongClickListener {
+                        return@setOnLongClickListener true
+                    }
+
+
+                    viewHolder = ViewHolder(deviceView)
+
+                    return viewHolder
+                }
+
+                override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+                    val device = _devices[position]
+                    holder.item = device
+                    holder.tvDeviceAddress.text =
+                        device._macAddress.value + " - " + (device._name.value ?: "UNKNOWN")
+
+                    holder.btnDisconnectSensor.setOnClickListener {
+                        viewModel.disconnectDevice(device)
+                    }
+
+
+                    device._actualConnectionState.asLiveData().observe(viewLifecycleOwner) {
+                        holder.tvConnectionState.text = it.toString() ?: "null"
+                    }
+
+                    device._sensorValues.asLiveData().observe(lifecycleOwner) {
+                        when (it?.sensorType) {
+                            SensorType.TEMPERATURE -> holder.tvTemperature.text =
+                                String.format("%.2f °C", it.value)
+                            SensorType.HUMIDITY -> holder.tvHumidity.text =
+                                String.format("%.2f  %%", it.value)
+                            SensorType.PM1 -> holder.tvPm1.text =
+                                String.format("%.0f ppm", it.value)
+                            SensorType.PM2_5 -> holder.tvPm25.text =
+                                String.format("%.0f ppm", it.value)
+                            SensorType.PM10 -> holder.tvPm10.text =
+                                String.format("%.0f ppm", it.value)
+                            null -> {
+                                holder.tvTemperature.text = "-"
+                                holder.tvHumidity.text = "-"
+                                holder.tvPm1.text = "-"
+                                holder.tvPm25.text = "-"
+                                holder.tvPm10.text = "-"
+                            }
+                        }
+                    }
+                }
+
+                override fun getItemCount(): Int {
+                    return _devices.size
+                }
+
+                fun setItems(devices: List<DeviceEntity>) {
+                    _devices = devices
+                    notifyDataSetChanged()
+                }
+            }
+
             lateinit var item: DeviceEntity
-            val tvTemperature: TextView = listItemView.findViewById(R.id.tvTemperatureValue)
-            val tvHumidity: TextView = listItemView.findViewById(R.id.tvHumidityValue)
-            val tvPm1: TextView = listItemView.findViewById(R.id.tvPm1Value)
-            val tvPm25: TextView = listItemView.findViewById(R.id.tvPm25Value)
-            val tvPm10: TextView = listItemView.findViewById(R.id.tvPm10Value)
-
-            val btnDisconnectSensor: ImageButton =
-                listItemView.findViewById(R.id.btnDisconnectSensor)
-
-            val tvDeviceAddress: TextView = listItemView.findViewById(R.id.tvDeviceAddress)
-            val tvConnectionState: TextView = listItemView.findViewById(R.id.tvConnectionState)
-
+            var btnDevice: Button = listItemView.findViewById(R.id.btnDevice)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -337,7 +397,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             var viewHolder: ViewHolder? = null
 
             deviceView = layoutInflater.inflate(
-                R.layout.layout_airbeam2_values,
+                R.layout.layout_sensor_selection,
                 parent,
                 false
             )
@@ -355,35 +415,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val device = _devices[position]
             holder.item = device
-            holder.tvDeviceAddress.text =
-                device._macAddress.value + " - " + (device._name.value ?: "UNKNOWN")
+            holder.btnDevice.text =
+                (device._name.value ?: "UNKNOWN ${device.getBluetoothDeviceType()}")
 
-            holder.btnDisconnectSensor.setOnClickListener {
-                viewModel.disconnectDevice(device)
-            }
-
-
-            device._actualConnectionState.asLiveData().observe(viewLifecycleOwner) {
-                holder.tvConnectionState.text = it.toString() ?: "null"
-            }
-
-            device._sensorValues.asLiveData().observe(lifecycleOwner) {
-                when (it?.sensorType) {
-                    SensorType.TEMPERATURE -> holder.tvTemperature.text =
-                        String.format("%.2f °C", it.value)
-                    SensorType.HUMIDITY -> holder.tvHumidity.text =
-                        String.format("%.2f  %%", it.value)
-                    SensorType.PM1 -> holder.tvPm1.text = String.format("%.0f ppm", it.value)
-                    SensorType.PM2_5 -> holder.tvPm25.text = String.format("%.0f ppm", it.value)
-                    SensorType.PM10 -> holder.tvPm10.text = String.format("%.0f ppm", it.value)
-                    null -> {
-                        holder.tvTemperature.text = "-"
-                        holder.tvHumidity.text = "-"
-                        holder.tvPm1.text = "-"
-                        holder.tvPm25.text = "-"
-                        holder.tvPm10.text = "-"
-                    }
-                }
+            holder.btnDevice.setOnClickListener {
+                viewModel.onDeviceButtonClicked(device)
             }
         }
 
@@ -395,5 +431,22 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             _devices = devices
             notifyDataSetChanged()
         }
+    }
+
+    fun renderUiForDevice(deviceEntity: DeviceEntity?) {
+        val sensorValueFragment = when (deviceEntity?.getBluetoothDeviceType()) {
+            BluetoothDeviceType.NONE -> EmptySensorValueFragment()
+            BluetoothDeviceType.AIRBEAM2 -> AirBeamSensorValueFragment()
+            BluetoothDeviceType.AIRBEAM3 -> AirBeamSensorValueFragment()
+            BluetoothDeviceType.RUUVI_TAG -> RuuviSensorValueFragment()
+            null -> {
+                EmptySensorValueFragment()
+            }
+        }
+
+        childFragmentManager
+            .beginTransaction()
+            .replace(R.id.fragmentContainerView, sensorValueFragment)
+            .commit()
     }
 }
