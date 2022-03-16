@@ -436,9 +436,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     fun renderUiForDevice(deviceEntity: DeviceEntity?) {
         val sensorValueFragment = when (deviceEntity?.getBluetoothDeviceType()) {
             BluetoothDeviceType.NONE -> EmptySensorValueFragment()
-            BluetoothDeviceType.AIRBEAM2 -> AirBeamSensorValueFragment()
-            BluetoothDeviceType.AIRBEAM3 -> AirBeamSensorValueFragment()
-            BluetoothDeviceType.RUUVI_TAG -> RuuviSensorValueFragment()
+            BluetoothDeviceType.AIRBEAM2 -> AirBeamSensorValueFragment(deviceEntity)
+            BluetoothDeviceType.AIRBEAM3 -> AirBeamSensorValueFragment(deviceEntity)
+            BluetoothDeviceType.RUUVI_TAG -> RuuviSensorValueFragment(deviceEntity)
             null -> {
                 EmptySensorValueFragment()
             }

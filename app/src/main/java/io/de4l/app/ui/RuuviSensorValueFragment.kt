@@ -8,9 +8,10 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.lifecycle.asLiveData
 import io.de4l.app.R
+import io.de4l.app.device.DeviceEntity
 import io.de4l.app.sensor.SensorType
 
-class RuuviSensorValueFragment : SensorValueFragment() {
+class RuuviSensorValueFragment(deviceEntity: DeviceEntity?) : SensorValueFragment(deviceEntity) {
     private val LOG_TAG = SensorValueFragment::class.java.name
 
     lateinit var tvTemperature: TextView
@@ -30,7 +31,7 @@ class RuuviSensorValueFragment : SensorValueFragment() {
         tvHumidity = view.findViewById(R.id.tvHumidityValue)
         tvPressure = view.findViewById(R.id.tvPressureValue)
 
-        viewModel.sensorValues.asLiveData().observe(viewLifecycleOwner) {
+        viewModel.selectedDevice.value?._sensorValues?.asLiveData()?.observe(viewLifecycleOwner) {
             Log.i(LOG_TAG, "Sensor Value received: ${it?.sensorId}")
             when (it?.sensorType) {
                 SensorType.TEMPERATURE -> tvTemperature.text =

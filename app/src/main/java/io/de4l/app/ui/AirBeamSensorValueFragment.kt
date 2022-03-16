@@ -8,9 +8,10 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.lifecycle.asLiveData
 import io.de4l.app.R
+import io.de4l.app.device.DeviceEntity
 import io.de4l.app.sensor.SensorType
 
-class AirBeamSensorValueFragment : SensorValueFragment() {
+class AirBeamSensorValueFragment(deviceEntity: DeviceEntity?) : SensorValueFragment(deviceEntity) {
     private val LOG_TAG = SensorValueFragment::class.java.name
 
     lateinit var tvTemperature: TextView
@@ -34,7 +35,7 @@ class AirBeamSensorValueFragment : SensorValueFragment() {
         tvPm25 = view.findViewById(R.id.tvPm25Value)
         tvPm10 = view.findViewById(R.id.tvPm10Value)
 
-        viewModel.sensorValues.asLiveData().observe(viewLifecycleOwner) {
+        viewModel.selectedDevice.value?._sensorValues?.asLiveData()?.observe(viewLifecycleOwner) {
             Log.i(LOG_TAG, "Sensor Value received: ${it?.sensorId}")
             when (it?.sensorType) {
                 SensorType.TEMPERATURE -> tvTemperature.text =
