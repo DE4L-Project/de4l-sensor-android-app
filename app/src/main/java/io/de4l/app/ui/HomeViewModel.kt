@@ -1,7 +1,6 @@
 package io.de4l.app.ui
 
 import android.app.Application
-import android.util.Log
 import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.*
@@ -20,14 +19,14 @@ import io.de4l.app.tracking.BackgroundServiceWatcher
 import io.de4l.app.tracking.TrackingManager
 import io.de4l.app.tracking.TrackingState
 import io.de4l.app.ui.event.NavigationEvent
-import io.de4l.app.ui.event.SensorValueReceivedEvent
 import io.de4l.app.ui.event.StartLocationServiceEvent
 import io.de4l.app.ui.event.StopLocationServiceEvent
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.cancellable
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode

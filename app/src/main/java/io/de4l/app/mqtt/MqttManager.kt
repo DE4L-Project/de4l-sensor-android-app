@@ -14,8 +14,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.firstOrNull
-import org.eclipse.paho.android.service.MqttAndroidClient
-
 import org.eclipse.paho.client.mqttv3.*
 
 class MqttManager(

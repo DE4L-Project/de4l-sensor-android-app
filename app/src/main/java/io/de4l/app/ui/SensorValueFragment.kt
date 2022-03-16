@@ -9,7 +9,6 @@ import androidx.lifecycle.asLiveData
 import dagger.hilt.android.AndroidEntryPoint
 import io.de4l.app.R
 import io.de4l.app.device.DeviceEntity
-import kotlinx.coroutines.delay
 
 @AndroidEntryPoint
 abstract class SensorValueFragment(private val deviceEntity: DeviceEntity?) : Fragment() {
