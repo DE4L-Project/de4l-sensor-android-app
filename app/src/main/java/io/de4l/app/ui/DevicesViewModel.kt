@@ -64,10 +64,10 @@ class DevicesViewModel @Inject constructor(
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 device.let { device ->
-                    if (device._actualConnectionState.value != BluetoothConnectionState.CONNECTED) {
+                    if (device._actualConnectionState.value !== BluetoothConnectionState.CONNECTED) {
                         device._targetConnectionState.value = BluetoothConnectionState.CONNECTED
+                        device._actualConnectionState.value = BluetoothConnectionState.CONNECTING
                         device._macAddress.value?.let {
-
                             //Must find device first
                             launch { bluetoothDeviceManager.connectDeviceWithRetry(it) }
                         }

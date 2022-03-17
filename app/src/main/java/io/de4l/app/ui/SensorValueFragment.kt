@@ -33,16 +33,11 @@ abstract class SensorValueFragment(private val deviceEntity: DeviceEntity?) : Fr
                 tvConnectionState.text =
                     "Actual: ${it._actualConnectionState.value} --> Target: ${it._targetConnectionState.value}"
             }
-
         }
     }
 
     protected open fun clearUi() {
         tvDeviceAddress.text = "-"
         tvConnectionState.text = "-"
-    }
-
-    fun setDevice(deviceEntity: DeviceEntity?) {
-        viewModel.selectedDevice.value = deviceEntity
     }
 }

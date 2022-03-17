@@ -10,10 +10,7 @@ import io.de4l.app.ui.event.SensorValueReceivedEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 
@@ -83,6 +80,17 @@ abstract class DeviceEntity {
 
     protected fun onReconnecting() {
         this._actualConnectionState.value = BluetoothConnectionState.RECONNECTING
+    }
+
+    protected fun isAutoConnecting(): Flow<Boolean> {
+        return merge(
+            this._actualConnectionState,
+            this._targetConnectionState
+        ).map {
+            val targetState = this._targetConnectionState.value
+            val actualState = this._actualConnectionState.value
+            targetState === BluetoothConnectionState.CONNECTED && actualState !== targetState
+        }
     }
 
     @SuppressLint("MissingPermission")

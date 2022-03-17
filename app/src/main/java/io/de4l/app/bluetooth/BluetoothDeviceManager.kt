@@ -43,6 +43,8 @@ class BluetoothDeviceManager @Inject constructor(
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
     private var leScanCallback: ScanCallback? = null
 
+    private val scanJobQueue: MutableStateFlow<Job?> = MutableStateFlow(null)
+
     val bluetoothScanScanState = MutableStateFlow(BluetoothScanState.NOT_SCANNING)
 
     init {
@@ -131,7 +133,7 @@ class BluetoothDeviceManager @Inject constructor(
 
         if (bluetoothScanScanState.value != BluetoothScanState.NOT_SCANNING) {
             Log.w(LOG_TAG, "Is already scanning.")
-            close()
+            close(BluetoothAlreadyScanningException())
         }
 
         bluetoothScanScanState.value = BluetoothScanState.SCANNING
@@ -203,34 +205,6 @@ class BluetoothDeviceManager @Inject constructor(
             device._targetConnectionState.value = BluetoothConnectionState.DISCONNECTED
             device.disconnect()
         }
-
-//        when (device._bluetoothDeviceType.value) {
-//            BluetoothDeviceType.LEGACY_BLUETOOTH -> {
-//                closeLegacyBtConnection()
-//                bluetoothConnectionJob?.cancel()
-//                bluetoothConnectionJob = null
-//            }
-//            BluetoothDeviceType.BLE -> {
-//                bleConnectionManager.disconnect().enqueue()
-//            }
-//            BluetoothDeviceType.BLE_BEACON -> {
-//                leScanCallback?.let {
-//                    bluetoothAdapter.bluetoothLeScanner.stopScan(it)
-//                }
-//                leScanCallback = null
-//            }
-//            else -> {
-//                Log.i(
-//                    LOG_TAG,
-//                    "Trying to disconnect unknown BT DeviceType: ${device._macAddress.value} | ${device._name.value}"
-//                )
-//            }
-//        }
-
-
-//        coroutineScope.launch {
-//            onDisconnected(device)
-//        }
     }
 
     fun disconnect(device: BluetoothDevice) {
@@ -245,10 +219,17 @@ class BluetoothDeviceManager @Inject constructor(
     private suspend fun findBtDeviceWithRetry(macAddress: String): BluetoothDevice? {
         var discoveredDevice: BluetoothDevice? = null
         runWithRetry {
-            discoveredDevice = findBtDevice(macAddress)
-            if (discoveredDevice == null) {
-                throw RetryException("No device found")
+            try {
+                discoveredDevice = findBtDevice(macAddress)
+                if (discoveredDevice == null) {
+                    throw RetryException("No device found")
+                }
             }
+            catch(e: BluetoothAlreadyScanningException){
+//                cancelDeviceDiscovery()
+//                throw RetryException("Bluetooth Already Scanning")
+            }
+
         }
         return discoveredDevice
     }
