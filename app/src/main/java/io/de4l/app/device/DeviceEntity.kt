@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice
 import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.bluetooth.BluetoothDeviceManager
 import io.de4l.app.bluetooth.BluetoothDeviceType
+import io.de4l.app.sensor.SensorType
 import io.de4l.app.sensor.SensorValue
 import io.de4l.app.ui.event.SensorValueReceivedEvent
 import kotlinx.coroutines.CoroutineScope
@@ -31,6 +32,9 @@ abstract class DeviceEntity {
 
     val _name: MutableStateFlow<String?> = MutableStateFlow(null)
 
+    val sensorCache = HashMap<SensorType, SensorValue>()
+
+
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     constructor(
@@ -56,6 +60,9 @@ abstract class DeviceEntity {
 
         coroutineScope.launch {
             _sensorValues.collect {
+                it?.let {
+                    sensorCache.put(it.sensorType, it)
+                }
                 EventBus.getDefault().post(SensorValueReceivedEvent(it))
             }
         }
@@ -132,5 +139,6 @@ abstract class DeviceEntity {
             deviceEntity._targetConnectionState.value = deviceRecord.targetConnectionState
             return deviceEntity
         }
+
     }
 }

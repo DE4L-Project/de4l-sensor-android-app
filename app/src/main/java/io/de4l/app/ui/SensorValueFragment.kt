@@ -9,6 +9,8 @@ import androidx.lifecycle.asLiveData
 import dagger.hilt.android.AndroidEntryPoint
 import io.de4l.app.R
 import io.de4l.app.device.DeviceEntity
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.merge
 
 @AndroidEntryPoint
 abstract class SensorValueFragment(private val deviceEntity: DeviceEntity?) : Fragment() {
@@ -27,12 +29,24 @@ abstract class SensorValueFragment(private val deviceEntity: DeviceEntity?) : Fr
 
         viewModel.selectedDevice.value = deviceEntity
 
-        viewModel.selectedDevice.asLiveData().observe(viewLifecycleOwner) {
-            it?.let {
-                tvDeviceAddress.text = it._macAddress.value
-                tvConnectionState.text =
-                    "Actual: ${it._actualConnectionState.value} --> Target: ${it._targetConnectionState.value}"
+        viewModel.selectedDevice.value?.let { selectedDevice ->
+            selectedDevice._macAddress.asLiveData().observe(viewLifecycleOwner) {
+                tvDeviceAddress.text = it
             }
+
+            merge(
+                selectedDevice._actualConnectionState,
+                selectedDevice._targetConnectionState
+            ).asLiveData().observe(viewLifecycleOwner) {
+                tvConnectionState.text =
+                    "Actual: ${selectedDevice._actualConnectionState.value} --> Target: ${selectedDevice._targetConnectionState.value}"
+            }
+        }
+
+
+        viewModel.selectedDevice.filterNotNull().asLiveData().observe(viewLifecycleOwner) {
+
+
         }
     }
 

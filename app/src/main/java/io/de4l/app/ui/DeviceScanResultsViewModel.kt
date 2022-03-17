@@ -1,5 +1,6 @@
 package io.de4l.app.ui
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.util.Log
 import androidx.lifecycle.*
@@ -33,6 +34,7 @@ class DeviceScanResultsViewModel @Inject constructor(
 
     var scanStarted = false
 
+    @SuppressLint("MissingPermission")
     @ExperimentalCoroutinesApi
     fun startScanning() {
         scanStarted = true

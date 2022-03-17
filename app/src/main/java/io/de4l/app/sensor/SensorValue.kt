@@ -7,7 +7,7 @@ import org.joda.time.DateTime
 class SensorValue(
     val sensorId: String,
     val deviceType: BluetoothDeviceType,
-    val sensorType: SensorType?,
+    val sensorType: SensorType,
     val value: Double?,
     val timestamp: DateTime,
     val rawData: String

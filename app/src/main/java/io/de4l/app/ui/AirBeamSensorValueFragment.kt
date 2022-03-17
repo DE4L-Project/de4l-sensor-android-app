@@ -10,6 +10,8 @@ import androidx.lifecycle.asLiveData
 import io.de4l.app.R
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.sensor.SensorType
+import io.de4l.app.sensor.SensorValue
+import kotlinx.coroutines.flow.*
 
 class AirBeamSensorValueFragment(deviceEntity: DeviceEntity?) : SensorValueFragment(deviceEntity) {
     private val LOG_TAG = SensorValueFragment::class.java.name
@@ -35,19 +37,42 @@ class AirBeamSensorValueFragment(deviceEntity: DeviceEntity?) : SensorValueFragm
         tvPm25 = view.findViewById(R.id.tvPm25Value)
         tvPm10 = view.findViewById(R.id.tvPm10Value)
 
-        viewModel.selectedDevice.value?._sensorValues?.asLiveData()?.observe(viewLifecycleOwner) {
-            Log.i(LOG_TAG, "Sensor Value received: ${it?.sensorId}")
-            when (it?.sensorType) {
-                SensorType.TEMPERATURE -> tvTemperature.text =
-                    String.format("%.2f °C", it.value)
-                SensorType.HUMIDITY -> tvHumidity.text =
-                    String.format("%.2f  %%", it.value)
-                SensorType.PM1 -> tvPm1.text = String.format("%.0f ppm", it.value)
-                SensorType.PM2_5 -> tvPm25.text = String.format("%.0f ppm", it.value)
-                SensorType.PM10 -> tvPm10.text = String.format("%.0f ppm", it.value)
-                null -> clearUi()
+
+        viewModel.getFlowForProperty(SensorType.TEMPERATURE).filterNotNull().asLiveData()
+            .observe(viewLifecycleOwner) {
+                tvTemperature.text = String.format("%.2f °C", it.value)
             }
-        }
+
+        viewModel.getFlowForProperty(SensorType.HUMIDITY).filterNotNull().asLiveData()
+            .observe(viewLifecycleOwner) {
+                tvHumidity.text = String.format("%.2f  %%", it.value)
+            }
+
+        viewModel.getFlowForProperty(SensorType.PM1).filterNotNull().asLiveData()
+            .observe(viewLifecycleOwner) {
+                tvPm1.text = String.format("%.0f ppm", it.value)
+            }
+
+        viewModel.getFlowForProperty(SensorType.PM2_5).filterNotNull().asLiveData()
+            .observe(viewLifecycleOwner) {
+                tvPm25.text = String.format("%.0f ppm", it.value)
+            }
+
+        viewModel.getFlowForProperty(SensorType.PM10).filterNotNull().asLiveData()
+            .observe(viewLifecycleOwner) {
+                tvPm10.text = String.format("%.0f ppm", it.value)
+            }
+
+//        viewModel.sensorValues.asLiveData().observe(viewLifecycleOwner) {
+//            Log.i(LOG_TAG, "Sensor Value received: ${it?.sensorId}")
+//            when (it?.sensorType) {
+//
+//
+//                null -> clearUi()
+//            }
+//        }
+
+        viewModel.registerUiUpdates()
     }
 
     override fun clearUi() {

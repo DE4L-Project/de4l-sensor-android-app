@@ -11,6 +11,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.util.Log
+import com.google.common.collect.ImmutableSet
 import io.de4l.app.bluetooth.event.BluetoothDeviceConnectedEvent
 import io.de4l.app.bluetooth.event.BluetoothDeviceDisconnectedEvent
 import io.de4l.app.device.DeviceEntity
@@ -43,12 +44,53 @@ class BluetoothDeviceManager @Inject constructor(
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
     private var leScanCallback: ScanCallback? = null
 
-    private val scanJobQueue: MutableStateFlow<Job?> = MutableStateFlow(null)
+    private val scanJobQueue: MutableSharedFlow<BluetoothScanJob> = MutableSharedFlow()
+    private val _scanJobs: MutableSet<BluetoothScanJob> = HashSet()
+//    private val macAdresses: MutableSet<String> = HashSet<String>()
+
+    private val _scannedDevices: MutableSharedFlow<BluetoothDevice> = MutableSharedFlow()
 
     val bluetoothScanScanState = MutableStateFlow(BluetoothScanState.NOT_SCANNING)
 
     init {
         EventBus.getDefault().register(this)
+
+        coroutineScope.launch {
+            scanJobQueue.filterNotNull().collect {
+                _scanJobs.add(it)
+                if (bluetoothScanScanState.value == BluetoothScanState.NOT_SCANNING) {
+                    bluetoothScanScanState.value = BluetoothScanState.PENDING
+                    launch {
+                        scanForDevices()
+                            .onCompletion {
+                                Log.v(LOG_TAG, "Scan for devices finished")
+                                val scanJobs = _scanJobs.toSet()
+                                _scanJobs.clear()
+                                scanJobs.forEach { scanJob ->
+                                    scanJob.onError()
+                                }
+                            }.collect()
+                    }
+
+
+                }
+
+            }
+        }
+
+        coroutineScope.launch {
+            _scannedDevices.collect { bluetoothDevice ->
+                val scanJob = _scanJobs.find {
+                    bluetoothDevice.address == it.macAddress
+                }
+                scanJob?.onSuccess(bluetoothDevice)
+                _scanJobs.remove(scanJob)
+                if (_scanJobs.isEmpty()) {
+                    cancelDeviceDiscovery()
+                }
+            }
+        }
+
 
     }
 
@@ -106,34 +148,13 @@ class BluetoothDeviceManager @Inject constructor(
         onDisconnected(macAddress)
     }
 
-    private fun connectSensorBeacon(device: BluetoothDevice) {
-        coroutineScope.launch {
-
-            leScanCallback = object : ScanCallback() {
-                override fun onScanResult(callbackType: Int, result: ScanResult?) {
-                    result?.let { scanResult ->
-                        if (scanResult.device?.address == device.address) {
-                            val tagData =
-                                RuuviTagParser().parseFromRawFormat5(scanResult.scanRecord!!.bytes)
-                            Log.v(LOG_TAG, tagData.toString())
-                        }
-                    }
-                }
-            }
-
-            bluetoothAdapter.bluetoothLeScanner.startScan(leScanCallback)
-            onSuccessfulConnect(device)
-        }
-    }
-
-
     //https://github.com/ThanosFisherman/BlueFlow
     @ExperimentalCoroutinesApi
     suspend fun scanForDevices() = callbackFlow<BluetoothDevice> {
 
-        if (bluetoothScanScanState.value != BluetoothScanState.NOT_SCANNING) {
+        if (bluetoothScanScanState.value == BluetoothScanState.SCANNING) {
             Log.w(LOG_TAG, "Is already scanning.")
-            close(BluetoothAlreadyScanningException())
+            close()
         }
 
         bluetoothScanScanState.value = BluetoothScanState.SCANNING
@@ -149,15 +170,22 @@ class BluetoothDeviceManager @Inject constructor(
             addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
         }
 
+//        val receiver = BluetoothScanReceiver()
+
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 when (intent?.action) {
                     BluetoothDevice.ACTION_FOUND -> {
+                        Log.v(LOG_TAG, "ACTION_FOUND")
                         val device =
                             intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE) as BluetoothDevice?
                         device?.let {
                             try {
-                                trySend(device)
+                                coroutineScope.launch {
+                                    _scannedDevices.emit(it)
+                                }
+
+//                                trySend(device)
                             } catch (e: ClosedSendChannelException) {
                                 Log.v(
                                     LOG_TAG,
@@ -224,8 +252,7 @@ class BluetoothDeviceManager @Inject constructor(
                 if (discoveredDevice == null) {
                     throw RetryException("No device found")
                 }
-            }
-            catch(e: BluetoothAlreadyScanningException){
+            } catch (e: BluetoothAlreadyScanningException) {
 //                cancelDeviceDiscovery()
 //                throw RetryException("Bluetooth Already Scanning")
             }
@@ -237,18 +264,22 @@ class BluetoothDeviceManager @Inject constructor(
     @ExperimentalCoroutinesApi
     private suspend fun findBtDevice(macAddress: String): BluetoothDevice? {
         var discoveredDevice: BluetoothDevice? = null
-        val job = coroutineScope.async {
-            scanForDevices()
-                .filter {
-                    it.address == macAddress
-                }
-                .collect {
-                    cancelDeviceDiscovery()
-                    Log.i(LOG_TAG, "Device: ${it.address}")
-                    discoveredDevice = it
-                }
-        }
-        job.await()
+        val bluetoothScanJob = BluetoothScanJob(macAddress)
+        scanJobQueue.emit(bluetoothScanJob)
+        discoveredDevice = bluetoothScanJob.waitForDevice()
+
+//        val job = coroutineScope.async {
+//            scanForDevices()
+//                .filter {
+//                    it.address == macAddress
+//                }
+//                .collect {
+//                    cancelDeviceDiscovery()
+//                    Log.i(LOG_TAG, "Device: ${it.address}")
+//                    discoveredDevice = it
+//                }
+//        }
+//        job.await()
         return discoveredDevice
     }
 
@@ -341,6 +372,34 @@ class BluetoothDeviceManager @Inject constructor(
     fun onStopBleScannerEvent(event: StopBleScannerEvent) {
         bluetoothAdapter.bluetoothLeScanner.stopScan(event.leScanCallback)
     }
+
+//    inner class BluetoothScanReceiver : BroadcastReceiver() {
+//        override fun onReceive(context: Context?, intent: Intent?) {
+//            when (intent?.action) {
+//                BluetoothDevice.ACTION_FOUND -> {
+//                    val device =
+//                        intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE) as BluetoothDevice?
+//                    device?.let {
+//                        try {
+//                            trySend(device)
+//                        } catch (e: ClosedSendChannelException) {
+//                            Log.v(
+//                                LOG_TAG,
+//                                "Closed Channel Exception in BluetoothDeviceManager:onReceive - Can be ignored."
+//                            )
+//                        }
+//                    }
+//                }
+//                BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
+//                    Log.v(LOG_TAG, "ACTION_DISCOVERY_STARTED")
+//                }
+//                BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
+//                    Log.v(LOG_TAG, "ACTION_DISCOVERY_FINISHED")
+//                    close()
+//                }
+//            }
+//        }
+//    }
 
     companion object {
         fun getDeviceTypeForBluetoothDevice(bluetoothDevice: BluetoothDevice): BluetoothDeviceType {
