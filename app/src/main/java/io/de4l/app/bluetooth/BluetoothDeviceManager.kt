@@ -45,7 +45,7 @@ class BluetoothDeviceManager @Inject constructor(
     private var leScanCallback: ScanCallback? = null
 
     private val scanJobQueue: MutableSharedFlow<BluetoothScanJob> = MutableSharedFlow()
-    private val _scanJobs: MutableSet<BluetoothScanJob> = HashSet()
+    private val _scanJobs: MutableMap<String, BluetoothScanJob> = HashMap()
 //    private val macAdresses: MutableSet<String> = HashSet<String>()
 
     private val _scannedDevices: MutableSharedFlow<BluetoothDevice> = MutableSharedFlow()
@@ -57,34 +57,34 @@ class BluetoothDeviceManager @Inject constructor(
 
         coroutineScope.launch {
             scanJobQueue.filterNotNull().collect {
-                _scanJobs.add(it)
-                if (bluetoothScanScanState.value == BluetoothScanState.NOT_SCANNING) {
-                    bluetoothScanScanState.value = BluetoothScanState.PENDING
-                    launch {
-                        scanForDevices()
-                            .onCompletion {
-                                Log.v(LOG_TAG, "Scan for devices finished")
-                                val scanJobs = _scanJobs.toSet()
-                                _scanJobs.clear()
-                                scanJobs.forEach { scanJob ->
-                                    scanJob.onError()
+
+                //Start job only if not already scanning
+                if (_scanJobs[it.macAddress] == null) {
+                    _scanJobs[it.macAddress] = it
+                    if (bluetoothScanScanState.value == BluetoothScanState.NOT_SCANNING) {
+                        bluetoothScanScanState.value = BluetoothScanState.PENDING
+                        launch {
+                            scanForDevices()
+                                .onCompletion {
+                                    Log.v(LOG_TAG, "Scan for devices finished")
+                                    val scanJobs = _scanJobs.toMap()
+                                    _scanJobs.clear()
+                                    scanJobs.values.forEach { scanJob ->
+                                        scanJob.onError()
+                                    }
                                 }
-                            }.collect()
+                                .collect()
+                        }
                     }
-
-
                 }
-
             }
         }
 
         coroutineScope.launch {
             _scannedDevices.collect { bluetoothDevice ->
-                val scanJob = _scanJobs.find {
-                    bluetoothDevice.address == it.macAddress
-                }
+                val scanJob = _scanJobs[bluetoothDevice.address]
                 scanJob?.onSuccess(bluetoothDevice)
-                _scanJobs.remove(scanJob)
+                _scanJobs.remove(bluetoothDevice.address)
                 if (_scanJobs.isEmpty()) {
                     cancelDeviceDiscovery()
                 }
