@@ -1,6 +1,7 @@
 package io.de4l.app.device
 
 import android.bluetooth.BluetoothDevice
+import android.util.Log
 import io.de4l.app.bluetooth.AirBeam3BleConnection
 import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.bluetooth.BluetoothDeviceType
@@ -16,7 +17,7 @@ import org.joda.time.DateTime
 
 class AirBeam2Device(
     macAddress: String,
-    targetConnectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED
+    targetConnectionState: BluetoothConnectionState = BluetoothConnectionState.NONE
 ) : DeviceEntity(macAddress, targetConnectionState) {
 
     private val LOG_TAG: String = AirBeam2Device::class.java.name
@@ -24,57 +25,57 @@ class AirBeam2Device(
     var socketConnection: BluetoothSocketConnection? = null
 
     private var bluetoothConnectionJob: Job? = null
-    private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     override suspend fun forceReconnect() {
         socketConnection?.simulateConnectionLoss()
     }
 
     override suspend fun connect() {
-        disconnect()
+        closeConnection()
         onConnecting()
         bluetoothConnectionJob = coroutineScope.launch(Dispatchers.IO) {
             bluetoothDevice?.let {
-                runWithRetry {
-                    try {
-                        socketConnection = BluetoothSocketConnection(
-                            it,
-                            object : AirBeam3BleConnection.ConnectionListener {
-                                override fun onDataReceived(
-                                    data: String,
-                                    device: BluetoothDevice
-                                ) {
-                                    _sensorValues.value = AirBeamSensorValueParser.parseLine(
-                                        device.address,
-                                        getBluetoothDeviceType(),
-                                        data,
-                                        DateTime()
-                                    )
-                                }
+                try {
+                    socketConnection = BluetoothSocketConnection(
+                        it,
+                        object : AirBeam3BleConnection.ConnectionListener {
+                            override fun onDataReceived(
+                                data: String,
+                                device: BluetoothDevice
+                            ) {
+                                _sensorValues.value = AirBeamSensorValueParser.parseLine(
+                                    device.address,
+                                    getBluetoothDeviceType(),
+                                    data,
+                                    DateTime()
+                                )
+                            }
 
-                                override fun onDisconnected() {
-                                    onDisconnected()
+                            override fun onDisconnected() {
+                                coroutineScope.launch {
+                                    this@AirBeam2Device.disconnect()
                                 }
+                            }
 
-                            })
-                        socketConnection?.connect { onConnected() }
-                        disconnect()
-                    } catch (e: Exception) {
-                        disconnect()
-                        if (_targetConnectionState.value === BluetoothConnectionState.CONNECTED) {
-                            onReconnecting()
-                            throw RetryException(e.message)
-                        }
-                    }
+                        })
+                    socketConnection?.connect { this@AirBeam2Device.onConnected() }
+                    disconnect()
+                } catch (e: Exception) {
+                    Log.e(LOG_TAG, "AirBeam2 ")
+                    disconnect()
                 }
             }
         }
     }
 
-    override suspend fun disconnect() {
-        onDisconnected()
+    private fun closeConnection() {
         socketConnection?.closeConnection()
         socketConnection = null
+    }
+
+    override suspend fun disconnect() {
+        closeConnection()
+        onDisconnected()
     }
 
     override fun getBluetoothDeviceType(): BluetoothDeviceType {

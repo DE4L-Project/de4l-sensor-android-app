@@ -16,8 +16,8 @@ android {
         minSdkVersion 21
         //MQTT Client Lib does not work for Android 31+
         targetSdkVersion 30
-        versionCode 12
-        versionName "0.0.12"
+        versionCode 13
+        versionName "0.1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         manifestPlaceholders = [
