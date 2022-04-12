@@ -24,7 +24,9 @@
         android:label="@string/app_name"
         android:roundIcon="@drawable/ic_launcher_de4l"
         android:supportsRtl="true"
-        android:theme="@style/Theme.DE4LApp">
+        android:theme="@style/Theme.DE4LApp"
+        android:requestLegacyExternalStorage="true"
+        >
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"

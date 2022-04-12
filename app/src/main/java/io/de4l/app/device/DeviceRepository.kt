@@ -10,6 +10,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.*
+import kotlin.collections.HashMap
 
 @SuppressLint("MissingPermission")
 class DeviceRepository(private val appDatabase: AppDatabase) {
@@ -71,7 +73,9 @@ class DeviceRepository(private val appDatabase: AppDatabase) {
 //        }
 
         try {
-            appDatabase.deviceDao().updateDevice(createDeviceRecordFromDeviceEntity(device))
+            val deviceRecord = createDeviceRecordFromDeviceEntity(device)
+            deviceRecord.versionUUID = UUID.randomUUID().toString()
+            appDatabase.deviceDao().updateDevice(deviceRecord)
         } catch (e: Exception) {
             Log.e(LOG_TAG, e.message ?: "Unknown", e)
         }
@@ -144,7 +148,7 @@ class DeviceRepository(private val appDatabase: AppDatabase) {
         val id: Int? = _cachedDevices[device._macAddress.value]?.deviceRecord?.id
         return DeviceRecord(
             id,
-            device._name.value!!,
+            device._name.value ?: "null",
             device._macAddress.value!!,
             getBluetoothTypeForDeviceEntity(device),
             device._targetConnectionState.value

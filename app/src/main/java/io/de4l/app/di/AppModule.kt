@@ -81,13 +81,15 @@ class AppModule() {
         locationService: LocationService,
         deviceRepository: DeviceRepository,
         trackingManager: TrackingManager,
+        backgroundServiceWatcher: BackgroundServiceWatcher
     ): BluetoothDeviceManager {
         return BluetoothDeviceManager(
             application,
             bluetoothAdapter,
             locationService,
             deviceRepository,
-            trackingManager
+            trackingManager,
+            backgroundServiceWatcher
         )
     }
 

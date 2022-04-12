@@ -143,7 +143,7 @@
         android:layout_marginEnd="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_baseline_close_24"
+        app:srcCompat="@drawable/ic_unlink_24"
         tools:ignore="SpeakableTextPresentCheck" />
 
     <TextView

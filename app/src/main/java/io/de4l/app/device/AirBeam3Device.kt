@@ -7,6 +7,8 @@ import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.bluetooth.BluetoothDeviceType
 import io.de4l.app.sensor.AirBeamSensorValueParser
 import io.de4l.app.util.RetryException
+import io.de4l.app.util.RetryHelper.Companion.runWithRetry
+import kotlinx.coroutines.launch
 import no.nordicsemi.android.ble.BleManager
 import org.joda.time.DateTime
 import kotlin.coroutines.Continuation
@@ -15,20 +17,14 @@ import kotlin.coroutines.resumeWithException
 
 class AirBeam3Device(
     macAddress: String,
-    targetConnectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED
+    targetConnectionState: BluetoothConnectionState = BluetoothConnectionState.NONE
 ) : BleDevice(macAddress, targetConnectionState) {
 
-    override fun getBleConnection(cont: Continuation<Void?>): BleManager {
+    override fun getBleConnection(): BleManager {
         return AirBeam3BleConnection(De4lApplication.context, object :
             AirBeam3BleConnection.ConnectionListener {
             override fun onDisconnected() {
-                if (_targetConnectionState.value === BluetoothConnectionState.CONNECTED) {
-                    onReconnecting()
-                    //Causes Retry
-                    cont.resumeWithException(RetryException("Disconnected"))
-                } else {
-                    cont.resume(null)
-                }
+                this@AirBeam3Device.onDisconnected()
             }
 
             override fun onDataReceived(data: String, device: BluetoothDevice) {

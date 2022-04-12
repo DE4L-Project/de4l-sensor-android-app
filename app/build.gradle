@@ -31,8 +31,10 @@ android {
         buildConfigField("String", "AUTH_USERNAME_CLAIM_KEY", properties['AUTH_USERNAME_CLAIM_KEY'])
         buildConfigField("String", "AUTH_MQTT_CLAIM_RESOURCE", properties['AUTH_MQTT_CLAIM_RESOURCE'])
         buildConfigField("String", "AUTH_MQTT_CLAIM_ROLE", properties['AUTH_MQTT_CLAIM_ROLE'])
-
         buildConfigField("String", "MQTT_SERVER_URL", properties['MQTT_SERVER_URL'])
+        buildConfigField("String", "TRACKING_ONLY_ROLE", properties['TRACKING_ONLY_ROLE'])
+        buildConfigField("String", "APP_CLIENT_RESOURCE", properties['APP_CLIENT_RESOURCE'])
+
     }
 
     buildTypes {
@@ -57,7 +59,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0'
 
     //AndroidX
     implementation 'androidx.core:core-ktx:1.7.0'
@@ -88,7 +90,7 @@ dependencies {
     implementation 'org.greenrobot:eventbus:3.2.0'
     implementation 'joda-time:joda-time:2.10.5'
     implementation 'commons-codec:commons-codec:1.15'
-    implementation 'no.nordicsemi.android:ble-ktx:2.3.1'
+    implementation 'no.nordicsemi.android:ble-ktx:2.4.0'
 
     //MQTT
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'

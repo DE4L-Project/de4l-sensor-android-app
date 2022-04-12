@@ -21,7 +21,10 @@ data class DeviceRecord(
     var bluetoothDeviceType: BluetoothDeviceType,
 
     @ColumnInfo
-    var targetConnectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED
+    var targetConnectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED,
+
+    @ColumnInfo
+    var versionUUID: String? = null
 ) {
 
 }

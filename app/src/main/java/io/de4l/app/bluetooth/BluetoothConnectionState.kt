@@ -4,5 +4,6 @@ enum class BluetoothConnectionState {
     CONNECTED,
     CONNECTING,
     RECONNECTING,
-    DISCONNECTED
+    DISCONNECTED,
+    NONE
 }

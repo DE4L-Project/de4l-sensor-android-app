@@ -17,16 +17,21 @@ class LocationMqttMessage(
     }
 
     override fun toJson(): JsonObject {
-        val locationJsonObj = super.toJson()
+        val messageObj = super.toJson();
+
+        //Location JSON Object can only contain lat and lon
+        val locationJsonObj = JsonObject()
         locationJsonObj.addProperty("lat", this.locationValue.latitude)
         locationJsonObj.addProperty("lon", this.locationValue.longitude)
-        locationJsonObj.addProperty("gpsAccuracy", this.locationValue.accuracy)
-        locationJsonObj.addProperty("altitudeInMeters", this.locationValue.altitude)
-        locationJsonObj.addProperty("bearingInDegrees", this.locationValue.bearing)
-        locationJsonObj.addProperty("speedInMetersPerSecond", this.locationValue.speed)
-        locationJsonObj.addProperty("provider", this.locationValue.provider)
-        locationJsonObj.addProperty("timestamp", this.locationValue.timestamp.toString())
-        return locationJsonObj
+        messageObj.add("location", locationJsonObj)
+
+        messageObj.addProperty("gpsAccuracy", this.locationValue.accuracy)
+        messageObj.addProperty("altitudeInMeters", this.locationValue.altitude)
+        messageObj.addProperty("bearingInDegrees", this.locationValue.bearing)
+        messageObj.addProperty("speedInMetersPerSecond", this.locationValue.speed)
+        messageObj.addProperty("provider", this.locationValue.provider)
+        messageObj.addProperty("timestamp", this.locationValue.timestamp.toString())
+        return messageObj
     }
 
     override fun getSchemaVersion(): String {

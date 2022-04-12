@@ -10,6 +10,7 @@ import io.de4l.app.bluetooth.BluetoothDeviceType
 import io.de4l.app.bluetooth.BluetoothScanState
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.device.DeviceRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
@@ -29,7 +30,7 @@ class DeviceScanResultsViewModel @Inject constructor(
 
     val foundDevices: MutableLiveData<DeviceEntity> = MutableLiveData()
     var scanState: LiveData<BluetoothScanState> = bluetoothDeviceManager
-        .bluetoothScanScanState
+        .bluetoothScanState()
         .asLiveData()
 
     var scanStarted = false
@@ -38,7 +39,7 @@ class DeviceScanResultsViewModel @Inject constructor(
     @ExperimentalCoroutinesApi
     fun startScanning() {
         scanStarted = true
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             bluetoothDeviceManager
                 .scanForDevices()
                 .map {
@@ -55,8 +56,7 @@ class DeviceScanResultsViewModel @Inject constructor(
                     deviceRepository.containsDeviceAddress(it.address)
                 }
                 .collect {
-                    foundDevices.value =
-                        DeviceEntity.fromBluetoothDevice(it)
+                    foundDevices.postValue(DeviceEntity.fromBluetoothDevice(it))
                 }
         }
     }

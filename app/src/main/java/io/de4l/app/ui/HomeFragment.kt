@@ -2,14 +2,12 @@ package io.de4l.app.ui
 
 import android.content.res.ColorStateList
 import android.content.res.Configuration
-import android.content.res.Resources
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.ImageButton
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
@@ -36,7 +34,6 @@ import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.bluetooth.BluetoothDeviceType
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.location.LocationValue
-import io.de4l.app.sensor.SensorType
 import io.de4l.app.tracking.TrackingState
 
 @AndroidEntryPoint
@@ -157,8 +154,15 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         (rvDeviceLabels.layoutManager as LinearLayoutManager).orientation =
             LinearLayoutManager.HORIZONTAL
 
-        viewModel.connectedDevices.observe(viewLifecycleOwner) {
-            rvDeviceLabels.adapter = DeviceTabsAdapter(it, viewLifecycleOwner)
+        viewModel.linkedDevices.observe(viewLifecycleOwner) { connectedDevices ->
+            rvDeviceLabels.adapter = DeviceTabsAdapter(connectedDevices, viewLifecycleOwner)
+            if (connectedDevices.isEmpty()) {
+                viewModel.selectedDevice.value = null
+            } else {
+                if (viewModel.selectedDevice.value == null) {
+                    viewModel.selectedDevice.value = connectedDevices[0]
+                }
+            }
         }
 
         tvVersionInfo = view.findViewById(R.id.tvVersionInfo)
@@ -231,8 +235,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
         if (userCapture?.isTrackOnlyUser() == true) {
             viewModel.startLocationUpdates()
-        } else {
-            viewModel.stopLocationUpdates()
         }
     }
 
@@ -326,8 +328,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val device = _devices[position]
             holder.item = device
-            holder.btnDevice.text =
-                (device._name.value ?: "UNKNOWN ${device.getBluetoothDeviceType()}")
+            holder.btnDevice.text = getDeviceButtonText(device)
+
 
             holder.btnDevice.setOnClickListener {
                 viewModel.onDeviceButtonClicked(device)
@@ -336,10 +338,21 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             device._actualConnectionState.asLiveData().observe(viewLifecycleOwner) {
                 if (it == BluetoothConnectionState.DISCONNECTED) {
                     setButtonColor(holder, R.color.design_default_color_error)
+                } else if (it == BluetoothConnectionState.CONNECTED) {
+                    setButtonColor(holder, R.color.light_green)
                 } else {
-                    setButtonColor(holder, R.color.design_default_color_primary_dark)
+                    setButtonColor(holder, R.color.light_blue_900)
                 }
             }
+        }
+
+        protected fun getDeviceButtonText(device: DeviceEntity): String {
+            var text = (device._name.value ?: "UNKNOWN ${device.getBluetoothDeviceType()}")
+            val actualConnectionState = device._actualConnectionState.value
+            if (actualConnectionState == BluetoothConnectionState.CONNECTING || actualConnectionState == BluetoothConnectionState.RECONNECTING) {
+                text += "..."
+            }
+            return text;
         }
 
         protected fun setButtonColor(holder: ViewHolder, color: Int) {

@@ -1,6 +1,7 @@
 package io.de4l.app.ui
 
 import android.app.Application
+import android.util.Log
 import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.*
@@ -9,6 +10,7 @@ import io.de4l.app.BuildConfig
 import io.de4l.app.R
 import io.de4l.app.auth.AuthManager
 import io.de4l.app.bluetooth.BluetoothDeviceManager
+import io.de4l.app.bluetooth.event.ConnectToBluetoothDeviceEvent
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.device.DeviceRepository
 import io.de4l.app.location.LocationService
@@ -52,6 +54,7 @@ class HomeViewModel @Inject constructor(
         if (BuildConfig.DEBUG) BuildConfig.VERSION_NAME + "-dev" else BuildConfig.VERSION_NAME
 
     lateinit var trackingEnabled: LiveData<Boolean>
+    lateinit var linkedDevices: LiveData<List<DeviceEntity>>
     lateinit var connectedDevices: LiveData<List<DeviceEntity>>
     lateinit var trackingState: LiveData<TrackingState>
 
@@ -62,15 +65,18 @@ class HomeViewModel @Inject constructor(
         EventBus.getDefault().register(this)
 
         viewModelScope.launch {
+            linkedDevices = deviceRepository.getDevices().asLiveData()
             connectedDevices = deviceRepository.getDevicesShouldBeConnected().asLiveData()
             trackingState = trackingManager.trackingState.asLiveData()
             trackingEnabled =
                 deviceRepository.getConnectedDevices()
                     .combine(authManager.user) { connectedDevices, user ->
-                        connectedDevices.isNotEmpty() && user != null ||
-                                user?.isTrackOnlyUser() == true
+                        Log.v(LOG_TAG, "connectedDevices: ${connectedDevices.size}")
+                        Log.v(LOG_TAG, "user: ${user}")
+                        connectedDevices.isNotEmpty() && user != null || user?.isTrackOnlyUser() == true
                     }
                     .asLiveData()
+
 
 //            selectedDevice.collect {
 //                try {
@@ -111,12 +117,23 @@ class HomeViewModel @Inject constructor(
 
     fun onBtConnectClicked() {
         if (connectedDevices.value?.isNotEmpty() == true) {
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 bluetoothDeviceManager.disconnectAllDevices()
             }
         } else {
-            // Go to connect Page
-            EventBus.getDefault().post(NavigationEvent(R.id.devices))
+            if (linkedDevices.value?.isEmpty() == true) {
+                EventBus.getDefault().post(NavigationEvent(R.id.devices))
+            } else {
+                linkedDevices.value?.forEach {
+                    viewModelScope.launch(Dispatchers.IO) {
+                        it._macAddress.value?.let { macAddress ->
+                            backgroundServiceWatcher.sendEventToService(
+                                ConnectToBluetoothDeviceEvent(macAddress)
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 

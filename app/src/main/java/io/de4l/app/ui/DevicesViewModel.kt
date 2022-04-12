@@ -9,6 +9,7 @@ import io.de4l.app.R
 import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.bluetooth.BluetoothDeviceManager
 import io.de4l.app.bluetooth.event.BluetoothDeviceConnectedEvent
+import io.de4l.app.bluetooth.event.ConnectToBluetoothDeviceEvent
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.device.DeviceRepository
 import io.de4l.app.tracking.BackgroundServiceWatcher
@@ -35,12 +36,9 @@ class DevicesViewModel @Inject constructor(
         viewModelScope.launch {
             _devices = deviceRepository.getDevices().asLiveData()
         }
-
-        EventBus.getDefault().register(this)
     }
 
     override fun onCleared() {
-        EventBus.getDefault().unregister(this)
         super.onCleared()
     }
 
@@ -67,9 +65,13 @@ class DevicesViewModel @Inject constructor(
                     if (device._actualConnectionState.value !== BluetoothConnectionState.CONNECTED) {
                         device._targetConnectionState.value = BluetoothConnectionState.CONNECTED
                         device._actualConnectionState.value = BluetoothConnectionState.CONNECTING
-                        device._macAddress.value?.let {
-                            //Must find device first
-                            launch { bluetoothDeviceManager.connectDeviceWithRetry(it) }
+                        deviceRepository.updateDevice(device)
+
+                        //Must find device first
+                        device._macAddress.value?.let { macAddress ->
+                            backgroundServiceWatcher.sendEventToService(
+                                ConnectToBluetoothDeviceEvent(macAddress)
+                            )
                         }
 
                     } else {
@@ -77,13 +79,14 @@ class DevicesViewModel @Inject constructor(
                         deviceRepository.updateDevice(device)
                         bluetoothDeviceManager.disconnect(device)
                     }
+
                 }
             }
         }
     }
 
     private fun onDeviceRemoveClicked(device: DeviceEntity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             if (device._actualConnectionState.value != BluetoothConnectionState.DISCONNECTED) {
                 bluetoothDeviceManager.disconnect(device)
             }
@@ -93,11 +96,4 @@ class DevicesViewModel @Inject constructor(
             }
         }
     }
-
-
-    @Subscribe
-    fun onBluetoothDeviceConnected(event: BluetoothDeviceConnectedEvent) {
-        EventBus.getDefault().post(NavigationEvent(R.id.action_devices_to_homeFragment))
-    }
-
 }

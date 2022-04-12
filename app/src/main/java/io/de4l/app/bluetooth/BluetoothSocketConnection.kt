@@ -77,6 +77,7 @@ class BluetoothSocketConnection(
 
 
             } catch (e: IOException) {
+                connectionListener.onDisconnected()
                 // If socket was closed on purpose, ignore IOException
                 if (socketClosedIntentionally) {
                     return

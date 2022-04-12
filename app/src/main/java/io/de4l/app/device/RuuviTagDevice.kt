@@ -8,12 +8,13 @@ import io.de4l.app.bluetooth.StartBleScannerEvent
 import io.de4l.app.sensor.RuuviTagParser
 import io.de4l.app.sensor.SensorType
 import io.de4l.app.sensor.SensorValue
+import io.de4l.app.tracking.TrackingManager_Factory
 import org.greenrobot.eventbus.EventBus
 import org.joda.time.DateTime
 
 class RuuviTagDevice(
     macAddress: String,
-    targetConnectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED
+    targetConnectionState: BluetoothConnectionState = BluetoothConnectionState.NONE
 ) : DeviceEntity(macAddress, targetConnectionState) {
 
     private var leScanCallback: ScanCallback? = null

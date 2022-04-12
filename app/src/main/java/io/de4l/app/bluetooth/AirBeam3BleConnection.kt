@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
+import android.util.Log
 import io.de4l.app.device.BleDevice
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.util.ByteConverter
@@ -68,6 +69,7 @@ class AirBeam3BleConnection(
             measurementsCharacteristics = MEASUREMENTS_CHARACTERISTIC_UUIDS.mapNotNull { uuid ->
                 service.getCharacteristic(uuid)
             }
+
             return device != null
                     && device is BleDevice
                     && configurationCharacteristic != null

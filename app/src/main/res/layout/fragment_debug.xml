@@ -3,67 +3,53 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".BlankFragment">
+    android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/btnAirBeam3TestDebug"
-        android:layout_width="wrap_content"
-        android:layout_height="48dp"
-        android:text="Test Airbeam3 Connection"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/tvDebugConnectionInfo"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:text="Empty"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnAirBeam3TestDebug" />
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/btnAirbeam2Status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Airbeam2"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvDebugAb2" />
+            <TextView
+                android:id="@+id/lblBluetoothDeviceManagerScanJobQueue"
+                android:layout_width="137dp"
+                android:layout_height="wrap_content"
+                android:text="ScanJobQueue" />
 
-    <Button
-        android:id="@+id/btnAirBeam3Status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Airbeam3"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvDebugAb3" />
+            <TextView
+                android:id="@+id/tvBluetoothDeviceManagerScanJobQueue"
+                android:layout_width="275dp"
+                android:layout_height="match_parent"
+                android:text="-" />
+        </TableRow>
 
-    <Button
-        android:id="@+id/btnConnectionLoss"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="40dp"
-        android:text="Connection Loss"
-        app:layout_constraintStart_toEndOf="@+id/btnAirbeam2Status"
-        app:layout_constraintTop_toTopOf="@+id/btnAirbeam2Status" />
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/tvDebugAb3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TextView"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnAirbeam2Status" />
+            <TextView
+                android:id="@+id/lblBluetoothScanState"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BluetoothScanState" />
 
-    <TextView
-        android:id="@+id/tvDebugAb2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TextView"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvDebugConnectionInfo" />
+            <TextView
+                android:id="@+id/tvBluetoothScanState"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </TableLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

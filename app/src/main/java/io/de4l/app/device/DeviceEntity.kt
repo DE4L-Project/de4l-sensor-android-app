@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice
 import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.bluetooth.BluetoothDeviceManager
 import io.de4l.app.bluetooth.BluetoothDeviceType
+import io.de4l.app.bluetooth.BtDeviceConnectionChangeEvent
 import io.de4l.app.sensor.SensorType
 import io.de4l.app.sensor.SensorValue
 import io.de4l.app.ui.event.SensorValueReceivedEvent
@@ -17,29 +18,24 @@ import org.greenrobot.eventbus.EventBus
 
 @OptIn(ExperimentalCoroutinesApi::class)
 abstract class DeviceEntity {
-
     val _macAddress: MutableStateFlow<String?> = MutableStateFlow(null)
-
     val _targetConnectionState: MutableStateFlow<BluetoothConnectionState> =
-        MutableStateFlow(BluetoothConnectionState.DISCONNECTED)
+        MutableStateFlow(BluetoothConnectionState.NONE)
     val _actualConnectionState: MutableStateFlow<BluetoothConnectionState> =
         MutableStateFlow(BluetoothConnectionState.DISCONNECTED)
-
     val _sensorValues: MutableStateFlow<SensorValue?> = MutableStateFlow(null)
-    val changes: Flow<Any?>
-
-    var bluetoothDevice: BluetoothDevice? = null
-
     val _name: MutableStateFlow<String?> = MutableStateFlow(null)
 
-    val sensorCache = HashMap<SensorType, SensorValue>()
+    var bluetoothDevice: BluetoothDevice? = null
+    val _changes: Flow<Any?>
 
+    val sensorValueCache = HashMap<SensorType, SensorValue>()
 
-    private val coroutineScope = CoroutineScope(Dispatchers.Default)
+    protected val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     constructor(
         macAddress: String,
-        targetConnectionState: BluetoothConnectionState = BluetoothConnectionState.DISCONNECTED
+        targetConnectionState: BluetoothConnectionState = BluetoothConnectionState.NONE
     ) {
         val sanitizedMacAddress = macAddress.replace(":", "")
         this._macAddress.value = macAddress
@@ -50,20 +46,28 @@ abstract class DeviceEntity {
             )
         this._targetConnectionState.value = targetConnectionState
 
-        changes = merge(
+        _changes = merge(
             _name,
             _macAddress,
             _targetConnectionState,
             _actualConnectionState,
             _sensorValues
         )
+    }
 
+    init {
         coroutineScope.launch {
             _sensorValues.collect {
                 it?.let {
-                    sensorCache.put(it.sensorType, it)
+                    sensorValueCache.put(it.sensorType, it)
                 }
                 EventBus.getDefault().post(SensorValueReceivedEvent(it))
+            }
+        }
+
+        coroutineScope.launch {
+            _actualConnectionState.collect {
+                EventBus.getDefault().post(BtDeviceConnectionChangeEvent(this@DeviceEntity))
             }
         }
     }
@@ -74,7 +78,10 @@ abstract class DeviceEntity {
     abstract fun getBluetoothDeviceType(): BluetoothDeviceType
 
     protected fun onConnecting() {
-        this._actualConnectionState.value = BluetoothConnectionState.CONNECTING
+        // Do not override reconnecting state
+        if (this._actualConnectionState.value !== BluetoothConnectionState.RECONNECTING) {
+            this._actualConnectionState.value = BluetoothConnectionState.CONNECTING
+        }
     }
 
     protected fun onConnected() {
@@ -86,6 +93,7 @@ abstract class DeviceEntity {
     }
 
     protected fun onReconnecting() {
+
         this._actualConnectionState.value = BluetoothConnectionState.RECONNECTING
     }
 

@@ -13,6 +13,6 @@
         android:title="Information" />
     <item
         android:id="@+id/debugFragment"
-        android:icon="@drawable/ic_info_24"
+        android:icon="@drawable/ic_baseline_bug_report_24"
         android:title="Debug" />
 </menu>

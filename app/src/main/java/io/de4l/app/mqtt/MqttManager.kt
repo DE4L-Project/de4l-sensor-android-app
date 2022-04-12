@@ -148,12 +148,13 @@ class MqttManager(
                 try {
                     connectionState.value = MqttConnectionState.CONNECTION_LOST
                     mqttAndroidClient?.disconnect()
+                } catch (e: Exception) {
+                    Log.v(LOG_TAG, "${e.message}")
+                } finally {
                     coroutineScope.launch {
                         delay(2000)
                         connectWithRetry()
                     }
-                } catch (e: Exception) {
-                    Log.v(LOG_TAG, "${e.message}")
                 }
             }
 
@@ -204,7 +205,7 @@ class MqttManager(
                         try {
                             val token = mqttAndroidClient?.publish(topic, mqttMessage)
                             token?.waitForCompletion(1000)
-                            offer(true)
+                            trySend(true)
                         } catch (e: Exception) {
                             Log.v(LOG_TAG, e.message ?: e::class.java.name)
                         }
@@ -212,7 +213,7 @@ class MqttManager(
                 }
                 close()
             } catch (e: Exception) {
-                close(e)
+                close (e)
             }
             awaitClose {
                 cancel()
