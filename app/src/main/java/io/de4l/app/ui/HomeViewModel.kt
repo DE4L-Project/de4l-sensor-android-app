@@ -68,6 +68,7 @@ class HomeViewModel @Inject constructor(
             linkedDevices = deviceRepository.getDevices().asLiveData()
             connectedDevices = deviceRepository.getDevicesShouldBeConnected().asLiveData()
             trackingState = trackingManager.trackingState.asLiveData()
+
             trackingEnabled =
                 deviceRepository.getConnectedDevices()
                     .combine(authManager.user) { connectedDevices, user ->
@@ -76,28 +77,6 @@ class HomeViewModel @Inject constructor(
                         connectedDevices.isNotEmpty() && user != null || user?.isTrackOnlyUser() == true
                     }
                     .asLiveData()
-
-
-//            selectedDevice.collect {
-//                try {
-//                    job?.cancelAndJoin()
-//                } catch (e: CancellationException) {
-//                    Log.v(LOG_TAG, e.message.toString())
-//                }
-//
-//                job = null
-//
-//                it?.let { _device ->
-//                    job = viewModelScope.launch {
-//                        //Send current value
-//                        sensorValues.value = _device._sensorValues.value
-//                        //Register Updates
-//                        _device._sensorValues.collect { _sensorValue ->
-//                            sensorValues.value = _sensorValue
-//                        }
-//                    }
-//                }
-//            }
         }
     }
 

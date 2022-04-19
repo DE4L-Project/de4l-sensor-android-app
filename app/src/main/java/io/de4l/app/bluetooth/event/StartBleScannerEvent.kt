@@ -1,4 +1,4 @@
-package io.de4l.app.bluetooth
+package io.de4l.app.bluetooth.event
 
 import android.bluetooth.le.ScanCallback
 

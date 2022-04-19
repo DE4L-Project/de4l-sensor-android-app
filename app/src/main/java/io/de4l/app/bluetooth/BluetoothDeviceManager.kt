@@ -4,22 +4,15 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanResult
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.util.Log
-import com.google.common.collect.ImmutableSet
-import io.de4l.app.bluetooth.event.BluetoothDeviceConnectedEvent
-import io.de4l.app.bluetooth.event.BluetoothDeviceDisconnectedEvent
-import io.de4l.app.bluetooth.event.ConnectToBluetoothDeviceEvent
+import io.de4l.app.bluetooth.event.*
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.device.DeviceRepository
-import io.de4l.app.device.StopBleScannerEvent
 import io.de4l.app.location.LocationService
-import io.de4l.app.sensor.RuuviTagParser
 import io.de4l.app.tracking.BackgroundServiceWatcher
 import io.de4l.app.tracking.TrackingManager
 import io.de4l.app.ui.event.SendSensorValueMqttEvent
@@ -35,7 +28,9 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
+import java.util.*
 import javax.inject.Inject
+import kotlin.collections.HashMap
 
 
 @SuppressLint("MissingPermission")
@@ -59,6 +54,8 @@ class BluetoothDeviceManager @Inject constructor(
     private val _scannedDevices: MutableSharedFlow<BluetoothDevice> = MutableSharedFlow()
 
     private val bluetoothScanScanState = MutableStateFlow(BluetoothScanState.NOT_SCANNING)
+
+    private var bleScannerRestartJob: Timer? = null;
 
     init {
         EventBus.getDefault().register(this)
@@ -294,19 +291,6 @@ class BluetoothDeviceManager @Inject constructor(
         scanJobQueue.emit(bluetoothScanJob)
         discoveredDevice = bluetoothScanJob.waitForDevice()
         Log.v(LOG_TAG, "Discovered Device: ${macAddress} - ${discoveredDevice?.address}")
-
-//        val job = coroutineScope.async {
-//            scanForDevices()
-//                .filter {
-//                    it.address == macAddress
-//                }
-//                .collect {
-//                    cancelDeviceDiscovery()
-//                    Log.i(LOG_TAG, "Device: ${it.address}")
-//                    discoveredDevice = it
-//                }
-//        }
-//        job.await()
         return discoveredDevice
     }
 
@@ -403,15 +387,13 @@ class BluetoothDeviceManager @Inject constructor(
         coroutineScope.launch {
             val deviceEntity = event.deviceEntity
 
-            deviceEntity._actualConnectionState.asSharedFlow()
-                .collect { connectionState ->
-                    when (connectionState) {
-                        BluetoothConnectionState.CONNECTED -> onConnected(deviceEntity)
-                        BluetoothConnectionState.CONNECTING -> onConnecting(deviceEntity)
-                        BluetoothConnectionState.RECONNECTING -> onReconnecting(deviceEntity)
-                        BluetoothConnectionState.DISCONNECTED -> onDisconnected(deviceEntity)
-                    }
-                }
+            val connectionState = deviceEntity._actualConnectionState.value
+            when (connectionState) {
+                BluetoothConnectionState.CONNECTED -> onConnected(deviceEntity)
+                BluetoothConnectionState.CONNECTING -> onConnecting(deviceEntity)
+                BluetoothConnectionState.RECONNECTING -> onReconnecting(deviceEntity)
+                BluetoothConnectionState.DISCONNECTED -> onDisconnected(deviceEntity)
+            }
         }
     }
 
@@ -428,14 +410,12 @@ class BluetoothDeviceManager @Inject constructor(
     fun onStartBleScannerEvent(event: StartBleScannerEvent) {
         LoggingHelper.logCurrentThread(LOG_TAG, "onStartBleScannerEvent()")
         bluetoothAdapter.bluetoothLeScanner.startScan(event.leScanCallback)
-        Log.v(LOG_TAG, "Is Bluetooth Adapter Discovering: ${bluetoothAdapter.isDiscovering()}")
     }
 
     @Subscribe
     fun onStopBleScannerEvent(event: StopBleScannerEvent) {
         LoggingHelper.logCurrentThread(LOG_TAG, "onStopBleScannerEvent()")
         bluetoothAdapter.bluetoothLeScanner.stopScan(event.leScanCallback)
-        Log.v(LOG_TAG, "Is Bluetooth Adapter Discovering: ${bluetoothAdapter.isDiscovering()}")
 
     }
 

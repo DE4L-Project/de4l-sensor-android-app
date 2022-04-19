@@ -4,11 +4,11 @@ import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.bluetooth.BluetoothDeviceType
-import io.de4l.app.bluetooth.StartBleScannerEvent
+import io.de4l.app.bluetooth.event.StartBleScannerEvent
+import io.de4l.app.bluetooth.event.StopBleScannerEvent
 import io.de4l.app.sensor.RuuviTagParser
 import io.de4l.app.sensor.SensorType
 import io.de4l.app.sensor.SensorValue
-import io.de4l.app.tracking.TrackingManager_Factory
 import org.greenrobot.eventbus.EventBus
 import org.joda.time.DateTime
 

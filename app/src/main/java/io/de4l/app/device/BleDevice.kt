@@ -28,7 +28,6 @@ abstract class BleDevice(
             connection.let { connection ->
                 connection?.connect(it)!!
                     .fail { bluetoothDevice, status ->
-                        //cont.resumeWithException(RetryException("BLE Connection failed - Status ${status} - Device: ${bluetoothDevice.address}"))
                         Log.v(
                             LOG_TAG,
                             "BLE Connection failed - Status ${status} - Device: ${bluetoothDevice.address}"
@@ -41,31 +40,6 @@ abstract class BleDevice(
             }
         }
     }
-
-//        bluetoothDevice?.let {
-//            runWithRetry {
-//                if (_targetConnectionState.value === BluetoothConnectionState.DISCONNECTED) {
-//                    //Stop retry if disconnected
-//                    return@runWithRetry
-//                }
-//
-//                suspendCoroutine { cont: Continuation<Void?> ->
-//                    connection = getBleConnection(cont)
-//                    connection.let { connection ->
-//                        connection?.connect(it)!!
-//                            .fail { bluetoothDevice, status ->
-//                                cont.resumeWithException(RetryException("BLE Connection failed - Status ${status} - Device: ${bluetoothDevice.address}"))
-//                            }
-//                            .done {
-//                                onConnected()
-//                                cont.resume(null)
-//                            }
-//                            .enqueue()
-//                    }
-//                }
-//            }
-//        }
-//        }
 
     override suspend fun forceReconnect() {
         TODO("Not yet implemented")

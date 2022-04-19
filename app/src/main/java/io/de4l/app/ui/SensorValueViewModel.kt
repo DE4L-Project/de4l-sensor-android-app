@@ -6,9 +6,11 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.bluetooth.BluetoothDeviceManager
+import io.de4l.app.bluetooth.event.ConnectToBluetoothDeviceEvent
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.sensor.SensorType
 import io.de4l.app.sensor.SensorValue
+import io.de4l.app.tracking.BackgroundServiceWatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
@@ -17,7 +19,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SensorValueViewModel @Inject constructor(
-    private val bluetoothDeviceManager: BluetoothDeviceManager
+    private val bluetoothDeviceManager: BluetoothDeviceManager,
+    private val backgroundServiceWatcher: BackgroundServiceWatcher
 ) : ViewModel() {
     private val LOG_TAG = SensorValueViewModel::class.java.name
 
@@ -65,7 +68,7 @@ class SensorValueViewModel @Inject constructor(
                 selectedDevice.value?._targetConnectionState?.value =
                     BluetoothConnectionState.CONNECTED
                 selectedDevice.value?._macAddress?.value?.let {
-                    launch(Dispatchers.IO) { bluetoothDeviceManager.connectDeviceWithRetry(it) }
+                    backgroundServiceWatcher.sendEventToService(ConnectToBluetoothDeviceEvent(it))
                 }
             }
         }

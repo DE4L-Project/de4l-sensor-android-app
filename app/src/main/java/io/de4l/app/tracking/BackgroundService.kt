@@ -75,8 +75,6 @@ class BackgroundService() : Service() {
         locationService.startLocationUpdates(this)
 
         coroutineScope.launch {
-
-            Log.v(LOG_TAG, "coroutineScope launch()")
             merge(
                 bluetoothDeviceManager.hasConnectedDevices(),
                 trackingManager.trackingState,
@@ -88,8 +86,15 @@ class BackgroundService() : Service() {
             }
         }
 
+//        coroutineScope.launch {
+//            authManager.user.collect {
+//                if (it == null) {
+//                    onDestroy()
+//                }
+//            }
+//        }
+
         coroutineScope.launch {
-            var lastValue: Boolean? = null
             val connectedDevices = deviceRepository.getDevicesShouldBeConnected().firstOrNull()
             connectedDevices?.forEach { device ->
                 val macAddress = device._macAddress.value
@@ -97,32 +102,6 @@ class BackgroundService() : Service() {
                     launch { bluetoothDeviceManager.connectDeviceWithRetry(it) }
                 }
             }
-        }
-        coroutineScope.launch {
-
-//            bluetoothDeviceManager.hasConnectedDevices().collect {
-//                when (it) {
-//                    true -> {
-//                        deviceRepository.getDevicesShouldBeConnected().collect { devices ->
-//                            devices.forEach {
-//                                it._macAddress.value?.let { macAddress ->
-//                                    launch {
-//                                        bluetoothDeviceManager.connectDeviceWithRetry(
-//                                            macAddress
-//                                        )
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                    false -> {
-//                        if (lastValue !== null && lastValue == true) {
-//                            stopSelf()
-//                        }
-//                    }
-//                }
-//                lastValue = it
-//            }
         }
 
         if (!backgroundServiceWatcher.isBackgroundServiceActive.value) {
@@ -183,11 +162,7 @@ class BackgroundService() : Service() {
 
         CoroutineScope(Dispatchers.Default)
             .launch {
-                Log.v(LOG_TAG, "coroutineScope - close - start")
-
                 trackingManager.stopTracking()
-                Log.v(LOG_TAG, "coroutineScope - close - end")
-                Log.v(LOG_TAG, "coroutineScope - close - after")
                 stopForeground(true)
                 super.onDestroy()
             }
@@ -214,8 +189,6 @@ class BackgroundService() : Service() {
 
                 }
             }
-//            BluetoothConnectionState.CONNECTING -> bluetoothConnectionText = "Connecting..."
-//            BluetoothConnectionState.RECONNECTING -> bluetoothConnectionText = "Reconnecting..."
         }
 
         val notificationText = "$bluetoothConnectionText | $trackingStateText"
@@ -269,14 +242,7 @@ class BackgroundService() : Service() {
                     "Stop",
                     activityActionPendingIntent
                 )
-//                .addAction(
-//                    R.drawable.googleg_standard_color_18,
-//                    "Force Reconnect",
-//                    forceReconnectPendingIntent
-//                )
                 .build()
-
-
         return notification
     }
 
@@ -298,7 +264,7 @@ class BackgroundService() : Service() {
 
     @Subscribe
     fun onConnectToBluetoothDevice(event: ConnectToBluetoothDeviceEvent) {
-        coroutineScope.launch {
+        coroutineScope.launch(Dispatchers.IO) {
             if (event.connectWithRetry) {
                 bluetoothDeviceManager.connectDeviceWithRetry(event.macAddress)
             } else {

@@ -61,7 +61,6 @@ class AirBeam2Device(
                     socketConnection?.connect { this@AirBeam2Device.onConnected() }
                     disconnect()
                 } catch (e: Exception) {
-                    Log.e(LOG_TAG, "AirBeam2 ")
                     disconnect()
                 }
             }

@@ -5,7 +5,7 @@ import android.bluetooth.BluetoothDevice
 import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.bluetooth.BluetoothDeviceManager
 import io.de4l.app.bluetooth.BluetoothDeviceType
-import io.de4l.app.bluetooth.BtDeviceConnectionChangeEvent
+import io.de4l.app.bluetooth.event.BtDeviceConnectionChangeEvent
 import io.de4l.app.sensor.SensorType
 import io.de4l.app.sensor.SensorValue
 import io.de4l.app.ui.event.SensorValueReceivedEvent
