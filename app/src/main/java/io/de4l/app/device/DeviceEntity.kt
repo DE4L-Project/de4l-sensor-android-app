@@ -77,24 +77,12 @@ abstract class DeviceEntity {
     abstract suspend fun disconnect()
     abstract fun getBluetoothDeviceType(): BluetoothDeviceType
 
-    protected fun onConnecting() {
-        // Do not override reconnecting state
-        if (this._actualConnectionState.value !== BluetoothConnectionState.RECONNECTING) {
-            this._actualConnectionState.value = BluetoothConnectionState.CONNECTING
-        }
-    }
-
     protected fun onConnected() {
         this._actualConnectionState.value = BluetoothConnectionState.CONNECTED
     }
 
     protected fun onDisconnected() {
         this._actualConnectionState.value = BluetoothConnectionState.DISCONNECTED
-    }
-
-    protected fun onReconnecting() {
-
-        this._actualConnectionState.value = BluetoothConnectionState.RECONNECTING
     }
 
     protected fun isAutoConnecting(): Flow<Boolean> {

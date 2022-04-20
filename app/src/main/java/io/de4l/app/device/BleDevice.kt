@@ -21,7 +21,7 @@ abstract class BleDevice(
     private val LOG_TAG: String = BleDevice::class.java.name
 
     override suspend fun connect() {
-        onConnecting()
+//        onConnecting()
 
         bluetoothDevice?.let {
             connection = getBleConnection()

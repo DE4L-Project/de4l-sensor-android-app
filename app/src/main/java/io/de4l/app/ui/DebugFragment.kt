@@ -35,10 +35,10 @@ class DebugFragment : Fragment() {
         tvScanJobQueue = view.findViewById(R.id.tvBluetoothDeviceManagerScanJobQueue)
         tvBluetoothScanState = view.findViewById(R.id.tvBluetoothScanState)
 
-        viewModel.wantedDevices.changed().asLiveData().observe(viewLifecycleOwner) {
+        viewModel.activeScanJobs.changed().asLiveData().observe(viewLifecycleOwner) {
             var macAddressesAsString = "";
-            viewModel.wantedDevices.forEach {
-                macAddressesAsString += "$it, "
+            viewModel.activeScanJobs.toMap().forEach {
+                macAddressesAsString += "${it.key}, "
             }
             tvScanJobQueue.text = macAddressesAsString
         }

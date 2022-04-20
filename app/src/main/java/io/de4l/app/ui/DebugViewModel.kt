@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.bluetooth.BluetoothDeviceManager
+import io.de4l.app.bluetooth.BluetoothScanner
 import io.de4l.app.bluetooth.event.BluetoothDeviceConnectedEvent
 import io.de4l.app.bluetooth.event.ConnectToBluetoothDeviceEvent
 import io.de4l.app.device.DeviceEntity
@@ -21,7 +22,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DebugViewModel @Inject constructor(
-    private val bluetoothDeviceManager: BluetoothDeviceManager,
+    private val bluetoothScanner: BluetoothScanner,
     private val backgroundServiceWatcher: BackgroundServiceWatcher,
     private val deviceRepository: DeviceRepository,
     application: Application
@@ -29,8 +30,8 @@ class DebugViewModel @Inject constructor(
 
     private val LOG_TAG: String = DebugViewModel::class.java.name
 
-    val wantedDevices = bluetoothDeviceManager.wantedDevices()
-    val bluetoothScanScanState = bluetoothDeviceManager.bluetoothScanState().asLiveData()
+    val activeScanJobs = bluetoothScanner.activeScanJobs
+    val bluetoothScanScanState = bluetoothScanner.bluetoothScanState().asLiveData()
 
 
 }

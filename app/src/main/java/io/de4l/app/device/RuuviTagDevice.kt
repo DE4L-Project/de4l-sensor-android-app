@@ -20,7 +20,7 @@ class RuuviTagDevice(
     private var leScanCallback: ScanCallback? = null
 
     override suspend fun connect() {
-        onConnecting()
+//        onConnecting()
         leScanCallback = object : ScanCallback() {
             override fun onScanResult(callbackType: Int, result: ScanResult?) {
                 result?.let { scanResult ->

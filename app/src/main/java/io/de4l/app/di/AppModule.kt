@@ -17,6 +17,7 @@ import dagger.hilt.components.SingletonComponent
 import io.de4l.app.AppConstants
 import io.de4l.app.auth.AuthManager
 import io.de4l.app.bluetooth.BluetoothDeviceManager
+import io.de4l.app.bluetooth.BluetoothScanner
 import io.de4l.app.database.AppDatabase
 import io.de4l.app.device.DeviceRepository
 import io.de4l.app.location.LocationService
@@ -75,9 +76,19 @@ class AppModule() {
 
     @Singleton
     @Provides
+    fun provideBluetoothScanner(
+        application: Application,
+        bluetoothAdapter: BluetoothAdapter
+    ): BluetoothScanner {
+        return BluetoothScanner(application, bluetoothAdapter)
+    }
+
+
+    @Singleton
+    @Provides
     fun provideDe4lBluetoothManager(
         application: Application,
-        bluetoothAdapter: BluetoothAdapter,
+        bluetoothscanner: BluetoothScanner,
         locationService: LocationService,
         deviceRepository: DeviceRepository,
         trackingManager: TrackingManager,
@@ -85,7 +96,7 @@ class AppModule() {
     ): BluetoothDeviceManager {
         return BluetoothDeviceManager(
             application,
-            bluetoothAdapter,
+            bluetoothscanner,
             locationService,
             deviceRepository,
             trackingManager,

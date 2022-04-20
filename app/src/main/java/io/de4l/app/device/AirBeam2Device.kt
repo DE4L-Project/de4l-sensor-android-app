@@ -32,7 +32,6 @@ class AirBeam2Device(
 
     override suspend fun connect() {
         closeConnection()
-        onConnecting()
         bluetoothConnectionJob = coroutineScope.launch(Dispatchers.IO) {
             bluetoothDevice?.let {
                 try {

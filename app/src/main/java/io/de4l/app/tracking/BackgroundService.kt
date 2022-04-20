@@ -23,6 +23,7 @@ import io.de4l.app.mqtt.MqttManager
 import io.de4l.app.ui.MainActivity
 import io.de4l.app.ui.event.StartTrackingServiceEvent
 import io.de4l.app.ui.event.StopTrackingServiceEvent
+import io.de4l.app.util.LoggingHelper
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filterNot
@@ -94,15 +95,6 @@ class BackgroundService() : Service() {
 //            }
 //        }
 
-        coroutineScope.launch {
-            val connectedDevices = deviceRepository.getDevicesShouldBeConnected().firstOrNull()
-            connectedDevices?.forEach { device ->
-                val macAddress = device._macAddress.value
-                macAddress?.let {
-                    launch { bluetoothDeviceManager.connectDeviceWithRetry(it) }
-                }
-            }
-        }
 
         if (!backgroundServiceWatcher.isBackgroundServiceActive.value) {
             backgroundServiceWatcher.isBackgroundServiceActive.value = true
@@ -265,6 +257,10 @@ class BackgroundService() : Service() {
     @Subscribe
     fun onConnectToBluetoothDevice(event: ConnectToBluetoothDeviceEvent) {
         coroutineScope.launch(Dispatchers.IO) {
+            LoggingHelper.logCurrentThread(
+                LOG_TAG,
+                "Received ConnectToBluetoothDeviceEvent: ${event.macAddress} - Retry: ${event.connectWithRetry}"
+            )
             if (event.connectWithRetry) {
                 bluetoothDeviceManager.connectDeviceWithRetry(event.macAddress)
             } else {

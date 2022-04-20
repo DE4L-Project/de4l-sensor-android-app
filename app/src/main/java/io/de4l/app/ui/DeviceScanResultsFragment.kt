@@ -42,7 +42,6 @@ class DeviceScanResultsFragment : Fragment() {
 
     override fun onPause() {
         super.onPause()
-        viewModel.stopScanning()
     }
 
     override fun onStop() {
@@ -69,7 +68,7 @@ class DeviceScanResultsFragment : Fragment() {
             when (it) {
                 NOT_SCANNING -> {
                     tbScan.title = "Searching finished"
-                    if (devices.isEmpty() && viewModel.scanStarted) {
+                    if (devices.isEmpty()) {
                         Toast.makeText(
                             context,
                             "No Bluetooth devices found!",
@@ -114,7 +113,6 @@ class DeviceScanResultsFragment : Fragment() {
                 )
             }
             Log.v(LOG_TAG, "${millis}ms")
-
             return ViewHolder(deviceView)
         }
 

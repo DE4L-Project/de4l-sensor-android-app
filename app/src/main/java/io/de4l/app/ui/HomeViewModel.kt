@@ -104,6 +104,9 @@ class HomeViewModel @Inject constructor(
                 EventBus.getDefault().post(NavigationEvent(R.id.devices))
             } else {
                 linkedDevices.value?.forEach {
+//                    viewModelScope.launch(Dispatchers.IO) {
+//                        bluetoothDeviceManager.connectDeviceWithRetry(it._macAddress.value)
+//                    }
                     viewModelScope.launch(Dispatchers.IO) {
                         it._macAddress.value?.let { macAddress ->
                             backgroundServiceWatcher.sendEventToService(

@@ -19,23 +19,17 @@ class ObservableMap<K, V>(private val map: MutableMap<K, V>) {
 
     operator fun set(key: K, value: V) {
         map[key] = value
-        coroutineScope.launch {
-            changed.emit(true)
-        }
+        emitChanged()
     }
 
     fun clear() {
         map.clear()
-        coroutineScope.launch {
-            changed.emit(true)
-        }
+        emitChanged()
     }
 
     fun remove(key: K) {
         map.remove(key)
-        coroutineScope.launch {
-            changed.emit(true)
-        }
+        emitChanged()
     }
 
     fun toMap(): Map<K, V> {
@@ -62,4 +56,22 @@ class ObservableMap<K, V>(private val map: MutableMap<K, V>) {
         return changed;
     }
 
+    fun entries(): MutableSet<MutableMap.MutableEntry<K, V>> {
+        return map.entries
+    }
+
+    fun removeAllKeys(keys: Set<K>) {
+        if (keys.isNotEmpty()) {
+            keys.forEach { key ->
+                map.remove(key)
+            }
+            emitChanged()
+        }
+    }
+
+    private fun emitChanged() {
+        coroutineScope.launch {
+            changed.emit(true)
+        }
+    }
 }

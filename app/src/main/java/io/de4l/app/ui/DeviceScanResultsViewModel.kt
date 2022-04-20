@@ -8,40 +8,36 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.de4l.app.bluetooth.BluetoothDeviceManager
 import io.de4l.app.bluetooth.BluetoothDeviceType
 import io.de4l.app.bluetooth.BluetoothScanState
+import io.de4l.app.bluetooth.BluetoothScanner
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.device.DeviceRepository
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.concurrent.timer
 
 @HiltViewModel
 class DeviceScanResultsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     val deviceRepository: DeviceRepository,
-    val bluetoothDeviceManager: BluetoothDeviceManager
+    val bluetoothScanner: BluetoothScanner
 ) : ViewModel() {
 
     private val LOG_TAG: String = DeviceScanResultsViewModel::class.java.name
 
     val foundDevices: MutableLiveData<DeviceEntity> = MutableLiveData()
-    var scanState: LiveData<BluetoothScanState> = bluetoothDeviceManager
-        .bluetoothScanState()
-        .asLiveData()
-
-    var scanStarted = false
+    var scanState: MutableLiveData<BluetoothScanState> = MutableLiveData()
 
     @SuppressLint("MissingPermission")
     @ExperimentalCoroutinesApi
     fun startScanning() {
-        scanStarted = true
-        viewModelScope.launch(Dispatchers.IO) {
-            bluetoothDeviceManager
-                .scanForDevices()
+        scanState.value = BluetoothScanState.SCANNING
+        val discoveryJob = viewModelScope.launch(Dispatchers.IO) {
+            bluetoothScanner
+                .discoverDevices()
                 .map {
                     Log.i(
                         LOG_TAG,
@@ -59,12 +55,15 @@ class DeviceScanResultsViewModel @Inject constructor(
                     foundDevices.postValue(DeviceEntity.fromBluetoothDevice(it))
                 }
         }
-    }
 
-    fun stopScanning() {
-        bluetoothDeviceManager.cancelDeviceDiscovery()
-    }
+        viewModelScope.launch {
+            delay(20000)
+            scanState.value = BluetoothScanState.NOT_SCANNING
+            discoveryJob.cancel()
+        }
 
+
+    }
 
     fun onDeviceSelected(device: DeviceEntity) {
         viewModelScope.launch {

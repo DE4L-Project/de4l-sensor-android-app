@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 
-data class BluetoothScanJob(val macAddress: String) {
+data class BluetoothScanJob(val macAddress: String, val retry: Boolean = false) {
 
     private val _device: MutableSharedFlow<BluetoothDevice?> = MutableSharedFlow()
 
