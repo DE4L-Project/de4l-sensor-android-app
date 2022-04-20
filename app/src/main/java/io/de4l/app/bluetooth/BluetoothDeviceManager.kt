@@ -69,10 +69,12 @@ class BluetoothDeviceManager @Inject constructor(
     }
 
     private suspend fun connect(macAddress: String, connectWithRetry: Boolean = false) {
+        //Device must be linked first
         val deviceEntity = deviceRepository.getByAddress(macAddress).firstOrNull()
         deviceEntity?.let { _deviceEntity ->
             _deviceEntity._targetConnectionState.value = BluetoothConnectionState.CONNECTED
             onConnecting(_deviceEntity)
+
             val bluetoothDevice = bluetoothScanner.findBtDevice(macAddress, connectWithRetry)
             bluetoothDevice?.let { _bluetoothDevice ->
                 _deviceEntity.bluetoothDevice = _bluetoothDevice
@@ -110,40 +112,8 @@ class BluetoothDeviceManager @Inject constructor(
         }
     }
 
-
-//    private suspend fun findBtDeviceWithRetry(macAddress: String): BluetoothDevice? {
-//        var discoveredDevice: BluetoothDevice? = null
-//        runWithRetry {
-//            try {
-//                discoveredDevice = findBtDevice(macAddress)
-//                //Only retry if user did not stop search
-//                if (_wantedDevices.contains(macAddress) && discoveredDevice == null) {
-//                    throw RetryException("No device found; ${macAddress}")
-//                }
-//            } catch (e: BluetoothAlreadyScanningException) {
-////                cancelDeviceDiscovery()
-////                throw RetryException("Bluetooth Already Scanning")
-//            }
-//
-//        }
-//        return discoveredDevice
-//    }
-
-//    @ExperimentalCoroutinesApi
-//    private suspend fun findBtDevice(macAddress: String): BluetoothDevice? {
-//        Log.v(LOG_TAG, "findBtDevice: ${macAddress}")
-//
-//        var discoveredDevice: BluetoothDevice? = null
-//        val bluetoothScanJob = BluetoothScanJob(macAddress)
-//        scanJobQueue.emit(bluetoothScanJob)
-//        discoveredDevice = bluetoothScanJob.waitForDevice()
-//        Log.v(LOG_TAG, "Discovered Device: ${macAddress} - ${discoveredDevice?.address}")
-//        return discoveredDevice
-//    }
-
     private suspend fun onConnected(device: DeviceEntity) {
         Log.v(LOG_TAG, "Device ${device._macAddress.value} - CONNECTED")
-//        device._actualConnectionState.value = BluetoothConnectionState.CONNECTED
         saveDevice(device)
         EventBus.getDefault().post(BluetoothDeviceConnectedEvent(device))
     }
@@ -194,6 +164,7 @@ class BluetoothDeviceManager @Inject constructor(
             bluetoothScanner.stopSearchForDevice(device._macAddress.value)
         }
 
+        // Starting reconnect
         if (device._targetConnectionState.value == BluetoothConnectionState.CONNECTED) {
             onReconnecting(device)
             device._macAddress.value?.let {

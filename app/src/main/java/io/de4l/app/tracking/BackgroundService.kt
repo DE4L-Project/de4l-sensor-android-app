@@ -25,7 +25,6 @@ import io.de4l.app.ui.event.StartTrackingServiceEvent
 import io.de4l.app.ui.event.StopTrackingServiceEvent
 import io.de4l.app.util.LoggingHelper
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.merge
@@ -257,7 +256,7 @@ class BackgroundService() : Service() {
     @Subscribe
     fun onConnectToBluetoothDevice(event: ConnectToBluetoothDeviceEvent) {
         coroutineScope.launch(Dispatchers.IO) {
-            LoggingHelper.logCurrentThread(
+            LoggingHelper.logWithCurrentThread(
                 LOG_TAG,
                 "Received ConnectToBluetoothDeviceEvent: ${event.macAddress} - Retry: ${event.connectWithRetry}"
             )

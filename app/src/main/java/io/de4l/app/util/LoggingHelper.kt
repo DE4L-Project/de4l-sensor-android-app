@@ -5,7 +5,7 @@ import android.util.Log
 class LoggingHelper {
 
     companion object {
-        fun logCurrentThread(tag: String, message: String) {
+        fun logWithCurrentThread(tag: String, message: String) {
             Log.v(tag, Thread.currentThread().name + " | " + message)
         }
     }

@@ -22,7 +22,7 @@ abstract class DeviceEntity {
     val _targetConnectionState: MutableStateFlow<BluetoothConnectionState> =
         MutableStateFlow(BluetoothConnectionState.NONE)
     val _actualConnectionState: MutableStateFlow<BluetoothConnectionState> =
-        MutableStateFlow(BluetoothConnectionState.DISCONNECTED)
+        MutableStateFlow(BluetoothConnectionState.NONE)
     val _sensorValues: MutableStateFlow<SensorValue?> = MutableStateFlow(null)
     val _name: MutableStateFlow<String?> = MutableStateFlow(null)
 
@@ -131,7 +131,7 @@ abstract class DeviceEntity {
                 else ->
                     throw Exception("Unknown device type: ${deviceRecord.bluetoothDeviceType}")
             }
-
+            deviceEntity._actualConnectionState.value = BluetoothConnectionState.DISCONNECTED
             deviceEntity._targetConnectionState.value = deviceRecord.targetConnectionState
             return deviceEntity
         }
