@@ -2,30 +2,41 @@ package io.de4l.app.device
 
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
+import hilt_aggregated_deps._dagger_hilt_android_flags_FragmentGetContextFix_FragmentGetContextFixEntryPoint
 import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.bluetooth.BluetoothDeviceType
 import io.de4l.app.bluetooth.event.StartBleScannerEvent
 import io.de4l.app.bluetooth.event.StopBleScannerEvent
+import io.de4l.app.mqtt.MqttManager
 import io.de4l.app.sensor.RuuviTagParser
 import io.de4l.app.sensor.SensorType
 import io.de4l.app.sensor.SensorValue
+import io.de4l.app.util.LoggingHelper
+import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.joda.time.DateTime
+import java.util.*
+import kotlin.concurrent.timerTask
 
 class RuuviTagDevice(
     macAddress: String,
     targetConnectionState: BluetoothConnectionState = BluetoothConnectionState.NONE
 ) : DeviceEntity(macAddress, targetConnectionState) {
 
+    private val LOG_TAG = MqttManager::class.java.name
+    private val CONNECTION_TIMEOUT_MILLIS = 60000L
+
     private var leScanCallback: ScanCallback? = null
+    private var connectionTimer: Timer? = null
 
     override suspend fun connect() {
-//        onConnecting()
         leScanCallback = object : ScanCallback() {
             override fun onScanResult(callbackType: Int, result: ScanResult?) {
                 result?.let { scanResult ->
                     bluetoothDevice?.let {
                         if (scanResult.device?.address == it.address) {
+                            resetAndStartConnectionTimer()
+
                             val tagData =
                                 RuuviTagParser().parseFromRawFormat5(scanResult.scanRecord!!.bytes)
 
@@ -63,9 +74,29 @@ class RuuviTagDevice(
             EventBus.getDefault().post(StartBleScannerEvent(it))
         }
         onConnected()
+        resetAndStartConnectionTimer()
+    }
+
+    private fun resetAndStartConnectionTimer() {
+        connectionTimer?.cancel()
+        connectionTimer = Timer()
+        connectionTimer?.schedule(
+            timerTask {
+                coroutineScope.launch {
+                    LoggingHelper.logWithCurrentThread(
+                        LOG_TAG,
+                        "Ruuvi Tag - Connection Timeout: ${_macAddress.value}"
+                    )
+                    disconnect()
+                }
+            }, CONNECTION_TIMEOUT_MILLIS
+        )
     }
 
     override suspend fun disconnect() {
+        connectionTimer?.cancel()
+        connectionTimer = null
+
         leScanCallback?.let {
             EventBus.getDefault().post(StopBleScannerEvent(it))
         }

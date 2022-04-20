@@ -1,5 +1,6 @@
 package io.de4l.app
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import dagger.hilt.android.HiltAndroidApp
@@ -9,11 +10,12 @@ class De4lApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        De4lApplication.context = this
+        context = this
     }
 
     companion object {
         lateinit var context: Context
+            private set
     }
 
 }
