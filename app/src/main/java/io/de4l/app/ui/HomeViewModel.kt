@@ -68,7 +68,7 @@ class HomeViewModel @Inject constructor(
             trackingState = trackingManager.trackingState.asLiveData()
 
             trackingEnabled =
-                deviceRepository.getConnectedDevices()
+                deviceRepository.getDevicesShouldBeConnected()
                     .combine(authManager.user) { connectedDevices, user ->
                         Log.v(LOG_TAG, "connectedDevices: ${connectedDevices.size}")
                         Log.v(LOG_TAG, "user: ${user}")

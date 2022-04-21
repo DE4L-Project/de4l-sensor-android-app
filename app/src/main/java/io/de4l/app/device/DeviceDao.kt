@@ -17,7 +17,7 @@ interface DeviceDao {
 
 //    @Query("SELECT * FROM DeviceRecord WHERE actualConnectionState = :connectionState")
 //    fun getConnectedDevices(connectionState: BluetoothConnectionState = BluetoothConnectionState.CONNECTED): Flow<List<DeviceRecord?>>
-//
+
 //    @Query("UPDATE DeviceRecord SET actualConnectionState = :connectionState")
 //    fun resetConnections(connectionState: String = BluetoothConnectionState.DISCONNECTED.toString())
 
@@ -25,7 +25,7 @@ interface DeviceDao {
     suspend fun updateDevice(device: DeviceRecord)
 
     @Insert
-    suspend fun insertAll(vararg devices: DeviceRecord)
+    suspend fun insertAll(vararg devices: DeviceRecord) : List<Long>
 
     @Delete
     suspend fun delete(devices: DeviceRecord)

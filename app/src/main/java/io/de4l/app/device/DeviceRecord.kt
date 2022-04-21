@@ -9,7 +9,7 @@ import io.de4l.app.bluetooth.BluetoothDeviceType
 @Entity
 data class DeviceRecord(
     @PrimaryKey(autoGenerate = true)
-    val id: Int?,
+    var id: Long?,
 
     @ColumnInfo(index = true)
     var name: String,

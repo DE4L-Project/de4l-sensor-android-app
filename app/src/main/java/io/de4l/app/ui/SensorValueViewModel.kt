@@ -2,6 +2,7 @@ package io.de4l.app.ui
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.de4l.app.bluetooth.BluetoothConnectionState
@@ -25,6 +26,7 @@ class SensorValueViewModel @Inject constructor(
     private val LOG_TAG = SensorValueViewModel::class.java.name
 
     val selectedDevice: MutableStateFlow<DeviceEntity?> = MutableStateFlow(null)
+    val clearUiEventFlow: MutableSharedFlow<Boolean> = MutableSharedFlow()
 //    val sensorValues: MutableStateFlow<SensorValue?> = MutableStateFlow(null)
 
     val sensorValueFlows: MutableMap<SensorType, MutableStateFlow<SensorValue?>> = HashMap()
@@ -64,6 +66,7 @@ class SensorValueViewModel @Inject constructor(
                 selectedDevice.value?._targetConnectionState?.value =
                     BluetoothConnectionState.DISCONNECTED
                 selectedDevice.value?.disconnect()
+                clearUiEventFlow.emit(true)
             } else {
                 selectedDevice.value?._targetConnectionState?.value =
                     BluetoothConnectionState.CONNECTED

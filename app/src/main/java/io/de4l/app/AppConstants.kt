@@ -30,7 +30,7 @@ class AppConstants {
         const val MQTT_SERVER_URL = BuildConfig.MQTT_SERVER_URL
 
         val MQTT_TOPIC_PATTERN_SENSOR_VALUES =
-            if (BuildConfig.DEBUG) "sensors/%s/de4l-app-debug" else "sensors/%s/de4l-app"
+            if (BuildConfig.DEBUG) "sensors/%s/de4l-app-v2-debug" else "sensors/%s/de4l-app-v2"
 
         val MQTT_TOPIC_PATTERN_LOCATION_VALUES =
             if (BuildConfig.DEBUG) "locations/%s/de4l-app-debug" else "locations/%s/de4l-app"

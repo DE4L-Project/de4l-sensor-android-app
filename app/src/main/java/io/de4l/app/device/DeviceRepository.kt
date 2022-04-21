@@ -41,8 +41,11 @@ class DeviceRepository(private val appDatabase: AppDatabase) {
     }
 
     suspend fun getDevicesShouldBeConnected(): Flow<List<DeviceEntity>> {
-        return getDevices()
+        val devices = getDevices()
+        Log.v(LOG_TAG, "Devices")
+        return devices
             .map {
+                Log.v(LOG_TAG, "Devices Filter")
                 it.filter { device ->
                     device._targetConnectionState.value == BluetoothConnectionState.CONNECTED
                 }
@@ -54,11 +57,16 @@ class DeviceRepository(private val appDatabase: AppDatabase) {
     }
 
     suspend fun addDevice(device: DeviceEntity) {
+        device._targetConnectionState.value = BluetoothConnectionState.DISCONNECTED
+        device._actualConnectionState.value = BluetoothConnectionState.DISCONNECTED
         val deviceRecord = createDeviceRecordFromDeviceEntity(device)
 
-        appDatabase
+        val insertedIds = appDatabase
             .deviceDao()
             .insertAll(deviceRecord)
+
+        //Need For Caching
+        deviceRecord.id = insertedIds[0]
 
         device._macAddress.value?.let {
             _cachedDevices[it] = CachedDevice(device, deviceRecord)
@@ -117,6 +125,7 @@ class DeviceRepository(private val appDatabase: AppDatabase) {
     }
 
     private suspend fun getDevicesFromDb(): Flow<List<DeviceEntity>> {
+        Log.v(LOG_TAG, "Get devices from DB")
         return appDatabase
             .deviceDao()
             .getAll()
@@ -145,7 +154,7 @@ class DeviceRepository(private val appDatabase: AppDatabase) {
     }
 
     private fun createDeviceRecordFromDeviceEntity(device: DeviceEntity): DeviceRecord {
-        val id: Int? = _cachedDevices[device._macAddress.value]?.deviceRecord?.id
+        val id: Long? = _cachedDevices[device._macAddress.value]?.deviceRecord?.id
         return DeviceRecord(
             id,
             device._name.value ?: "null",

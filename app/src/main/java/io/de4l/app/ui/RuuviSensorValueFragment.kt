@@ -10,6 +10,7 @@ import androidx.lifecycle.asLiveData
 import io.de4l.app.R
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.sensor.SensorType
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 
 class RuuviSensorValueFragment(deviceEntity: DeviceEntity?) : SensorValueFragment(deviceEntity) {
@@ -47,10 +48,15 @@ class RuuviSensorValueFragment(deviceEntity: DeviceEntity?) : SensorValueFragmen
                 tvPressure.text = String.format("%.0f hPa", it.value)
             }
 
+
         viewModel.registerUiUpdates()
     }
 
     override fun clearUi() {
+        clearSensorDataUi()
+    }
+
+    override fun clearSensorDataUi() {
         tvTemperature.text = "-"
         tvHumidity.text = "-"
         tvPressure.text = "-"

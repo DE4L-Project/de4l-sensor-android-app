@@ -13,6 +13,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.de4l.app.R
 import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.device.DeviceEntity
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.merge
 
@@ -39,6 +40,11 @@ abstract class SensorValueFragment(private val deviceEntity: DeviceEntity?) : Fr
         }
 
         viewModel.selectedDevice.value = deviceEntity
+
+        viewModel.clearUiEventFlow.filter { it }.asLiveData()
+            .observe(viewLifecycleOwner) {
+                clearSensorDataUi()
+            }
 
         viewModel.selectedDevice.value?.let { selectedDevice ->
             selectedDevice._macAddress.asLiveData().observe(viewLifecycleOwner) {
@@ -75,10 +81,14 @@ abstract class SensorValueFragment(private val deviceEntity: DeviceEntity?) : Fr
                 }
             }
         }
+
+
     }
 
     protected open fun clearUi() {
         tvDeviceAddress.text = "-"
         tvConnectionState.text = "-"
     }
+
+    abstract fun clearSensorDataUi()
 }

@@ -76,6 +76,10 @@ class AirBeamSensorValueFragment(deviceEntity: DeviceEntity?) : SensorValueFragm
     }
 
     override fun clearUi() {
+        clearSensorDataUi()
+    }
+
+    override fun clearSensorDataUi() {
         tvTemperature.text = "-"
         tvHumidity.text = "-"
         tvPm1.text = "-"
