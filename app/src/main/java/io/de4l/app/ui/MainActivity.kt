@@ -15,6 +15,7 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import dagger.hilt.android.AndroidEntryPoint
 import io.de4l.app.AppConstants
+import io.de4l.app.BuildConfig
 import io.de4l.app.R
 import io.de4l.app.auth.AuthManager
 import io.de4l.app.auth.TokenRefreshException
@@ -100,6 +101,10 @@ class MainActivity : AppCompatActivity() {
             } else {
                 bottomNavView.visibility = View.VISIBLE
             }
+        }
+
+        if (!BuildConfig.DEBUG) {
+            bottomNavView.menu.removeItem(R.id.debugFragment)
         }
 
         // Setting Navigation Controller with the BottomNavigationView

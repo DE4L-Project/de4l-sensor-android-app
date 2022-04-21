@@ -22,6 +22,7 @@ abstract class SensorValueFragment(private val deviceEntity: DeviceEntity?) : Fr
 
     protected val viewModel: SensorValueViewModel by viewModels()
 
+    lateinit var tvDeviceName: TextView
     lateinit var tvDeviceAddress: TextView
     lateinit var tvConnectionState: TextView
     lateinit var btnDisconnectSensor: ImageButton
@@ -29,6 +30,7 @@ abstract class SensorValueFragment(private val deviceEntity: DeviceEntity?) : Fr
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        tvDeviceName = view.findViewById(R.id.tvDeviceName)
         tvDeviceAddress = view.findViewById(R.id.tvDeviceAddress)
         tvConnectionState = view.findViewById(R.id.tvConnectionState)
         btnDisconnectSensor = view.findViewById(R.id.btnDisconnectSensor)
@@ -41,6 +43,10 @@ abstract class SensorValueFragment(private val deviceEntity: DeviceEntity?) : Fr
         viewModel.selectedDevice.value?.let { selectedDevice ->
             selectedDevice._macAddress.asLiveData().observe(viewLifecycleOwner) {
                 tvDeviceAddress.text = it
+            }
+
+            selectedDevice._name.asLiveData().observe(viewLifecycleOwner) {
+                tvDeviceName.text = it
             }
 
             merge(

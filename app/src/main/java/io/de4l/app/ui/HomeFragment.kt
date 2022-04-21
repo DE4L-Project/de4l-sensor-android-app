@@ -85,6 +85,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
         viewModel.trackingEnabled.observe(viewLifecycleOwner) { trackingEnabled ->
             btnTracking.isEnabled = trackingEnabled
+            if (!trackingEnabled) {
+                btnTracking.backgroundTintList = null
+            }
 
             if (trackingEnabled && viewModel.trackingState.value == TrackingState.NOT_TRACKING) {
                 styleFabButtonInactive(btnTracking)
@@ -141,7 +144,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             viewModel.onToggleTrackingClicked()
         }
         tvTrackingFooter = view.findViewById(R.id.tvDataTransmissionFooter)
-
 
 //        rvDevices = view.findViewById(R.id.rvDevices)
 //        rvDevices.layoutManager = LinearLayoutManager(context)

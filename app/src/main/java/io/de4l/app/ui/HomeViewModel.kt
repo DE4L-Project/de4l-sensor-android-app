@@ -20,9 +20,7 @@ import io.de4l.app.sensor.SensorValue
 import io.de4l.app.tracking.BackgroundServiceWatcher
 import io.de4l.app.tracking.TrackingManager
 import io.de4l.app.tracking.TrackingState
-import io.de4l.app.ui.event.NavigationEvent
-import io.de4l.app.ui.event.StartLocationServiceEvent
-import io.de4l.app.ui.event.StopLocationServiceEvent
+import io.de4l.app.ui.event.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -87,9 +85,9 @@ class HomeViewModel @Inject constructor(
     fun onToggleTrackingClicked() {
         viewModelScope.launch(Dispatchers.IO) {
             if (trackingState.value == TrackingState.TRACKING || trackingState.value == TrackingState.LOCATION_ONLY) {
-                trackingManager.stopTracking()
+                backgroundServiceWatcher.sendEventToService(StopTrackingServiceEvent())
             } else {
-                trackingManager.startTracking()
+                backgroundServiceWatcher.sendEventToService(StartTrackingServiceEvent())
             }
         }
     }

@@ -1,8 +1,7 @@
 package io.de4l.app.tracking
 
 import android.app.*
-import android.app.PendingIntent.FLAG_IMMUTABLE
-import android.app.PendingIntent.FLAG_UPDATE_CURRENT
+import android.app.PendingIntent.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -25,9 +24,7 @@ import io.de4l.app.ui.event.StartTrackingServiceEvent
 import io.de4l.app.ui.event.StopTrackingServiceEvent
 import io.de4l.app.util.LoggingHelper
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.filterNot
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import javax.inject.Inject
@@ -62,7 +59,7 @@ class BackgroundService() : Service() {
 
     private var mBroadcastReceiver: BroadcastReceiver? = null
 
-    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+    private lateinit var coroutineScope: CoroutineScope
 
     override fun onBind(p0: Intent?): IBinder? {
         return null;
@@ -70,21 +67,33 @@ class BackgroundService() : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.v(LOG_TAG, "onStartCommand()")
+        if (backgroundServiceWatcher.isBackgroundServiceActive.value !== BackgroundServiceState.RUNNING) {
+            notificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            locationService.startLocationUpdates(this)
 
-        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        locationService.startLocationUpdates(this)
-
-        coroutineScope.launch {
-            merge(
-                bluetoothDeviceManager.hasConnectedDevices(),
-                trackingManager.trackingState,
-                authManager.user
-            ).collect {
-                // Update notification when any of these changed
-                Log.v(LOG_TAG, "updateNotification()")
-                updateNotification()
+            coroutineScope.launch {
+                merge(
+                    bluetoothDeviceManager.hasConnectedDevices(),
+                    trackingManager.trackingState,
+                    authManager.user
+                )
+                    .debounce(1000)
+                    .collect {
+                        // Update notification when any of these changed
+                        Log.v(LOG_TAG, "updateNotification()")
+                        updateNotification()
+                    }
             }
-        }
+
+            coroutineScope.launch {
+                //Wait for first connected device then register connection lost listener
+                bluetoothDeviceManager.hasConnectedDevices().filter { it }.first()
+                bluetoothDeviceManager.hasConnectedDevices().filterNot { it }
+                    .collect {
+                        launch { stopSelf() }
+                    }
+            }
 
 //        coroutineScope.launch {
 //            authManager.user.collect {
@@ -94,13 +103,13 @@ class BackgroundService() : Service() {
 //            }
 //        }
 
-
-        if (!backgroundServiceWatcher.isBackgroundServiceActive.value) {
-            backgroundServiceWatcher.isBackgroundServiceActive.value = true
             startForeground(
                 AppConstants.TRACKING_SERVICE_NOTIFICATION_ID,
                 buildNotification("Background service started")
             )
+
+            backgroundServiceWatcher.isBackgroundServiceActive.value =
+                BackgroundServiceState.RUNNING
         }
 
         return START_STICKY
@@ -108,9 +117,10 @@ class BackgroundService() : Service() {
 
     override fun onCreate() {
         Log.v(LOG_TAG, "onCreate()")
-        super.onCreate()
         registerBroadcastReceivers()
         EventBus.getDefault().register(this)
+        coroutineScope = CoroutineScope(Dispatchers.IO)
+        super.onCreate()
     }
 
     private fun registerBroadcastReceivers() {
@@ -142,9 +152,11 @@ class BackgroundService() : Service() {
     override fun onDestroy() {
         Log.v(LOG_TAG, "onDestroy()")
         coroutineScope.cancel()
-        backgroundServiceWatcher.isBackgroundServiceActive.value = false
+        backgroundServiceWatcher.isBackgroundServiceActive.value =
+            BackgroundServiceState.NOT_RUNNING
         EventBus.getDefault().unregister(this)
         locationService.stopLocationUpdates()
+
         if (mBroadcastReceiver != null) {
             unregisterReceiver(mBroadcastReceiver)
         }
@@ -156,6 +168,7 @@ class BackgroundService() : Service() {
                 trackingManager.stopTracking()
                 stopForeground(true)
                 super.onDestroy()
+                Log.v(LOG_TAG, "finishedOnDestroy()")
             }
     }
 
@@ -195,7 +208,7 @@ class BackgroundService() : Service() {
             this,
             1002,
             intent,
-            FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE
+            FLAG_UPDATE_CURRENT or getCompatImmutableFlag()
         )
 
         val forceReconnectIntent = Intent(AppConstants.FORCE_RECONNECT_ACTION)
@@ -203,7 +216,7 @@ class BackgroundService() : Service() {
             this,
             1003,
             forceReconnectIntent,
-            FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE
+            FLAG_UPDATE_CURRENT or getCompatImmutableFlag()
         )
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -215,11 +228,14 @@ class BackgroundService() : Service() {
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(serviceChannel)
         }
+
         val notificationIntent = Intent(this, MainActivity::class.java)
+
         val pendingIntent = PendingIntent.getActivity(
             this,
             AppConstants.TRACKING_NOTIFICATION_CODE,
-            notificationIntent, FLAG_IMMUTABLE
+            notificationIntent,
+            getCompatImmutableFlag()
         )
 
         val notification: Notification =
@@ -228,6 +244,7 @@ class BackgroundService() : Service() {
                 .setContentText(message)
                 .setSmallIcon(R.drawable.ic_data_transmission_24)
                 .setContentIntent(pendingIntent)
+                .setSilent(true)
                 .addAction(
                     R.drawable.googleg_standard_color_18,
                     "Stop",
@@ -265,6 +282,14 @@ class BackgroundService() : Service() {
             } else {
                 bluetoothDeviceManager.connectDevice(event.macAddress)
             }
+        }
+    }
+
+    fun getCompatImmutableFlag(): Int {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            FLAG_MUTABLE
+        } else {
+            FLAG_IMMUTABLE
         }
     }
 
