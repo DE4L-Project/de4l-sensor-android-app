@@ -42,12 +42,17 @@ class AirBeam2Device(
                                 data: String,
                                 device: BluetoothDevice
                             ) {
-                                _sensorValues.value = AirBeamSensorValueParser.parseLine(
-                                    device.address,
-                                    getBluetoothDeviceType(),
-                                    data,
-                                    DateTime()
-                                )
+                                coroutineScope.launch {
+                                    _sensorValues.emit(
+                                        AirBeamSensorValueParser.parseLine(
+                                            device.address,
+                                            getBluetoothDeviceType(),
+                                            data,
+                                            DateTime()
+                                        )
+                                    )
+                                }
+
                             }
 
                             override fun onDisconnected() {

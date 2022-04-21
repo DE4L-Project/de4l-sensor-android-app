@@ -4,23 +4,21 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanFilter
+import android.bluetooth.le.ScanSettings
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.util.Log
-import io.de4l.app.AppConstants
 import io.de4l.app.BuildConfig
-import io.de4l.app.bluetooth.event.StartBleScannerEvent
-import io.de4l.app.bluetooth.event.StopBleScannerEvent
 import io.de4l.app.util.LoggingHelper
 import io.de4l.app.util.ObservableMap
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ClosedSendChannelException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
-import org.greenrobot.eventbus.EventBus
-import org.greenrobot.eventbus.Subscribe
 import javax.inject.Inject
 import kotlin.math.pow
 
@@ -50,7 +48,6 @@ class BluetoothScanner @Inject constructor(
     private var currentDeviceScanTask: Job? = null
 
     init {
-        EventBus.getDefault().register(this)
         coroutineScope.launch { registerScanJobListener() }
 
         if (BuildConfig.DEBUG) {
@@ -276,18 +273,6 @@ class BluetoothScanner @Inject constructor(
         return discoveredDevices.asSharedFlow()
     }
 
-    @Subscribe
-    fun onStartBleScannerEvent(event: StartBleScannerEvent) {
-        LoggingHelper.logWithCurrentThread(LOG_TAG, "onStartBleScannerEvent()")
-        bluetoothAdapter.bluetoothLeScanner.startScan(event.leScanCallback)
-    }
-
-    @Subscribe
-    fun onStopBleScannerEvent(event: StopBleScannerEvent) {
-        LoggingHelper.logWithCurrentThread(LOG_TAG, "onStopBleScannerEvent()")
-        bluetoothAdapter.bluetoothLeScanner.stopScan(event.leScanCallback)
-
-    }
 
     private suspend fun cancelAllNonRetrieableScanJobs() {
         val nonRetrieableScanJobKeys = activeScanJobs.toMap().filterValues { !it.retry }.keys
@@ -303,5 +288,24 @@ class BluetoothScanner @Inject constructor(
             it.onError()
         }
         activeScanJobs.clear()
+    }
+
+    fun startBleScan(leScanCallback: ScanCallback, macAddress: String) {
+        val scanSettings =
+            ScanSettings.Builder()
+                .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
+                .build();
+
+        val scanFilter = ScanFilter.Builder().setDeviceAddress(macAddress).build()
+
+        bluetoothAdapter.bluetoothLeScanner.startScan(
+            listOf(scanFilter),
+            scanSettings,
+            leScanCallback
+        )
+    }
+
+    fun stopBleScan(leScanCallback: ScanCallback) {
+        bluetoothAdapter.bluetoothLeScanner.stopScan(leScanCallback)
     }
 }

@@ -15,7 +15,10 @@ import io.de4l.app.AppConstants
 import io.de4l.app.R
 import io.de4l.app.auth.AuthManager
 import io.de4l.app.bluetooth.BluetoothDeviceManager
+import io.de4l.app.bluetooth.BluetoothScanner
 import io.de4l.app.bluetooth.event.ConnectToBluetoothDeviceEvent
+import io.de4l.app.bluetooth.event.StartBleScannerEvent
+import io.de4l.app.bluetooth.event.StopBleScannerEvent
 import io.de4l.app.device.DeviceRepository
 import io.de4l.app.location.LocationService
 import io.de4l.app.mqtt.MqttManager
@@ -54,6 +57,9 @@ class BackgroundService() : Service() {
 
     @Inject
     lateinit var trackingManager: TrackingManager
+
+    @Inject
+    lateinit var bluetoothScanner: BluetoothScanner
 
     private lateinit var notificationManager: NotificationManager
 
@@ -132,6 +138,7 @@ class BackgroundService() : Service() {
                         stopSelf()
                     }
                     AppConstants.FORCE_RECONNECT_ACTION -> {
+                        LoggingHelper.logWithCurrentThread(LOG_TAG, "Ble Device found")
 //                        bluetoothDeviceManager.forceReconnect()
                     }
                 }
@@ -283,6 +290,18 @@ class BackgroundService() : Service() {
                 bluetoothDeviceManager.connectDevice(event.macAddress)
             }
         }
+    }
+
+    @Subscribe
+    fun onStartBleScannerEvent(event: StartBleScannerEvent) {
+        LoggingHelper.logWithCurrentThread(LOG_TAG, "onStartBleScannerEvent()")
+        bluetoothScanner.startBleScan(event.leScanCallback, event.macAddress)
+    }
+
+    @Subscribe
+    fun onStopBleScannerEvent(event: StopBleScannerEvent) {
+        LoggingHelper.logWithCurrentThread(LOG_TAG, "onStopBleScannerEvent()")
+        bluetoothScanner.stopBleScan(event.leScanCallback)
     }
 
     fun getCompatImmutableFlag(): Int {

@@ -9,6 +9,7 @@ import io.de4l.app.bluetooth.event.BtDeviceConnectionChangeEvent
 import io.de4l.app.sensor.SensorType
 import io.de4l.app.sensor.SensorValue
 import io.de4l.app.ui.event.SensorValueReceivedEvent
+import io.de4l.app.util.LoggingHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -18,12 +19,15 @@ import org.greenrobot.eventbus.EventBus
 
 @OptIn(ExperimentalCoroutinesApi::class)
 abstract class DeviceEntity {
+    private val LOG_TAG = DeviceEntity::class.java.name
+
     val _macAddress: MutableStateFlow<String?> = MutableStateFlow(null)
     val _targetConnectionState: MutableStateFlow<BluetoothConnectionState> =
         MutableStateFlow(BluetoothConnectionState.NONE)
     val _actualConnectionState: MutableStateFlow<BluetoothConnectionState> =
         MutableStateFlow(BluetoothConnectionState.NONE)
-    val _sensorValues: MutableStateFlow<SensorValue?> = MutableStateFlow(null)
+
+    val _sensorValues: MutableSharedFlow<SensorValue?> = MutableSharedFlow<SensorValue?>()
     val _name: MutableStateFlow<String?> = MutableStateFlow(null)
 
     var bluetoothDevice: BluetoothDevice? = null
@@ -58,6 +62,10 @@ abstract class DeviceEntity {
     init {
         coroutineScope.launch {
             _sensorValues.collect {
+                LoggingHelper.logWithCurrentThread(
+                    LOG_TAG,
+                    "Sensor Value Received - ${_macAddress.value}"
+                )
                 it?.let {
                     sensorValueCache.put(it.sensorType, it)
                 }
