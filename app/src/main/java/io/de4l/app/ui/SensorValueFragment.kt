@@ -28,6 +28,8 @@ abstract class SensorValueFragment(private val deviceEntity: DeviceEntity?) : Fr
     lateinit var tvConnectionState: TextView
     lateinit var btnDisconnectSensor: ImageButton
 
+    constructor() : this(null)
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

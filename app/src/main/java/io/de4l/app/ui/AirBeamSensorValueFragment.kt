@@ -22,6 +22,8 @@ class AirBeamSensorValueFragment(deviceEntity: DeviceEntity?) : SensorValueFragm
     lateinit var tvPm25: TextView
     lateinit var tvPm10: TextView
 
+    constructor() : this(null)
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?

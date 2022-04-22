@@ -20,6 +20,8 @@ class RuuviSensorValueFragment(deviceEntity: DeviceEntity?) : SensorValueFragmen
     lateinit var tvHumidity: TextView
     lateinit var tvPressure: TextView
 
+    constructor() : this(null)
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
