@@ -5,7 +5,7 @@
 
 ## Motivation
 
-Android App for connecting [HabitatMap's AirBeam2](https://www.habitatmap.org/airbeam) sensors to an Android smartphone and transmitting values in real-time via MQTT and OAuth2 authentication. See the [App - Quickstart Guide](documentation/quickstart-airbeam2-de4l-app.pdf)
+Android App for connecting Bluetooth environment sensors to an Android smartphone and transmitting values in real-time via MQTT and OAuth2 authentication. See the [App - Quickstart Guide](documentation/quickstart-airbeam2-de4l-app.pdf)
 
 Currently the app is used in the research project [DE4L](https://de4l.io/en/about-de4l/) (Data Economy 4 Advanced Logistics) funded by the German Federal Ministry for Economic Affairs and Energy (01MD19008A).
 
@@ -21,7 +21,12 @@ Developed by [InfAI Management GmbH](https://infai.org/) in Leipzig, Germany.
 - Real-time data connection using MQTT
 - OAuth2 Token authentication for MQTT and automatic token refresh
 - MQTT message buffering using Room when connection to MQTT server is lost
+- Multiple simultaneous sensor connections (Classic BT, BLE, BLE Beacon)   
 - In case Bluetooth connection to sensor is lost, reconnect procedure is initiated
+- Support of multiple sensors
+  - [HabitatMap's AirBeam2 + AirBeam3](https://www.habitatmap.org/airbeam)
+  - [Ruuvi Tag Sensor Beacon](https://ruuvi.com/ruuvitag/)
+    
 
 ## Technology Overview
 - [Paho MQTT Client](https://github.com/eclipse/paho.mqtt.android)
@@ -49,15 +54,9 @@ AUTH_MQTT_CLAIM_ROLE="{RESOURCE_ROLE}"                          #REQUIRED RESOUR
 
 # MQTT
 MQTT_SERVER_URL="{MQTT-BROKER-URL}"                             #EXAMPLE: ssl://broker.example.com:8883
-MQTT_OAUTH_USERNAME="{MQTT_OAUTH_USERNAME}"                     #SEE NOTE BELOW
+TRACKING_ONLY_ROLE="{CLIENT-ROLE}"                              #Enables location tracking only mode / no sensors needed                          
+APP_CLIENT_RESOURCE="{CLIENT-RESOURCE}"                         #App Oauth Resource Client
 ```
-
-**Note:**
-*Within the DE4L project [VerneMQ](https://vernemq.com/) is used as MQTT broker in combination with an authentication service which integrates into the VerneMQ authentication process by using webhooks. The authentication service provides an OAuth2 token authentication mode which is indicated by a fixed username, hence the MQTT_OAUTH_USERNAME parameter. The access token is then sent using the password parameter.*
-
-## Upcoming
-- support multiple sensors
-- support more sensor types
 
 ## Known Issues (might be fixed in future releases)
 - [AIRBEAM2] AirBeam2 sensor occasionally produces unparseable lines
@@ -75,7 +74,7 @@ MQTT_OAUTH_USERNAME="{MQTT_OAUTH_USERNAME}"                     #SEE NOTE BELOW
 ```text
 MIT License
 
-Copyright (c) 2021 InfAI Management GmbH
+Copyright (c) 2022 InfAI Management GmbH
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
