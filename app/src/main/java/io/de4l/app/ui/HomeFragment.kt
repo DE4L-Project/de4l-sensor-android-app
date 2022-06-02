@@ -86,7 +86,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         viewModel.trackingEnabled.observe(viewLifecycleOwner) { trackingEnabled ->
             btnTracking.isEnabled = trackingEnabled
             if (!trackingEnabled) {
-                btnTracking.backgroundTintList = null
+                btnTracking.backgroundTintList
             }
 
             if (trackingEnabled && viewModel.trackingState.value == TrackingState.NOT_TRACKING) {

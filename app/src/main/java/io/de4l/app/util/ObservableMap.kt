@@ -60,6 +60,10 @@ class ObservableMap<K, V>(private val map: MutableMap<K, V>) {
         return map.entries
     }
 
+    fun values(): MutableCollection<V> {
+        return map.values
+    }
+
     fun removeAllKeys(keys: Set<K>) {
         if (keys.isNotEmpty()) {
             keys.forEach { key ->

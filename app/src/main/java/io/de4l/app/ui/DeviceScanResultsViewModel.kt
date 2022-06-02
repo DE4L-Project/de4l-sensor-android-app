@@ -11,13 +11,10 @@ import io.de4l.app.bluetooth.BluetoothScanState
 import io.de4l.app.bluetooth.BluetoothScanner
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.device.DeviceRepository
+import io.de4l.app.util.LoggingHelper
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.filterNot
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
-import kotlin.concurrent.timer
 
 @HiltViewModel
 class DeviceScanResultsViewModel @Inject constructor(
@@ -30,14 +27,41 @@ class DeviceScanResultsViewModel @Inject constructor(
 
     val foundDevices: MutableLiveData<DeviceEntity> = MutableLiveData()
     var scanState: MutableLiveData<BluetoothScanState> = MutableLiveData()
+    val useLegacyModeChannel: MutableSharedFlow<Boolean> = MutableSharedFlow()
+    private var useLegacyMode: Boolean = false
+
+    private var discoveryJob: Job? = null
+
+    init {
+        //Restart Scanning
+        viewModelScope.launch {
+            useLegacyModeChannel.collect {
+                useLegacyMode = it
+                LoggingHelper.logWithCurrentThread(LOG_TAG, "Switch $it")
+                stopScanning()
+                delay(200)
+                startScanning()
+            }
+        }
+
+        viewModelScope.launch {
+            bluetoothScanner.bluetoothScanState().collect {
+                if (discoveryJob != null && it === BluetoothScanState.NOT_SCANNING) {
+                    scanState.value = it
+                    discoveryJob?.cancel()
+                    discoveryJob = null
+                }
+            }
+        }
+    }
 
     @SuppressLint("MissingPermission")
     @ExperimentalCoroutinesApi
     fun startScanning() {
         scanState.value = BluetoothScanState.SCANNING
-        val discoveryJob = viewModelScope.launch(Dispatchers.IO) {
+        discoveryJob = viewModelScope.launch(Dispatchers.IO) {
             bluetoothScanner
-                .discoverDevices()
+                .discoverDevices(useLegacyMode)
                 .map {
                     Log.i(
                         LOG_TAG,
@@ -55,14 +79,10 @@ class DeviceScanResultsViewModel @Inject constructor(
                     foundDevices.postValue(DeviceEntity.fromBluetoothDevice(it))
                 }
         }
+    }
 
-        viewModelScope.launch {
-            delay(20000)
-            scanState.value = BluetoothScanState.NOT_SCANNING
-            discoveryJob.cancel()
-        }
-
-
+    fun stopScanning() {
+        bluetoothScanner.cancelDeviceDiscovery()
     }
 
     fun onDeviceSelected(device: DeviceEntity) {

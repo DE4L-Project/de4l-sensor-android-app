@@ -7,9 +7,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.widget.Toolbar
+import androidx.appcompat.widget.SwitchCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -19,6 +20,7 @@ import io.de4l.app.bluetooth.BluetoothDeviceManager
 import io.de4l.app.bluetooth.BluetoothScanState.NOT_SCANNING
 import io.de4l.app.bluetooth.BluetoothScanState.SCANNING
 import io.de4l.app.device.DeviceEntity
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.system.measureTimeMillis
 
@@ -33,7 +35,8 @@ class DeviceScanResultsFragment : Fragment() {
     private val devices: MutableMap<String, DeviceEntity> = mutableMapOf()
 
     private lateinit var rvBtDevices: RecyclerView
-    private lateinit var tbScan: Toolbar
+    private lateinit var tvScanHeader: TextView
+    private lateinit var swLegacyBt: SwitchCompat
 
     override fun onResume() {
         super.onResume()
@@ -67,7 +70,7 @@ class DeviceScanResultsFragment : Fragment() {
         viewModel.scanState.observe(viewLifecycleOwner) {
             when (it) {
                 NOT_SCANNING -> {
-                    tbScan.title = "Searching finished"
+                    tvScanHeader.text = "Searching finished"
                     if (devices.isEmpty()) {
                         Toast.makeText(
                             context,
@@ -77,7 +80,7 @@ class DeviceScanResultsFragment : Fragment() {
                             .show()
                     }
                 }
-                SCANNING -> tbScan.title = "Searching for BT devices..."
+                SCANNING -> tvScanHeader.text = "Searching for BT devices..."
             }
         }
 
@@ -90,8 +93,14 @@ class DeviceScanResultsFragment : Fragment() {
         rvBtDevices = view.findViewById(R.id.rvBtDevices)
         rvBtDevices.adapter = BtDeviceAdapter(devices)
         rvBtDevices.layoutManager = LinearLayoutManager(context)
-        tbScan = view.findViewById(R.id.tbScan)
+        tvScanHeader = view.findViewById(R.id.tvScanHeader)
 
+        swLegacyBt = view.findViewById(R.id.swLegacyScan)
+        swLegacyBt.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.viewModelScope.launch {
+                viewModel.useLegacyModeChannel.emit(isChecked)
+            }
+        }
     }
 
     inner class BtDeviceAdapter(private val btDevices: Map<String, DeviceEntity>) :

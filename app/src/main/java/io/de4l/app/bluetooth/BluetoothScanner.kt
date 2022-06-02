@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
+import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -46,6 +47,9 @@ class BluetoothScanner @Inject constructor(
 
     val activeScanJobs: ObservableMap<String, BluetoothScanJob> = ObservableMap(mutableMapOf())
     private var currentDeviceScanTask: Job? = null
+    private var currentBleScanCallback: ScanCallback? = null
+
+    private val cancelDeviceDiscoveryChannel: MutableSharedFlow<Boolean> = MutableSharedFlow()
 
     init {
         coroutineScope.launch { registerScanJobListener() }
@@ -63,9 +67,13 @@ class BluetoothScanner @Inject constructor(
         }
     }
 
-    suspend fun findBtDevice(macAddress: String, findWithRetry: Boolean = false): BluetoothDevice? {
+    suspend fun findBtDevice(
+        macAddress: String,
+        deviceType: BluetoothDeviceType,
+        findWithRetry: Boolean = false
+    ): BluetoothDevice? {
         LoggingHelper.logWithCurrentThread(LOG_TAG, "findBtDevice: ${macAddress}")
-        val scanJob = BluetoothScanJob(macAddress, findWithRetry)
+        val scanJob = BluetoothScanJob(macAddress, deviceType, findWithRetry)
         activeScanJobs[macAddress] = scanJob;
         return scanJob.waitForDevice()
     }
@@ -109,7 +117,10 @@ class BluetoothScanner @Inject constructor(
                     LoggingHelper.logWithCurrentThread(LOG_TAG, "Start Scan - ${retryCounter}")
                     currentDeviceScanTask = coroutineScope.launch {
                         calculateDelay()
-                        scanForDevices()
+                        val useLegacyMode =
+                            activeScanJobs.values().any { it.isLegacyScanJob() }
+
+                        scanForDevices(useLegacyMode)
                             .catch {
                                 if (it is BluetoothScanFinished) {
                                     retryCounter++
@@ -164,29 +175,12 @@ class BluetoothScanner @Inject constructor(
         }
     }
 
-    //https://github.com/ThanosFisherman/BlueFlow
-    @ExperimentalCoroutinesApi
-    suspend fun scanForDevices() = callbackFlow<BluetoothDevice> {
-        LoggingHelper.logWithCurrentThread(LOG_TAG, "scanForDevices()")
-        if (bluetoothScanScanState.value == BluetoothScanState.SCANNING) {
-            Log.w(LOG_TAG, "Is already scanning.")
-            close(BluetoothScanFinished())
-        }
-
-        bluetoothScanScanState.value = BluetoothScanState.SCANNING
-
-        val scanJobTimeout = launch {
-            delay(20000)
-            LoggingHelper.logWithCurrentThread(LOG_TAG, "Scan Timeout")
-            close(BluetoothScanFinished())
-        }
-
+    private suspend fun scanForLegacyDevices() = callbackFlow<BluetoothDevice> {
         val filter = IntentFilter().apply {
             addAction(BluetoothDevice.ACTION_FOUND)
             addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED)
             addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
         }
-
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 coroutineScope.launch {
@@ -197,7 +191,9 @@ class BluetoothScanner @Inject constructor(
                                 intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE) as BluetoothDevice?
                             device?.let {
                                 try {
-                                    trySend(device)
+                                    coroutineScope.launch {
+                                        send(device)
+                                    }
                                 } catch (e: ClosedSendChannelException) {
                                     LoggingHelper.logWithCurrentThread(
                                         LOG_TAG,
@@ -217,15 +213,129 @@ class BluetoothScanner @Inject constructor(
                 }
             }
         }
-
         application.registerReceiver(receiver, filter)
+
         startDeviceDiscovery()
 
         awaitClose {
-            LoggingHelper.logWithCurrentThread(LOG_TAG, "Await Close")
-            scanJobTimeout.cancel()
             bluetoothAdapter.cancelDiscovery()
             application.unregisterReceiver(receiver)
+        }
+    }
+
+    private suspend fun scanForBleDevice() =
+        callbackFlow<BluetoothDevice> {
+            val scanFilter: ScanFilter = ScanFilter.Builder().build()
+            val scanSettings: ScanSettings =
+                ScanSettings.Builder()
+                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                    .setNumOfMatches(ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT)
+                    .build()
+
+            currentBleScanCallback = object : ScanCallback() {
+                override fun onScanResult(callbackType: Int, result: ScanResult?) {
+                    result?.let {
+                        if (result.device.name != null && result.device.name.startsWith("Ruuvi")) {
+                            LoggingHelper.logWithCurrentThread(
+                                LOG_TAG,
+                                "RUUVI_TAG: " + result.device.address
+                            )
+                        }
+                        coroutineScope.launch {
+                            trySend(result.device)
+                        }
+                    }
+                }
+            }
+
+            bluetoothAdapter.bluetoothLeScanner.startScan(
+                listOf(scanFilter),
+                scanSettings,
+                currentBleScanCallback
+            )
+
+            awaitClose {
+                bluetoothAdapter.bluetoothLeScanner.stopScan(currentBleScanCallback)
+            }
+        }
+
+    //https://github.com/ThanosFisherman/BlueFlow
+    @ExperimentalCoroutinesApi
+    suspend fun scanForDevices(useLegacyMode: Boolean = false) = callbackFlow<BluetoothDevice> {
+        LoggingHelper.logWithCurrentThread(LOG_TAG, "scanForDevices()")
+
+        var bleScanJob: Job? = null;
+        var legacyScanJob: Job? = null;
+        var legacyScanJobTimeout: Job? = null;
+        var cancelDeviceDiscoveryJob: Job? = null;
+
+        if (bluetoothScanScanState.value == BluetoothScanState.SCANNING) {
+            Log.w(LOG_TAG, "Is already scanning.")
+            close(BluetoothScanFinished())
+        }
+
+        bluetoothScanScanState.value = BluetoothScanState.SCANNING
+
+        val bleScanJobTimeout = launch {
+            delay(20000)
+            LoggingHelper.logWithCurrentThread(LOG_TAG, "BLE Scan Timeout")
+            bleScanJob?.cancel()
+
+            //If legacy mode is needed, try again
+            if (useLegacyMode) {
+                legacyScanJobTimeout = launch {
+                    delay(20000)
+                    LoggingHelper.logWithCurrentThread(LOG_TAG, "LEGACY Scan Timeout")
+                    legacyScanJob?.cancel()
+                    close(BluetoothScanFinished())
+                }
+
+                legacyScanJob = coroutineScope.launch {
+                    scanForLegacyDevices()
+                        .catch {
+                            //Not important
+                            LoggingHelper.logWithCurrentThread(
+                                LOG_TAG,
+                                "Discovering legacy devices finished"
+                            )
+                        }
+                        .collect {
+                            send(it)
+                        }
+                }
+            } else {
+                close(BluetoothScanFinished())
+            }
+        }
+
+        cancelDeviceDiscoveryJob = coroutineScope.launch {
+            cancelDeviceDiscoveryChannel.filter { it }
+                .collect {
+                    close(BluetoothScanFinished())
+                }
+        }
+
+        bleScanJob = coroutineScope.launch {
+            scanForBleDevice()
+                .catch {
+                    //Not important
+                    LoggingHelper.logWithCurrentThread(
+                        LOG_TAG,
+                        "Discovering BLE devices finished"
+                    )
+                }
+                .collect {
+                    send(it)
+                }
+        }
+
+        awaitClose {
+            LoggingHelper.logWithCurrentThread(LOG_TAG, "Await Close")
+            bleScanJob.cancel()
+            bleScanJobTimeout.cancel()
+            legacyScanJob?.cancel()
+            legacyScanJobTimeout?.cancel()
+            cancelDeviceDiscoveryJob.cancel()
             bluetoothScanScanState.value = BluetoothScanState.NOT_SCANNING
         }
     }
@@ -240,22 +350,29 @@ class BluetoothScanner @Inject constructor(
         bluetoothAdapter.startDiscovery()
     }
 
+    fun stopDeviceDiscovery() {
+        coroutineScope.launch {
+            cancelDeviceDiscoveryChannel.emit(true)
+        }
+    }
 
     fun cancelDeviceDiscovery() {
         LoggingHelper.logWithCurrentThread(LOG_TAG, "Cancel discovery")
         currentDeviceScanTask?.cancel()
         currentDeviceScanTask = null
-        bluetoothAdapter.cancelDiscovery()
-        bluetoothScanScanState.value = BluetoothScanState.NOT_SCANNING
+        stopDeviceDiscovery()
+//        bluetoothAdapter.cancelDiscovery()
+//        bluetoothAdapter.bluetoothLeScanner.stopScan(currentBleScanCallback)
+//        bluetoothScanScanState.value = BluetoothScanState.NOT_SCANNING
         retryCounter = 0;
     }
 
-    suspend fun discoverDevices(): SharedFlow<BluetoothDevice> {
+    suspend fun discoverDevices(useLegacyMode: Boolean = false): SharedFlow<BluetoothDevice> {
         LoggingHelper.logWithCurrentThread(LOG_TAG, "discoverDevices()")
         if (bluetoothScanScanState.value !== BluetoothScanState.SCANNING) {
             bluetoothScanScanState.value = BluetoothScanState.PENDING
             coroutineScope.launch {
-                scanForDevices()
+                scanForDevices(useLegacyMode)
                     .catch {
                         //Not important
                         LoggingHelper.logWithCurrentThread(

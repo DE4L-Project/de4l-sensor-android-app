@@ -60,22 +60,27 @@ class BluetoothDeviceManager @Inject constructor(
             }
     }
 
-    suspend fun connectDevice(macAddress: String) {
-        connect(macAddress)
+    suspend fun connectDevice(macAddress: String, deviceType: BluetoothDeviceType) {
+        connect(macAddress, deviceType)
     }
 
-    suspend fun connectDeviceWithRetry(macAddress: String) {
-        connect(macAddress, true)
+    suspend fun connectDeviceWithRetry(macAddress: String, deviceType: BluetoothDeviceType) {
+        connect(macAddress, deviceType, true)
     }
 
-    private suspend fun connect(macAddress: String, connectWithRetry: Boolean = false) {
+    private suspend fun connect(
+        macAddress: String,
+        deviceType: BluetoothDeviceType,
+        connectWithRetry: Boolean = false
+    ) {
         //Device must be linked first
         val deviceEntity = deviceRepository.getByAddress(macAddress).firstOrNull()
         deviceEntity?.let { _deviceEntity ->
             _deviceEntity._targetConnectionState.value = BluetoothConnectionState.CONNECTED
             onConnecting(_deviceEntity)
 
-            val bluetoothDevice = bluetoothScanner.findBtDevice(macAddress, connectWithRetry)
+            val bluetoothDevice =
+                bluetoothScanner.findBtDevice(macAddress, deviceType, connectWithRetry)
             bluetoothDevice?.let { _bluetoothDevice ->
                 _deviceEntity.bluetoothDevice = _bluetoothDevice
                 _deviceEntity.connect()
@@ -169,7 +174,12 @@ class BluetoothDeviceManager @Inject constructor(
             onReconnecting(device)
             device._macAddress.value?.let {
                 Log.v(LOG_TAG, "Connect via background service: ${it}")
-                backgroundServiceWatcher.sendEventToService(ConnectToBluetoothDeviceEvent(it))
+                backgroundServiceWatcher.sendEventToService(
+                    ConnectToBluetoothDeviceEvent(
+                        it,
+                        device.getBluetoothDeviceType()
+                    )
+                )
             }
         }
     }

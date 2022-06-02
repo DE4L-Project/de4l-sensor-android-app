@@ -70,7 +70,10 @@ class DevicesViewModel @Inject constructor(
                         //Must find device first
                         device._macAddress.value?.let { macAddress ->
                             backgroundServiceWatcher.sendEventToService(
-                                ConnectToBluetoothDeviceEvent(macAddress)
+                                ConnectToBluetoothDeviceEvent(
+                                    macAddress,
+                                    device.getBluetoothDeviceType()
+                                )
                             )
                         }
 

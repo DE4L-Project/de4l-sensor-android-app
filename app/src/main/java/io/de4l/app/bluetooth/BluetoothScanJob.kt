@@ -5,7 +5,11 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 
-data class BluetoothScanJob(val macAddress: String, val retry: Boolean = false) {
+data class BluetoothScanJob(
+    val macAddress: String,
+    val deviceType: BluetoothDeviceType,
+    val retry: Boolean = false
+) {
 
     private val _device: MutableSharedFlow<BluetoothDevice?> = MutableSharedFlow()
 
@@ -19,5 +23,9 @@ data class BluetoothScanJob(val macAddress: String, val retry: Boolean = false) 
 
     suspend fun onError() {
         _device.emit(null)
+    }
+
+    fun isLegacyScanJob(): Boolean {
+        return this.deviceType === BluetoothDeviceType.AIRBEAM2
     }
 }

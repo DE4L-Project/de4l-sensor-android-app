@@ -1,27 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/frameLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
     tools:context=".ui.DeviceScanResultsFragment">
 
     <!-- TODO: Update blank fragment layout -->
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/tbScan"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="?attr/colorPrimary"
         android:minHeight="?attr/actionBarSize"
-        android:theme="?attr/actionBarTheme" />
+        android:theme="?attr/actionBarTheme"
+        app:layout_constraintBottom_toTopOf="@+id/rvBtDevices"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <TextView
+        android:id="@+id/tvScanHeader"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="TextView"
+        android:textAlignment="textStart"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:textColor="@color/white"
+        app:layout_constraintBottom_toBottomOf="@+id/tbScan"
+        app:layout_constraintEnd_toStartOf="@+id/swLegacyScan"
+        app:layout_constraintStart_toStartOf="@+id/tbScan"
+        app:layout_constraintTop_toTopOf="@+id/tbScan" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/swLegacyScan"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:text="Legacy BT Scan"
+        android:textColor="@color/white"
+        app:layout_constraintBottom_toBottomOf="@+id/tbScan"
+        app:layout_constraintEnd_toEndOf="@+id/tbScan"
+        app:layout_constraintTop_toTopOf="@+id/tbScan" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvBtDevices"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tbScan">
 
     </androidx.recyclerview.widget.RecyclerView>
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

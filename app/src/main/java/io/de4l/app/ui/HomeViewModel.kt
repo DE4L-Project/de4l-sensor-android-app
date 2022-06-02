@@ -108,7 +108,10 @@ class HomeViewModel @Inject constructor(
                     viewModelScope.launch(Dispatchers.IO) {
                         it._macAddress.value?.let { macAddress ->
                             backgroundServiceWatcher.sendEventToService(
-                                ConnectToBluetoothDeviceEvent(macAddress)
+                                ConnectToBluetoothDeviceEvent(
+                                    macAddress,
+                                    it.getBluetoothDeviceType()
+                                )
                             )
                         }
                     }

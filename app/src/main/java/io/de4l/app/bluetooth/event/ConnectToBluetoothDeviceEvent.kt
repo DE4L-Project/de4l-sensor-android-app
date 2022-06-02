@@ -1,5 +1,11 @@
 package io.de4l.app.bluetooth.event
 
-class ConnectToBluetoothDeviceEvent(val macAddress: String, val connectWithRetry: Boolean = true) {
+import io.de4l.app.bluetooth.BluetoothDeviceType
+
+class ConnectToBluetoothDeviceEvent(
+    val macAddress: String,
+    val deviceType: BluetoothDeviceType,
+    val connectWithRetry: Boolean = true
+) {
 
 }

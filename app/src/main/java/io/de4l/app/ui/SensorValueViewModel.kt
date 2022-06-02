@@ -70,8 +70,16 @@ class SensorValueViewModel @Inject constructor(
             } else {
                 selectedDevice.value?._targetConnectionState?.value =
                     BluetoothConnectionState.CONNECTED
-                selectedDevice.value?._macAddress?.value?.let {
-                    backgroundServiceWatcher.sendEventToService(ConnectToBluetoothDeviceEvent(it))
+
+                selectedDevice.value?.let { device ->
+                    device._macAddress?.value?.let { macAddress ->
+                        backgroundServiceWatcher.sendEventToService(
+                            ConnectToBluetoothDeviceEvent(
+                                macAddress,
+                                device.getBluetoothDeviceType()
+                            )
+                        )
+                    }
                 }
             }
         }

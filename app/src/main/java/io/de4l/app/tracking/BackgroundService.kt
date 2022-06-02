@@ -285,9 +285,9 @@ class BackgroundService() : Service() {
                 "Received ConnectToBluetoothDeviceEvent: ${event.macAddress} - Retry: ${event.connectWithRetry}"
             )
             if (event.connectWithRetry) {
-                bluetoothDeviceManager.connectDeviceWithRetry(event.macAddress)
+                bluetoothDeviceManager.connectDeviceWithRetry(event.macAddress, event.deviceType)
             } else {
-                bluetoothDeviceManager.connectDevice(event.macAddress)
+                bluetoothDeviceManager.connectDevice(event.macAddress, event.deviceType)
             }
         }
     }
