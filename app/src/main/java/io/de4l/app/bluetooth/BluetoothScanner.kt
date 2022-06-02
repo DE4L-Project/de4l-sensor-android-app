@@ -310,6 +310,12 @@ class BluetoothScanner @Inject constructor(
 
         cancelDeviceDiscoveryJob = coroutineScope.launch {
             cancelDeviceDiscoveryChannel.filter { it }
+                .catch {
+                    LoggingHelper.logWithCurrentThread(
+                        LOG_TAG,
+                        "cancelDeviceDiscoveryChannel closed"
+                    )
+                }
                 .collect {
                     coroutineScope.launch {
                         try {

@@ -14,12 +14,18 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.hoc081098.flowext.throttleTime
 import dagger.hilt.android.AndroidEntryPoint
 import io.de4l.app.R
 import io.de4l.app.bluetooth.BluetoothDeviceManager
 import io.de4l.app.bluetooth.BluetoothScanState.NOT_SCANNING
 import io.de4l.app.bluetooth.BluetoothScanState.SCANNING
 import io.de4l.app.device.DeviceEntity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.system.measureTimeMillis
@@ -33,6 +39,8 @@ class DeviceScanResultsFragment : Fragment() {
 
     private val viewModel: DeviceScanResultsViewModel by viewModels()
     private val devices: MutableMap<String, DeviceEntity> = mutableMapOf()
+    private val updateDeviceListEvents: MutableSharedFlow<Boolean> = MutableSharedFlow();
+
 
     private lateinit var rvBtDevices: RecyclerView
     private lateinit var tvScanHeader: TextView
@@ -53,18 +61,30 @@ class DeviceScanResultsFragment : Fragment() {
         rvBtDevices.adapter?.notifyDataSetChanged()
     }
 
+    fun updateList() {
+        updateDeviceListEvents.tryEmit(true)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        viewModel.foundDevices.observe(viewLifecycleOwner) {
+        viewModel.viewModelScope.launch {
+            updateDeviceListEvents
+//                .filter { it }
+                .throttleTime(400)
+                .collect {
+                    rvBtDevices.adapter?.notifyDataSetChanged()
+                }
+        }
 
+        viewModel.foundDevices.observe(viewLifecycleOwner) {
             it._macAddress.value?.let { macAddress ->
                 devices[macAddress] = it
             }
-
-
-            rvBtDevices.adapter?.notifyDataSetChanged()
+            viewModel.viewModelScope.launch(Dispatchers.IO) {
+                updateDeviceListEvents.emit(true)
+            }
         }
 
         viewModel.scanState.observe(viewLifecycleOwner) {
