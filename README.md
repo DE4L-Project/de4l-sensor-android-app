@@ -68,7 +68,7 @@ APP_CLIENT_RESOURCE="{CLIENT-RESOURCE}"                         #App Oauth Resou
 
 [project-logo]: documentation/logos/project-logo.png "DE4L Project Logo"
 [platform-architecture]: documentation/de4l-sensor-data-platform-architecture.png "DE4L Sensor Data Platform Architecture"
-[app-teaser]: documentation/app-teaser.png "App Teaser"
+[app-teaser]: documentation/files/app-teaser-1080p.png "App Teaser"
 
 ## License 
 ```text
