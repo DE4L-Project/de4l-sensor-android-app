@@ -276,14 +276,14 @@ class BluetoothScanner @Inject constructor(
 
         bluetoothScanScanState.value = BluetoothScanState.SCANNING
 
-        val bleScanJobTimeout = launch {
+        val bleScanJobTimeout = coroutineScope.launch {
             delay(20000)
             LoggingHelper.logWithCurrentThread(LOG_TAG, "BLE Scan Timeout")
             bleScanJob?.cancel()
 
             //If legacy mode is needed, try again
             if (useLegacyMode) {
-                legacyScanJobTimeout = launch {
+                legacyScanJobTimeout = coroutineScope.launch {
                     delay(20000)
                     LoggingHelper.logWithCurrentThread(LOG_TAG, "LEGACY Scan Timeout")
                     legacyScanJob?.cancel()
@@ -311,7 +311,13 @@ class BluetoothScanner @Inject constructor(
         cancelDeviceDiscoveryJob = coroutineScope.launch {
             cancelDeviceDiscoveryChannel.filter { it }
                 .collect {
-                    close(BluetoothScanFinished())
+                    coroutineScope.launch {
+                        try {
+                            this@callbackFlow.close(BluetoothScanFinished())
+                        } catch (e: Exception) {
+                            LoggingHelper.logWithCurrentThread(LOG_TAG, e.message ?: "null")
+                        }
+                    }
                 }
         }
 
