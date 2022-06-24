@@ -29,14 +29,16 @@ class AirBeam3Device(
 
             override fun onDataReceived(data: String, device: BluetoothDevice) {
                 coroutineScope.launch {
-                    _sensorValues.emit(
-                        AirBeamSensorValueParser.parseLine(
-                            device.address,
-                            getBluetoothDeviceType(),
-                            data,
-                            DateTime()
-                        )
+                    val sensorValue = AirBeamSensorValueParser.parseLine(
+                        device.address,
+                        getBluetoothDeviceType(),
+                        data,
+                        DateTime()
                     )
+
+                    sensorValue?.let {
+                        _sensorValues.emit(sensorValue)
+                    }
                 }
             }
         })

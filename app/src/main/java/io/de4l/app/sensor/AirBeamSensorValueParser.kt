@@ -1,36 +1,43 @@
 package io.de4l.app.sensor
 
+import android.util.Log
 import io.de4l.app.bluetooth.BluetoothDeviceType
 import org.joda.time.DateTime
-import java.lang.UnsupportedOperationException
 
 class AirBeamSensorValueParser {
     companion object {
+        private val LOG_TAG = AirBeamSensorValueParser::class.java.name
+
         fun parseLine(
             deviceId: String,
             deviceType: BluetoothDeviceType,
             line: String,
             timestamp: DateTime
-        ): SensorValue {
-            val data = line.split(";")
+        ): SensorValue? {
+            try {
+                val data = line.split(";")
 
-            var sensorValue: Double? = data[0].toDoubleOrNull()
-            val airBeamId = deviceId;
-            val sensorType: SensorType = parseSensorType(data[2])
+                var sensorValue: Double? = data[0].toDoubleOrNull()
+                val airBeamId = deviceId;
+                val sensorType: SensorType = parseSensorType(data[2])
 
-            //Transform temperature to celsius
-            if (sensorType === SensorType.TEMPERATURE && sensorValue != null) {
-                sensorValue = (sensorValue - 32.0f) * (5.0f / 9.0f)
+                //Transform temperature to celsius
+                if (sensorType === SensorType.TEMPERATURE && sensorValue != null) {
+                    sensorValue = (sensorValue - 32.0f) * (5.0f / 9.0f)
+                }
+
+                return SensorValue(
+                    airBeamId,
+                    deviceType,
+                    sensorType,
+                    sensorValue,
+                    timestamp,
+                    line
+                )
+            } catch (e: Exception) {
+                Log.e(LOG_TAG, e.message ?: "Unknown Error")
+                return null
             }
-
-            return SensorValue(
-                airBeamId,
-                deviceType,
-                sensorType,
-                sensorValue,
-                timestamp,
-                line
-            )
         }
 
         private fun parseSensorType(sensorTypeRaw: String): SensorType {
