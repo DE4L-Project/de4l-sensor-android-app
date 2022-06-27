@@ -12,6 +12,7 @@ import io.de4l.app.tracking.BackgroundServiceWatcher
 import io.de4l.app.tracking.TrackingManager
 import io.de4l.app.ui.event.SendSensorValueMqttEvent
 import io.de4l.app.ui.event.SensorValueReceivedEvent
+import io.de4l.app.util.LoggingHelper
 import io.de4l.app.util.ObservableMap
 import io.de4l.app.util.ObservableSet
 import kotlinx.coroutines.*
@@ -211,6 +212,7 @@ class BluetoothDeviceManager @Inject constructor(
 //                BluetoothConnectionState.CONNECTING -> onConnecting(deviceEntity)
 //                BluetoothConnectionState.RECONNECTING -> onReconnecting(deviceEntity)
                 BluetoothConnectionState.DISCONNECTED -> onDisconnected(deviceEntity)
+                else -> null //Throws error w/o else branch
             }
         }
     }

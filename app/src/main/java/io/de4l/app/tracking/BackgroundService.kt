@@ -200,6 +200,7 @@ class BackgroundService() : Service() {
 
                 }
             }
+            else -> null //Throws error w/o else branch
         }
 
         val notificationText = "$bluetoothConnectionText | $trackingStateText"

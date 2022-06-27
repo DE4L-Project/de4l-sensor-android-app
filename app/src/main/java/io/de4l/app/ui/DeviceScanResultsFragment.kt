@@ -101,6 +101,7 @@ class DeviceScanResultsFragment : Fragment() {
                     }
                 }
                 SCANNING -> tvScanHeader.text = "Searching for BT devices..."
+                else -> null //Throws error w/o else branch
             }
         }
 

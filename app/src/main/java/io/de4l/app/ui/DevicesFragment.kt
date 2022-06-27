@@ -115,6 +115,7 @@ class DevicesFragment : Fragment() {
 //                    holder.btnConnectDevice.isEnabled =
 //                        viewModel.connectionState.value == BluetoothConnectionState.DISCONNECTED
                     }
+                    else -> null //Throws error w/o else branch
                 }
             }
 
