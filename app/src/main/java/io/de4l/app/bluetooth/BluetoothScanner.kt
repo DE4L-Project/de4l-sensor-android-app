@@ -396,7 +396,13 @@ class BluetoothScanner @Inject constructor(
                         //Check for retries
                         retryFlow.emit(true)
                     }
-                    .collect { onDeviceFound(it) }
+                    .collect {
+                        LoggingHelper.logWithCurrentThread(
+                            LOG_TAG,
+                            "Collect discover device flow"
+                        )
+                        onDeviceFound(it)
+                    }
             }
         }
         return discoveredDevices.asSharedFlow()

@@ -56,24 +56,27 @@ class LocationService() {
             override fun onLocationResult(locationResult: LocationResult) {
                 coroutineScope?.launch {
                     super.onLocationResult(locationResult)
-                    val location = LocationValue(
-                        locationResult.lastLocation.latitude,
-                        locationResult.lastLocation.longitude,
-                        locationResult.lastLocation.provider,
-                        DateTime(locationResult.lastLocation.time),
-                        locationResult.lastLocation.accuracy,
-                        locationResult.lastLocation.speed,
-                        locationResult.lastLocation.bearing,
-                        locationResult.lastLocation.altitude,
-                    )
 
-                    val locationUpdateEvent = LocationUpdateEvent(location)
-                    addLocation(location)
-                    EventBus.getDefault().post(locationUpdateEvent)
-                    Log.i(
-                        LOG_TAG,
-                        "${Thread.currentThread().name} | ${locationResult.lastLocation.provider} [${locationResult.lastLocation.longitude}; ${locationResult.lastLocation.latitude}]"
-                    )
+                    locationResult.lastLocation?.let { lastLocation ->
+                        val location = LocationValue(
+                            lastLocation.latitude,
+                            lastLocation.longitude,
+                            lastLocation.provider,
+                            DateTime(lastLocation.time),
+                            lastLocation.accuracy,
+                            lastLocation.speed,
+                            lastLocation.bearing,
+                            lastLocation.altitude,
+                        )
+
+                        val locationUpdateEvent = LocationUpdateEvent(location)
+                        addLocation(location)
+                        EventBus.getDefault().post(locationUpdateEvent)
+                        Log.i(
+                            LOG_TAG,
+                            "${Thread.currentThread().name} | ${lastLocation.provider} [${lastLocation.longitude}; ${lastLocation.latitude}]"
+                        )
+                    }
                 }
             }
         }

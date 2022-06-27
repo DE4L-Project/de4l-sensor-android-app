@@ -14,7 +14,7 @@ android {
     defaultConfig {
         applicationId "io.de4l.app"
         minSdkVersion 23
-        //MQTT Client Lib does not work for Android 31+
+        //!!! MQTT Client Lib does not work for Android 31+ !!!
         targetSdkVersion 30
         versionCode 20
         versionName "0.1.7"
@@ -59,16 +59,16 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1'
 
     //AndroidX
-    implementation 'androidx.core:core-ktx:1.7.0'
+    implementation 'androidx.core:core-ktx:1.8.0'
 
-    implementation 'androidx.appcompat:appcompat:1.4.1'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
+    implementation 'androidx.appcompat:appcompat:1.4.2'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
-    implementation 'androidx.navigation:navigation-fragment-ktx:2.4.1'
-    implementation 'androidx.navigation:navigation-ui-ktx:2.4.1'
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.4.2'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.4.2'
 
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
 
@@ -79,16 +79,16 @@ dependencies {
     implementation "androidx.recyclerview:recyclerview:1.2.1"
     implementation "androidx.recyclerview:recyclerview-selection:1.1.0"
 
-    implementation 'androidx.room:room-runtime:2.4.1'
-    implementation 'androidx.room:room-ktx:2.4.1'
+    implementation 'androidx.room:room-runtime:2.4.2'
+    implementation 'androidx.room:room-ktx:2.4.2'
 
-    implementation 'com.google.android.material:material:1.5.0'
-    implementation 'com.google.android.gms:play-services-location:19.0.1'
+    implementation 'com.google.android.material:material:1.6.1'
+    implementation 'com.google.android.gms:play-services-location:20.0.0'
     implementation 'com.google.android.gms:play-services-maps:18.0.2'
 
     implementation 'com.google.guava:guava:30.1-android'
     implementation 'org.greenrobot:eventbus:3.2.0'
-    implementation 'joda-time:joda-time:2.10.5'
+    implementation 'joda-time:joda-time:2.10.10'
     implementation 'commons-codec:commons-codec:1.15'
     implementation 'no.nordicsemi.android:ble-ktx:2.4.0'
 
@@ -96,7 +96,7 @@ dependencies {
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
     implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.1'
 
-    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'com.google.code.gson:gson:2.9.0'
 
     implementation 'com.auth0.android:jwtdecode:2.0.0'
     implementation 'com.okta.android:oidc-androidx:1.0.18'
@@ -109,10 +109,10 @@ dependencies {
     implementation 'io.github.hoc081098:FlowExt-jvm:0.3.0'
 
     kapt 'com.google.dagger:hilt-android-compiler:2.39.1'
-    kapt "androidx.room:room-compiler:2.4.1"
+    kapt "androidx.room:room-compiler:2.4.2"
 
     testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.mockito:mockito-core:3.7.7'
+    testImplementation 'org.mockito:mockito-core:4.5.1'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
