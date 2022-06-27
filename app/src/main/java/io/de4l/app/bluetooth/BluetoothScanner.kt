@@ -234,15 +234,17 @@ class BluetoothScanner @Inject constructor(
 
             currentBleScanCallback = object : ScanCallback() {
                 override fun onScanResult(callbackType: Int, result: ScanResult?) {
-                    result?.let {
-                        if (result.device.name != null && result.device.name.startsWith("Ruuvi")) {
-                            LoggingHelper.logWithCurrentThread(
-                                LOG_TAG,
-                                "RUUVI_TAG: " + result.device.address
-                            )
-                        }
-                        coroutineScope.launch {
-                            trySend(result.device)
+                    result?.let { scanResult ->
+                        scanResult.device?.let { device ->
+                            if (device.name != null && device.name.startsWith("Ruuvi")) {
+                                LoggingHelper.logWithCurrentThread(
+                                    LOG_TAG,
+                                    "RUUVI_TAG: " + device.address
+                                )
+                            }
+                            coroutineScope.launch {
+                                trySend(device)
+                            }
                         }
                     }
                 }
