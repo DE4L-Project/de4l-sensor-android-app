@@ -1,20 +1,24 @@
 package io.de4l.app.tracking
 
 import android.util.Log
+import com.hoc081098.flowext.interval
 import io.de4l.app.AppConstants
 import io.de4l.app.BuildConfig
 import io.de4l.app.auth.AuthManager
 import io.de4l.app.device.DeviceRepository
 import io.de4l.app.location.event.LocationUpdateEvent
+import io.de4l.app.mqtt.HeartbeatMessage
 import io.de4l.app.mqtt.LocationMqttMessage
 import io.de4l.app.mqtt.MqttManager
 import io.de4l.app.mqtt.SensorValueMqttMessage
 import io.de4l.app.ui.event.SendSensorValueMqttEvent
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.firstOrNull
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
+import org.joda.time.DateTime
 import java.util.*
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
@@ -26,10 +30,13 @@ class TrackingManager @Inject constructor(
 ) {
 
     private val LOG_TAG: String = TrackingManager::class.java.getName()
+    private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     val trackingState = MutableStateFlow(TrackingState.NOT_TRACKING)
     val messageNumber: AtomicLong = AtomicLong(0L)
     var trackingSessionId: String? = null
+
+    var heartbeatJob: Job? = null;
 
     init {
         EventBus.getDefault().register(this)
@@ -50,12 +57,25 @@ class TrackingManager @Inject constructor(
             }
 
         mqttManager.connectWithRetry()
+
+        heartbeatJob?.cancel()
+        heartbeatJob = coroutineScope.launch {
+            interval(
+                AppConstants.HEARTBEAT_INTERVAL_SECONDS * 1000,
+                AppConstants.HEARTBEAT_INTERVAL_SECONDS * 1000
+            ).collect {
+                sendHeartbeat()
+            }
+
+        }
+
     }
 
     suspend fun stopTracking() {
         trackingSessionId = null
         trackingState.value = TrackingState.NOT_TRACKING
         mqttManager.disconnect()
+        heartbeatJob?.cancel()
     }
 
     fun dispose() {
@@ -101,4 +121,15 @@ class TrackingManager @Inject constructor(
         }
     }
 
+    fun sendHeartbeat() {
+        mqttManager.publishForCurrentUser(
+            HeartbeatMessage(
+                HeartbeatValue(DateTime()),
+                authManager.user.value?.username ?: "Unknown user.",
+                BuildConfig.VERSION_NAME,
+                AppConstants.HEARTBEAT_TOPIC_PATTERN_LOCATION_VALUES,
+                trackingSessionId ?: "null"
+            )
+        )
+    }
 }

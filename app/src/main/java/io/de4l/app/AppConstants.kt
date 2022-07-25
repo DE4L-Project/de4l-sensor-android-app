@@ -35,6 +35,9 @@ class AppConstants {
         val MQTT_TOPIC_PATTERN_LOCATION_VALUES =
             if (BuildConfig.DEBUG) "locations/%s/de4l-app-debug" else "locations/%s/de4l-app"
 
+        val HEARTBEAT_TOPIC_PATTERN_LOCATION_VALUES =
+            if (BuildConfig.DEBUG) "heartbeats/%s/de4l-app-debug" else "heartbeats/%s/de4l-app"
+
         //UI
         const val SPLASH_SCREEN_DELAY_IN_SECONDS = 1L
 
@@ -49,6 +52,9 @@ class AppConstants {
 
         //WEB VIEW
         const val DE4L_INFO_URL = "https://de4l.io/en/about-de4l/"
+
+        //HEARTBEAT
+        const val HEARTBEAT_INTERVAL_SECONDS = 60L
 
 
     }

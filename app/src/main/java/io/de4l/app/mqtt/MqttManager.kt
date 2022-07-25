@@ -4,8 +4,10 @@ import android.content.Context
 import android.util.Log
 import com.auth0.android.jwt.JWT
 import com.google.common.collect.ImmutableList
+import com.google.common.io.CharSource
 import io.de4l.app.AppConstants
 import io.de4l.app.auth.AuthManager
+import io.de4l.app.util.LoggingHelper
 import io.de4l.app.util.RetryException
 import io.de4l.app.util.RetryHelper.Companion.runWithRetry
 import kotlinx.coroutines.*
@@ -15,6 +17,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.firstOrNull
 import org.eclipse.paho.client.mqttv3.*
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.nio.charset.StandardCharsets
+import java.util.zip.GZIPOutputStream
 
 class MqttManager(
     private val context: Context,
@@ -213,7 +219,7 @@ class MqttManager(
                 }
                 close()
             } catch (e: Exception) {
-                close (e)
+                close(e)
             }
             awaitClose {
                 cancel()
