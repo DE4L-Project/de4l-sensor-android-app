@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.bluetooth.BluetoothDevice
 import android.util.Log
-import io.de4l.app.bluetooth.event.*
+import io.de4l.app.bluetooth.event.BluetoothDeviceConnectedEvent
+import io.de4l.app.bluetooth.event.BtDeviceConnectionChangeEvent
+import io.de4l.app.bluetooth.event.ConnectToBluetoothDeviceEvent
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.device.DeviceRepository
 import io.de4l.app.location.LocationService
@@ -12,14 +14,12 @@ import io.de4l.app.tracking.BackgroundServiceWatcher
 import io.de4l.app.tracking.TrackingManager
 import io.de4l.app.ui.event.SendSensorValueMqttEvent
 import io.de4l.app.ui.event.SensorValueReceivedEvent
-import io.de4l.app.util.LoggingHelper
-import io.de4l.app.util.ObservableMap
-import io.de4l.app.util.ObservableSet
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
-import java.util.*
 import javax.inject.Inject
 
 

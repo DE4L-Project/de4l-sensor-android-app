@@ -2,7 +2,6 @@ package io.de4l.app.bluetooth
 
 import android.bluetooth.BluetoothDevice
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 
 data class BluetoothScanJob(

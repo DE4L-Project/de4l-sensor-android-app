@@ -2,7 +2,6 @@ package io.de4l.app.ui
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.de4l.app.bluetooth.BluetoothConnectionState
@@ -12,8 +11,6 @@ import io.de4l.app.device.DeviceEntity
 import io.de4l.app.sensor.SensorType
 import io.de4l.app.sensor.SensorValue
 import io.de4l.app.tracking.BackgroundServiceWatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject

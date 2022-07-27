@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
-import android.util.Log
 import io.de4l.app.device.BleDevice
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.util.ByteConverter

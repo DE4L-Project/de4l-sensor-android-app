@@ -1,9 +1,7 @@
 package io.de4l.app.ui
 
-import android.content.res.Resources
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.fragment.app.Fragment
@@ -14,7 +12,6 @@ import io.de4l.app.R
 import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.device.DeviceEntity
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.merge
 
 @AndroidEntryPoint

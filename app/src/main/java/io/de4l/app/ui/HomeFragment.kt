@@ -35,7 +35,6 @@ import io.de4l.app.bluetooth.BluetoothDeviceType
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.location.LocationValue
 import io.de4l.app.tracking.TrackingState
-import java.lang.IllegalArgumentException
 
 @AndroidEntryPoint
 class HomeFragment : Fragment(), OnMapReadyCallback {

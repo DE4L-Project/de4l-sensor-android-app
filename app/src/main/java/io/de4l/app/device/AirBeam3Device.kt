@@ -6,14 +6,9 @@ import io.de4l.app.bluetooth.AirBeam3BleConnection
 import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.bluetooth.BluetoothDeviceType
 import io.de4l.app.sensor.AirBeamSensorValueParser
-import io.de4l.app.util.RetryException
-import io.de4l.app.util.RetryHelper.Companion.runWithRetry
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.ble.BleManager
 import org.joda.time.DateTime
-import kotlin.coroutines.Continuation
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 class AirBeam3Device(
     macAddress: String,

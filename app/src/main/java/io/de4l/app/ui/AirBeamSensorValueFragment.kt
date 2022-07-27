@@ -1,7 +1,6 @@
 package io.de4l.app.ui
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,8 +9,7 @@ import androidx.lifecycle.asLiveData
 import io.de4l.app.R
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.sensor.SensorType
-import io.de4l.app.sensor.SensorValue
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.filterNotNull
 
 class AirBeamSensorValueFragment(deviceEntity: DeviceEntity?) : SensorValueFragment(deviceEntity) {
     private val LOG_TAG = SensorValueFragment::class.java.name

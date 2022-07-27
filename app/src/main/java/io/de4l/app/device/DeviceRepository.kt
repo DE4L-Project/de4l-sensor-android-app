@@ -8,10 +8,12 @@ import io.de4l.app.bluetooth.BluetoothDeviceType
 import io.de4l.app.database.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import java.util.*
-import kotlin.collections.HashMap
 
 @SuppressLint("MissingPermission")
 class DeviceRepository(private val appDatabase: AppDatabase) {

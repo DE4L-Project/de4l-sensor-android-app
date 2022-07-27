@@ -6,7 +6,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.*
-import com.google.android.play.core.install.model.AppUpdateType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.de4l.app.BuildConfig
 import io.de4l.app.R

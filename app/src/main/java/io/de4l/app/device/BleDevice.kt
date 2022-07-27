@@ -2,15 +2,8 @@ package io.de4l.app.device
 
 import android.util.Log
 import io.de4l.app.bluetooth.BluetoothConnectionState
-import io.de4l.app.util.RetryException
-import io.de4l.app.util.RetryHelper.Companion.runWithRetry
 import no.nordicsemi.android.ble.BleManager
 import no.nordicsemi.android.ble.ktx.suspend
-import java.lang.Exception
-import kotlin.coroutines.Continuation
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 abstract class BleDevice(
     macAddress: String,

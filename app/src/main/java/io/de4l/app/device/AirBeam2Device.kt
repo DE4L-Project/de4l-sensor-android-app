@@ -1,15 +1,11 @@
 package io.de4l.app.device
 
 import android.bluetooth.BluetoothDevice
-import android.util.Log
 import io.de4l.app.bluetooth.AirBeam3BleConnection
 import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.bluetooth.BluetoothDeviceType
 import io.de4l.app.bluetooth.BluetoothSocketConnection
 import io.de4l.app.sensor.AirBeamSensorValueParser
-import io.de4l.app.util.RetryException
-import io.de4l.app.util.RetryHelper.Companion.runWithRetry
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch

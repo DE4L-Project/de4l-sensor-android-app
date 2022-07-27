@@ -8,8 +8,6 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.asLiveData
-import androidx.room.util.StringUtil
-import com.google.common.base.Strings
 import dagger.hilt.android.AndroidEntryPoint
 import io.de4l.app.R
 

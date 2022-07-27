@@ -2,12 +2,10 @@ package io.de4l.app.device
 
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
-import hilt_aggregated_deps._dagger_hilt_android_flags_FragmentGetContextFix_FragmentGetContextFixEntryPoint
 import io.de4l.app.bluetooth.BluetoothConnectionState
 import io.de4l.app.bluetooth.BluetoothDeviceType
 import io.de4l.app.bluetooth.event.StartBleScannerEvent
 import io.de4l.app.bluetooth.event.StopBleScannerEvent
-import io.de4l.app.mqtt.MqttManager
 import io.de4l.app.sensor.RuuviTagParser
 import io.de4l.app.sensor.SensorType
 import io.de4l.app.sensor.SensorValue

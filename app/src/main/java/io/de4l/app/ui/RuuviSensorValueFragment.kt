@@ -1,7 +1,6 @@
 package io.de4l.app.ui
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,7 +9,6 @@ import androidx.lifecycle.asLiveData
 import io.de4l.app.R
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.sensor.SensorType
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 
 class RuuviSensorValueFragment(deviceEntity: DeviceEntity?) : SensorValueFragment(deviceEntity) {
