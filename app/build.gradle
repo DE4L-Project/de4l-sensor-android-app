@@ -16,7 +16,7 @@ android {
         minSdkVersion 23
         //!!! MQTT Client Lib does not work for Android 31+ !!!
         targetSdkVersion 30
-        versionCode 21
+        versionCode 52
         versionName "0.1.8"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -82,9 +82,14 @@ dependencies {
     implementation 'androidx.room:room-runtime:2.4.2'
     implementation 'androidx.room:room-ktx:2.4.2'
 
+    implementation 'androidx.preference:preference-ktx:1.2.0'
+
     implementation 'com.google.android.material:material:1.6.1'
     implementation 'com.google.android.gms:play-services-location:20.0.0'
     implementation 'com.google.android.gms:play-services-maps:18.0.2'
+
+    implementation 'com.google.android.play:app-update:2.0.0'
+    implementation 'com.google.android.play:app-update-ktx:2.0.0'
 
     implementation 'com.google.guava:guava:30.1-android'
     implementation 'org.greenrobot:eventbus:3.2.0'

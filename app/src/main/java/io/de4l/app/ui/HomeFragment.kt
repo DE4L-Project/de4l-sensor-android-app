@@ -35,6 +35,7 @@ import io.de4l.app.bluetooth.BluetoothDeviceType
 import io.de4l.app.device.DeviceEntity
 import io.de4l.app.location.LocationValue
 import io.de4l.app.tracking.TrackingState
+import java.lang.IllegalArgumentException
 
 @AndroidEntryPoint
 class HomeFragment : Fragment(), OnMapReadyCallback {
@@ -202,6 +203,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     override fun onResume() {
         super.onResume()
         mapView?.onResume()
+
+        try {
+            viewModel.checkForUpdates(this.requireActivity())
+        } catch (e: IllegalStateException) {
+            Log.e(LOG_TAG, "Error HomeFragment check for updates: ${e.message}")
+        }
     }
 
     override fun onStop() {

@@ -3,6 +3,7 @@ package io.de4l.app
 
 class AppConstants {
     companion object {
+
         const val REQUEST_CODE_PERMISSIONS: Int = 1000
 
         // AUTH
@@ -56,6 +57,10 @@ class AppConstants {
         //HEARTBEAT
         const val HEARTBEAT_INTERVAL_SECONDS = 60L
 
+        //UPDATE CHECK
+        //check only once every XX hours
+        const val UPDATE_CHECK_MINIMUM_INTERVAL_HOURS = 12
+        const val UPDATE_FLOW_REQUEST_CODE = 3000
 
     }
 }

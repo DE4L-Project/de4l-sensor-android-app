@@ -1,10 +1,12 @@
 package io.de4l.app.ui
 
+import android.app.Activity
 import android.app.Application
 import android.util.Log
 import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.*
+import com.google.android.play.core.install.model.AppUpdateType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.de4l.app.BuildConfig
 import io.de4l.app.R
@@ -21,12 +23,10 @@ import io.de4l.app.tracking.BackgroundServiceWatcher
 import io.de4l.app.tracking.TrackingManager
 import io.de4l.app.tracking.TrackingState
 import io.de4l.app.ui.event.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
+import io.de4l.app.update.UpdateManager
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -40,7 +40,8 @@ class HomeViewModel @Inject constructor(
     private val deviceRepository: DeviceRepository,
     private val bluetoothDeviceManager: BluetoothDeviceManager,
     private val trackingManager: TrackingManager,
-    private val application: Application
+    private val application: Application,
+    private val updateManager: UpdateManager,
 ) : ViewModel() {
     private val LOG_TAG = HomeViewModel::class.java.name
 
@@ -49,7 +50,7 @@ class HomeViewModel @Inject constructor(
     val location = MutableLiveData<LocationValue?>(locationManager.getCurrentLocation())
     val user = authManager.user.asLiveData()
     val versionInfo =
-        if (BuildConfig.DEBUG) BuildConfig.VERSION_NAME + "-dev" else BuildConfig.VERSION_NAME
+        if (BuildConfig.DEBUG) "${BuildConfig.VERSION_NAME}-dev (${BuildConfig.VERSION_CODE})" else "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
 
     lateinit var trackingEnabled: LiveData<Boolean>
     lateinit var linkedDevices: LiveData<List<DeviceEntity>>
@@ -166,5 +167,21 @@ class HomeViewModel @Inject constructor(
 
     fun onDeviceButtonClicked(device: DeviceEntity) {
         selectedDevice.value = device
+    }
+
+    fun checkForUpdates(activity: Activity) {
+        viewModelScope.launch {
+            val checkUpdateResponse = updateManager.checkForUpdates()
+            withContext(Dispatchers.Main) {
+                if (checkUpdateResponse.isUpdateAvailable) {
+                    try {
+                        updateManager.startUpdateFlow(checkUpdateResponse, activity)
+                    } catch (e: Exception) {
+                        Toast.makeText(activity, e.message, 10000).show()
+                    }
+                }
+            }
+        }
+
     }
 }

@@ -10,6 +10,8 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,6 +27,7 @@ import io.de4l.app.mqtt.MqttManager
 import io.de4l.app.mqtt.MqttMessagePersistence
 import io.de4l.app.tracking.BackgroundServiceWatcher
 import io.de4l.app.tracking.TrackingManager
+import io.de4l.app.update.UpdateManager
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
@@ -45,8 +48,6 @@ class AppModule() {
             AppDatabase::class.java,
             AppConstants.ROOM_DB_NAME
         )
-            .addMigrations(migrate())
-            .fallbackToDestructiveMigration()
             .build()
     }
 
@@ -140,6 +141,23 @@ class AppModule() {
         deviceRepository: DeviceRepository
     ): TrackingManager {
         return TrackingManager(mqttManager, authManager, deviceRepository)
+    }
+
+    @Singleton
+    @Provides
+    fun provideUpdateManager(
+        application: Application,
+        appUpdateManager: AppUpdateManager
+    ): UpdateManager {
+        return UpdateManager(application, appUpdateManager)
+    }
+
+    @Singleton
+    @Provides
+    fun provideAppUpdateManager(
+        application: Application
+    ): AppUpdateManager {
+        return AppUpdateManagerFactory.create(application)
     }
 
 //    @Singleton
