@@ -6,10 +6,11 @@ import org.joda.time.DateTime
 
 class SensorValueMqttMessage(
     private val sensorValue: SensorValue,
+    private val applicationId: String,
     username: String,
     appVersionCode: String,
     mqttTopic: String,
-    trackingSessionId: String
+    trackingSessionId: String,
 ) : AbstractMqttMessage(username, appVersionCode, mqttTopic, trackingSessionId) {
 
     override fun toJson(): JsonObject {
@@ -21,6 +22,7 @@ class SensorValueMqttMessage(
         sensorValueJsonObj.addProperty("value", this.sensorValue.value)
         sensorValueJsonObj.addProperty("sequenceNumber", this.sensorValue.sequenceNumber)
         sensorValueJsonObj.addProperty("raw", this.sensorValue.rawData)
+        sensorValueJsonObj.addProperty("applicationId", this.applicationId)
 
         var locationJsonObj: JsonObject? = null
 

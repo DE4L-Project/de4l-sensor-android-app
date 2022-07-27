@@ -5,6 +5,8 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.location.LocationManager
+import android.os.BatteryManager
+import android.os.PowerManager
 import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
@@ -138,9 +140,19 @@ class AppModule() {
     fun provideTrackingManager(
         mqttManager: MqttManager,
         authManager: AuthManager,
-        deviceRepository: DeviceRepository
+        deviceRepository: DeviceRepository,
+        powerManager: PowerManager,
+        batteryManager: BatteryManager,
+        application: Application
     ): TrackingManager {
-        return TrackingManager(mqttManager, authManager, deviceRepository)
+        return TrackingManager(
+            mqttManager,
+            authManager,
+            deviceRepository,
+            powerManager,
+            batteryManager,
+            application
+        )
     }
 
     @Singleton
@@ -158,6 +170,22 @@ class AppModule() {
         application: Application
     ): AppUpdateManager {
         return AppUpdateManagerFactory.create(application)
+    }
+
+    @Singleton
+    @Provides
+    fun providePowerManager(
+        application: Application
+    ): PowerManager {
+        return application.getSystemService(Context.POWER_SERVICE) as PowerManager
+    }
+
+    @Singleton
+    @Provides
+    fun provideBatteryManager(
+        application: Application
+    ): BatteryManager {
+        return application.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
     }
 
 //    @Singleton
